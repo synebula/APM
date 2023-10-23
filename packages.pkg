@@ -1,0 +1,17 @@
+bash-completion
+obsidian
+neofetch
+code
+dbeaver
+wps-office-cn
+
+# fonts
+adobe-source-han-sans-cn-fonts
+
+# ui theme
+papirus-icon-theme 
+capitaine-cursors
+catppuccin-fcitx5-git
+
+# aur packages
+microsoft-edge-stable-bin
