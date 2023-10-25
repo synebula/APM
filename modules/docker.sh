@@ -9,7 +9,7 @@ if [ ! -d /etc/docker/ ]; then
 fi
 
 if [ ! -f /etc/docker/daemon.json ] || [ -z "`cat /etc/docker/daemon.json | grep registry-mirrors`" ]; then
-sudo bash -c 'cat >> /etc/docker/daemon.json << EFO
+sudo bash -c 'cat > /etc/docker/daemon.json << EFO
 {
   "registry-mirrors": [
     "https://hub-mirror.c.163.com",

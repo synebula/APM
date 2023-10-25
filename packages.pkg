@@ -4,6 +4,7 @@ neofetch
 code
 dbeaver
 wps-office-cn
+motrix
 
 # fonts
 adobe-source-han-sans-cn-fonts
@@ -14,4 +15,4 @@ capitaine-cursors
 catppuccin-fcitx5-git
 
 # aur packages
-microsoft-edge-stable-bin
+# microsoft-edge-stable-bin
