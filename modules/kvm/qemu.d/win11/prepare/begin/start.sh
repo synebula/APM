@@ -32,7 +32,7 @@ get_gpu_driver() {
 }
 
 # Determine whether the graphics card has been used by VFIO kernel modules
-if [ -z "$(lspci -k -s $pci_slot | grep vfio_pci)" ]; then
+if [ -z "$(lspci -k -s $pci_slot | grep vfio-pci)" ]; then
     # Determine whether nvidia kernel modules has been loaded
     get_gpu_driver
     gpu_driver=$?
