@@ -6,6 +6,8 @@ dbeaver
 wps-office-cn
 motrix
 vlc
+rsync
+smartmontools
 
 # fonts
 adobe-source-han-sans-cn-fonts
