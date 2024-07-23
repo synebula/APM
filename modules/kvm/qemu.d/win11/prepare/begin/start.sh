@@ -6,7 +6,10 @@ gpu_nvidia=10
 gpu_nouveau=20
 gpu_amdgpu=30
 gpu_driver_info=/tmp/libvirt_win11_gpu_driver
-pci_slot="01:00"
+gpu_slot="04:00"
+gpu_slot_info=/tmp/libvirt_win11_gpu_slot
+extra_pcies="03:00:0 00:14.3" # allow multi pcie, separated by space. like '08:00.1 09:00.2'
+extra_pcies_info=/tmp/libvirt_win11_extra_pcies
 
 # Xpad affects the work of the xbox controller and its wireless adapter
 # The xpad will shake hands with the handle/wireless adapter when it is plugged in. At this time,
@@ -14,7 +17,7 @@ pci_slot="01:00"
 # which will eventually cause it to fail to work.
 # I can't find a way to make the usb device passthrough into the virtual machine from before/when it is plugged in,
 # so I suggest you disable this driver if you need to use the gamepad in virtual machine
-modprobe -r xpad
+# modprobe -r xpad xone_dongle xone_gip xone_gip_gamepad
 
 # dGPU PCI slots
 
@@ -32,7 +35,7 @@ get_gpu_driver() {
 }
 
 # Determine whether the graphics card has been used by VFIO kernel modules
-if [ -z "$(lspci -k -s $pci_slot | grep vfio-pci)" ]; then
+if [ -z "$(lspci -k -s $gpu_slot | grep vfio-pci)" ]; then
     # Determine whether nvidia kernel modules has been loaded
     get_gpu_driver
     gpu_driver=$?
@@ -60,8 +63,10 @@ if [ -z "$(lspci -k -s $pci_slot | grep vfio-pci)" ]; then
 
         # Detach GPU devices from host
         # Use your GPU and HDMI Audio PCI host device
-        virsh nodedev-detach pci_0000_01_00_0
-        virsh nodedev-detach pci_0000_01_00_1
+        lspci -k -s $gpu_slot | grep $gpu_slot | awk '{print $1}' | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
+        echo $gpu_slot > $gpu_slot_info
+        # virsh nodedev-detach pci_0000_04_00_0
+        # virsh nodedev-detach pci_0000_04_00_1
 
         # Load vfio module
         modprobe vfio_pci
@@ -69,4 +74,12 @@ if [ -z "$(lspci -k -s $pci_slot | grep vfio-pci)" ]; then
         # Restart Display Manager
         systemctl start gdm
     fi
+fi
+
+if [ -n "$extra_pcies" ]; then
+    array=($extra_pcies)
+    for pcie in "${array[@]}";  do 
+        echo $pcie | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
+    done;
+    echo $extra_pcies > $extra_pcies_info
 fi

@@ -14,7 +14,7 @@ else
   exit 1
 fi
 
-sudo pacman -S --noconfirm --needed libvirt qemu-base virt-manager
+sudo pacman -S --noconfirm --needed libvirt qemu-full virt-manager
 
 # 创建网桥
 if ! nmcli c show br0 > /dev/null; then

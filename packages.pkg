@@ -11,6 +11,7 @@ smartmontools
 
 # fonts
 adobe-source-han-sans-cn-fonts
+noto-fonts-emoji
 
 # ui theme
 papirus-icon-theme 
@@ -18,4 +19,5 @@ capitaine-cursors
 catppuccin-fcitx5-git
 
 # aur packages
-# microsoft-edge-stable-bin
+microsoft-edge-stable-bin
+xone-dkms-git
