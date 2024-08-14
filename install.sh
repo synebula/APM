@@ -15,9 +15,10 @@ done
 sudo pacman -Sy
 
 # 第一次执行直接生产lock文件
+# 需要处理 AUR 包，需要更换 sudo pacman 命令到 yay
 if [ ! -e ${path}/.packages.lock ]; then
   echo -n $pkgs | tr ' ' '\n' | sort >${path}/.packages.lock
-  yay -S --noconfirm --needed $pkgs
+  sudo pacman -S --noconfirm --needed $pkgs
 else
   # 比对lock文件，找出修改的软件包
   echo -n $pkgs | tr ' ' '\n' | sort >${path}/.packages.tmp
@@ -26,7 +27,7 @@ else
 
   set -e
   if [ -n "$(echo $added)" ]; then
-    yay -S --noconfirm --needed $(echo $added)
+    sudo pacman -S --noconfirm --needed $(echo $added)
   fi
   if [ -n "$removed" ]; then
     sudo pacman --noconfirm -Rns $(echo $removed)

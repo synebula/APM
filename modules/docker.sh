@@ -9,7 +9,7 @@ if [ ! -d /etc/docker/ ]; then
 fi
 
 if [ ! -f /etc/docker/daemon.json ] || [ -z "`cat /etc/docker/daemon.json | grep registry-mirrors`" ]; then
-sudo bash -c 'cat >> /etc/docker/daemon.json << EFO
+echo '
 {
   "registry-mirrors": [
     "https://hub-mirror.c.163.com",
@@ -17,8 +17,7 @@ sudo bash -c 'cat >> /etc/docker/daemon.json << EFO
     "https://dockerproxy.com",
     "https://ccr.ccs.tencentyun.com"
   ]
-}
-EFO'
+}' | sudo tee /etc/docker/daemon.json
 fi
 
 sudo usermod -aG docker $user

@@ -4,9 +4,14 @@ neofetch
 code
 dbeaver
 wps-office-cn
+motrix
+vlc
+rsync
+smartmontools
 
 # fonts
 adobe-source-han-sans-cn-fonts
+noto-fonts-emoji
 
 # ui theme
 papirus-icon-theme 
@@ -15,3 +20,4 @@ catppuccin-fcitx5-git
 
 # aur packages
 microsoft-edge-stable-bin
+xone-dkms-git
