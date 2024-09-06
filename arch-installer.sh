@@ -14,6 +14,15 @@ check_success(){
 hostname=""
 password=""
 user=""
+manually_mount=""
+
+for p in "$@"
+do
+  if [ $p == "-D" ]; then
+    manually_mount=true
+    break
+  fi
+done
 
 while getopts ":h:p:u:" opt
 do
@@ -24,7 +33,7 @@ do
     p)
       password=$OPTARG
       ;;
-    p)
+    u)
       user=$OPTARG
       ;;
   esac 
@@ -34,31 +43,39 @@ shift $(($OPTIND - 1)) # Remove option args, only leave /dev/**
 disk=$1
 
 # 0.2 Read disk to install
-if [ -z "$disk" ] ; then
-    echo "Please specify a disk to install! usage: $0 -h hostname -u user -p password /dev/sda"
+# not spesify disk and not manually mount, print usage
+if [ -z "$disk" ] && [ -z "$manually_mount" ]; then
+    echo "Please specify a disk to install! Usage: $0 -h hostname -u user -p password /dev/sda"
+    echo "Or manually mount the hard drive, use parameter '-D', like: $0 -D -h hostname -u user -p password"
+    echo ""
+    echo -e "Options: \n -h hostname \n -u user name \n -p user password \n -D don't specify disk, manually mount it"
     exit 0
 fi
 
-echo -ne "\033[31mThis script will erase the disk you provide $disk !!! Please confirm to continue.\033[0m [y/N]"
-read -r input
+if [ -z "$manually_mount" ]; then
+  echo -ne "\033[31mThis script will erase the disk you provide $disk !!! Please confirm to continue.\033[0m [y/N]"
+  read -r input
 
-case $input in
-  [yY][eE][sS]|[yY])
-    # echo "Read for hostname..."
-    ;;
-  *)
-    echo "Exiting..."
-    exit 0
-    ;;
-esac
+  case $input in
+    [yY][eE][sS]|[yY])
+      # echo "Read for hostname..."
+      ;;
+    *)
+      echo "Exiting..."
+      exit 0
+      ;;
+  esac
+fi
 
 
 if [ -z "$hostname" ] ; then
   read -r -p "You dont specify hostname by arg -h, will use random hostname. Please confirm to continue or input hostname. [y/N/hostname] " input
 
   case $input in
-    [yY][eE][sS]|[yY])
-      hostname="archlinux"
+    [yY][eE][sS]|[yY]|'')
+      uid=`cat /proc/sys/kernel/random/uuid`
+      hostname=`echo ${uid##*-}`
+      
       echo "Continue..."
       ;;
     [nN][oO]|[nN])
@@ -71,74 +88,81 @@ if [ -z "$hostname" ] ; then
   esac
 fi
 
-# 0.3. Determine if the hard drive is NVMe, and set the suffix for the partition.
-disk_suffix=""
-is_nvme=false
-if [[ "$disk" =~ ^\/dev\/nvme.* ]]; then
-  disk_suffix="p"
-  is_nvme=true
-  echo 'nvme disk'
-fi
 
 echo "1. Update the system clock"
 timedatectl
 check_success
 
+if [ -n "$disk" ]; then
 
-echo "2. Partition the disks"
-wipefs -af $disk 
-check_success
-parted $disk -- mklabel gpt
-check_success
+  # 0.3. Determine if the hard drive is NVMe, and set the suffix for the partition.
+  disk_suffix=""
+  is_nvme=false
+  if [[ "$disk" =~ ^\/dev\/nvme.* ]]; then
+    disk_suffix="p"
+    is_nvme=true
+    echo 'nvme disk'
+  fi
 
-# boot and EFI partition
-parted $disk -- mkpart ESP fat32 1MiB 1025MiB
-check_success
-parted $disk -- set 1 esp on
-check_success
+  echo "2. Partition the disk"
+  wipefs -af $disk 
+  check_success
+  parted $disk -- mklabel gpt
+  check_success
 
-# home partition
-parted $disk -- mkpart primary ext4 1025MiB 50%
-check_success
+  # boot and EFI partition
+  parted $disk -- mkpart ESP fat32 1MiB 1025MiB
+  check_success
+  parted $disk -- set 1 esp on
+  check_success
 
-# root partition
+  # home partition
+  parted $disk -- mkpart primary ext4 1025MiB 50%
+  check_success
 
-if [ is_nvme ]; then
-  parted $disk -- mkpart primary ext4 50% 95%
+  # root partition
+
+  if [ is_nvme ]; then
+    parted $disk -- mkpart primary ext4 50% 95%
+  else
+    parted $disk -- mkpart primary ext4 50% 100%
+  fi
+  check_success
+
+  root=${disk}${disk_suffix}3
+  home=${disk}${disk_suffix}2
+  boot=${disk}${disk_suffix}1
+
+  wipefs -af $boot 
+  mkfs.fat -F32 $boot
+  check_success
+  wipefs -af $root 
+  mkfs.ext4 $root
+  check_success
+  wipefs -af $home 
+  mkfs.ext4 $home
+  check_success
+
+
+  echo "3. Mount the file system"
+  mount $root /mnt
+  check_success
+  mount --mkdir $boot /mnt/boot
+  check_success
+  mount --mkdir $home /mnt/home
+  check_success
 else
-  parted $disk -- mkpart primary ext4 50% 100%
+  echo "2. Skip Partition the disk"
+  echo "3. Skip Mount the file system"
 fi
-check_success
-
-root=${disk}${disk_suffix}3
-home=${disk}${disk_suffix}2
-boot=${disk}${disk_suffix}1
-
-wipefs -af $boot 
-mkfs.fat -F32 $boot
-check_success
-wipefs -af $root 
-mkfs.ext4 $root
-check_success
-wipefs -af $home 
-mkfs.ext4 $home
-check_success
-
-
-echo "3. Mount the file systems"
-mount $root /mnt
-check_success
-mount --mkdir $boot /mnt/boot
-check_success
-mount --mkdir $home /mnt/home
-check_success
 
 echo "4.Installation base system"
 # sed -i '1 i Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch' /etc/pacman.d/mirrorlist #插入到第一行
-sed -i '0,/Server = .*/i\Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch' /etc/pacman.d/mirrorlist # 插入到第一个匹配行前
+# sed -i '0,/Server = .*/i\Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch' /etc/pacman.d/mirrorlist # 插入到第一个匹配行前
 # awk '/Server = .*/ && !done { print "Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch"; done=1 } 1' /etc/pacman.d/mirrorlist
-pacstrap -K /mnt base linux linux-firmware base-devel grub efibootmgr sudo git networkmanager archlinux-keyring
 
+curl -L 'https://archlinux.org/mirrorlist/?country=CN&protocol=https' -o /etc/pacman.d/mirrorlist
+pacstrap -K /mnt base linux linux-firmware base-devel grub efibootmgr sudo vim git networkmanager archlinux-keyring
 
 
 echo "5. Configure the system"
@@ -146,7 +170,8 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 
 # shell can not continue after chroot, make a new script to continue.
-cat >> /mnt/configure.sh << EFO
+mount -t tmpfs tmp /mnt/tmp
+cat > /mnt/tmp/configure.sh << EFO
 #!/usr/bin/env bash
 
 echo "5.1 Chroot in the system and configure"
@@ -168,16 +193,15 @@ echo "root:$password" | chpasswd
 
 echo "5.4 Add user $user, and confiure sudo"
 if [ -n "$user" ] ; then
-  useradd -mN -g users -s /bin/bash -p $password $user
+  useradd -mN -g users -s /bin/bash -p \`perl -e "print crypt($password,'sa');"\` $user
   echo "$user ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/$user
 fi
 exit 0
 EFO
 
-chmod +x /mnt/configure.sh
-arch-chroot /mnt /bin/bash -c "./configure.sh"
-rm /mnt/configure.sh
-umount -a
+chmod +x /mnt/tmp/configure.sh
+arch-chroot /mnt /bin/bash -c "umount /tmp & /tmp/configure.sh"
+umount /mnt
 
 echo "Install finished. Your user [root] and [$user] password is $password ."
 
