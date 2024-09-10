@@ -5,49 +5,63 @@ Arch Linux 软件包管理
 > Manage Arch linux packages like NPM
 >
 > 像管理 NPM 软件包一样管理 Arch linux 软件
+> 纯 shell 实现
 
-## packages.pkg
+## packages.ini
 
 主软件包文件, 每行识别为一个软件包。
 
-```shell
+```ini
 obsidian
 neofetch
 code
 ```
 
-## packages.d
+### 注释
 
-脚本会查找该文件夹下的`.pkg`文件识别为软件包进行包安装， 可以把一系列的软件包单独分成一个`.pkg`文件放到文件夹下。
+字符`#`和`;`后的内容为注释内容。 注释可以为行注释，也可以为行内注释，如：
 
-## modules
-
-该文件夹下放置包含了复杂设置的软件包，如：`systemd`启动、设置环境变量、增加配置文件等。使用文件夹内脚本可以直接实现软件包的安装和初始化设置。
-
-## 注释
-
-字符`#`后的内容为注释内容。 注释可以为行注释，也可以为行内注释，如：
-
-```shell
+```ini
 # ui theme
 capitaine-cursors
 papirus-icon-theme # icon theme
 catppuccin-fcitx5-git
+; motrix
 ```
+
+## packages.d
+
+文件夹可以同时包含`.ini`和`.sh`格式文件，这些文件会在执行`./install.sh`或`apm`时安装或执行
+
+- `.ini`文件识别为软件包进行包安装， 可以把一系列的软件包单独分成一个`.ini`文件放到文件夹下。
+- `.sh`脚本文件可以是系统的配置，也可以在其中完成对软件包的安装和初始化设置。
+
+## modules
+
+该文件夹下放置包含了**可选的**复杂设置的软件包，如：`systemd`启动、设置环境变量、增加配置文件等。使用文件夹内脚本可以直接实现软件包的安装和初始化设置。
+
+_该文件夹下脚本不会在执行`./install.sh`或`apm`时执行，需要手动执行需要的脚本。_
 
 ## 安装命令
 
-使用`install.sh`脚本安装。
+第一次需要使用`./install.sh`脚本安装，后续可以直接执行`apm`命令。
 
 脚本会对比文件的修改，安装新增软件包并卸载移除软件包。
 
+_可在 install.sh 脚本开头修改 apm 参数来修改脚本使用的包管理程序_
+
+### apm 命令
+
+第一次执行`./install.sh`后会在`~/.bashrc`中设置 alias，后续执行`apm`即可。
+
 ### setup.sh
 
-会在调用`install.sh`前进行一些系统设置，目前实现了以下内容的设置：
+在调用`install.sh`时会先执行`setup.sh`脚本前进行一些系统设置，目前实现了以下内容的设置：
 
 1. 国内软件源的增加
 2. `AUR Helper`的安装（`yay`）
 3. 默认文件夹挂载等
+4. 写入`apm`命令的 alias
 
 ## 无重复副作用
 
@@ -59,13 +73,17 @@ catppuccin-fcitx5-git
 
 `arch-installer.sh` 是用来 `Arch Linux` 系统安装的脚本。
 
+> 该脚本执行 UEFI 安装，若机器不支持该安装方式，请勿执行或修改脚本后执行。
+
 用法：
 
 ```shell
 # arch-installer.sh -h 主机名 -u 用户名 -p 密码 安装磁盘
+# arch-installer.sh -D -h 主机名 -u 用户名 -p 密码
 
 arch-installer.sh -h hostname -u user -p password /dev/sda
 
 -u 若不指定，则不新建用户
 -p 若不指定，则默认密码 0000
+-D 不指定安装磁盘，手动挂载需要安装的分区
 ```

@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
 # Define command exec sucess checker.
-check_success(){
+check_success() {
   if [ $? -ne 0 ]; then
     echo "Error occurred, exiting..."
     exit 1
   fi
 }
-
 
 # 0.1 Read args
 
@@ -16,27 +15,25 @@ password=""
 user=""
 manually_mount=""
 
-for p in "$@"
-do
+for p in "$@"; do
   if [ $p == "-D" ]; then
     manually_mount=true
     break
   fi
 done
 
-while getopts ":h:p:u:" opt
-do
+while getopts ":h:p:u:" opt; do
   case $opt in
-    h)
-      hostname=$OPTARG
-      ;;
-    p)
-      password=$OPTARG
-      ;;
-    u)
-      user=$OPTARG
-      ;;
-  esac 
+  h)
+    hostname=$OPTARG
+    ;;
+  p)
+    password=$OPTARG
+    ;;
+  u)
+    user=$OPTARG
+    ;;
+  esac
 done
 shift $(($OPTIND - 1)) # Remove option args, only leave /dev/**
 
@@ -45,11 +42,11 @@ disk=$1
 # 0.2 Read disk to install
 # not spesify disk and not manually mount, print usage
 if [ -z "$disk" ] && [ -z "$manually_mount" ]; then
-    echo "Please specify a disk to install! Usage: $0 -h hostname -u user -p password /dev/sda"
-    echo "Or manually mount the hard drive, use parameter '-D', like: $0 -D -h hostname -u user -p password"
-    echo ""
-    echo -e "Options: \n -h hostname \n -u user name \n -p user password \n -D don't specify disk, manually mount it"
-    exit 0
+  echo "Please specify a disk to install! Usage: $0 -h hostname -u user -p password /dev/sda"
+  echo "Or manually mount the hard drive, use parameter '-D', like: $0 -D -h hostname -u user -p password"
+  echo ""
+  echo -e "Options: \n -h hostname \n -u user name \n -p user password \n -D don't specify disk, manually mount it"
+  exit 0
 fi
 
 if [ -z "$manually_mount" ]; then
@@ -57,37 +54,35 @@ if [ -z "$manually_mount" ]; then
   read -r input
 
   case $input in
-    [yY][eE][sS]|[yY])
-      # echo "Read for hostname..."
-      ;;
-    *)
-      echo "Exiting..."
-      exit 0
-      ;;
+  [yY][eE][sS] | [yY])
+    # echo "Read for hostname..."
+    ;;
+  *)
+    echo "Exiting..."
+    exit 0
+    ;;
   esac
 fi
 
-
-if [ -z "$hostname" ] ; then
+if [ -z "$hostname" ]; then
   read -r -p "You dont specify hostname by arg -h, will use random hostname. Please confirm to continue or input hostname. [y/N/hostname] " input
 
   case $input in
-    [yY][eE][sS]|[yY]|'')
-      uid=`cat /proc/sys/kernel/random/uuid`
-      hostname=`echo ${uid##*-}`
-      
-      echo "Continue..."
-      ;;
-    [nN][oO]|[nN])
-      echo "Exiting..."
-      exit 0
-      ;;
-    *)
-      hostname=$input
-      ;;
+  [yY][eE][sS] | [yY] | '')
+    uid=$(cat /proc/sys/kernel/random/uuid)
+    hostname=$(echo ${uid##*-})
+
+    echo "Continue..."
+    ;;
+  [nN][oO] | [nN])
+    echo "Exiting..."
+    exit 0
+    ;;
+  *)
+    hostname=$input
+    ;;
   esac
 fi
-
 
 echo "1. Update the system clock"
 timedatectl
@@ -105,7 +100,7 @@ if [ -n "$disk" ]; then
   fi
 
   echo "2. Partition the disk"
-  wipefs -af $disk 
+  wipefs -af $disk
   check_success
   parted $disk -- mklabel gpt
   check_success
@@ -133,16 +128,15 @@ if [ -n "$disk" ]; then
   home=${disk}${disk_suffix}2
   boot=${disk}${disk_suffix}1
 
-  wipefs -af $boot 
+  wipefs -af $boot
   mkfs.fat -F32 $boot
   check_success
-  wipefs -af $root 
+  wipefs -af $root
   mkfs.ext4 $root
   check_success
-  wipefs -af $home 
+  wipefs -af $home
   mkfs.ext4 $home
   check_success
-
 
   echo "3. Mount the file system"
   mount $root /mnt
@@ -164,14 +158,12 @@ echo "4.Installation base system"
 curl -L 'https://archlinux.org/mirrorlist/?country=CN&protocol=https' -o /etc/pacman.d/mirrorlist
 pacstrap -K /mnt base linux linux-firmware base-devel grub efibootmgr sudo vim git networkmanager archlinux-keyring
 
-
 echo "5. Configure the system"
-genfstab -U /mnt >> /mnt/etc/fstab
-
+genfstab -U /mnt >>/mnt/etc/fstab
 
 # shell can not continue after chroot, make a new script to continue.
 mount -t tmpfs tmp /mnt/tmp
-cat > /mnt/tmp/configure.sh << EFO
+cat >/mnt/tmp/configure.sh <<EFO
 #!/usr/bin/env bash
 
 echo "5.1 Chroot in the system and configure"
@@ -193,15 +185,15 @@ echo "root:$password" | chpasswd
 
 echo "5.4 Add user $user, and confiure sudo"
 if [ -n "$user" ] ; then
-  useradd -mN -g users -s /bin/bash -p \`perl -e "print crypt($password,'sa');"\` $user
+  useradd -mN -g users -s /bin/bash -p $(perl -e "print crypt($password,'sa');") $user
   echo "$user ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/$user
 fi
 exit 0
 EFO
 
 chmod +x /mnt/tmp/configure.sh
-arch-chroot /mnt /bin/bash -c "umount /tmp & /tmp/configure.sh"
+#  arch-chroot will mount /tmp again, so if /tmp/configure.sh is not exist, umount /tmp
+arch-chroot /mnt /bin/bash -c "if [ ! -f /tmp/configure.sh ]; then umount /tmp; fi & /tmp/configure.sh"
 umount /mnt
 
 echo "Install finished. Your user [root] and [$user] password is $password ."
-
