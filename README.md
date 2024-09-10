@@ -83,7 +83,8 @@ _可在 install.sh 脚本开头修改 apm 参数来修改脚本使用的包管�
 
 arch-installer.sh -h hostname -u user -p password /dev/sda
 
+-h 主机名
 -u 若不指定，则不新建用户
 -p 若不指定，则默认密码 0000
--D 不指定安装磁盘，手动挂载需要安装的分区
+-D 不指定安装磁盘，手动挂载需要安装的分区到 /mnt 目录
 ```
