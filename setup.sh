@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-user=$(whoami)
-path=$(dirname $0)
-
 # 判断文件是否存在内容。用法：is_configured 'keyword' file;
 is_configured() {
   lines=$(cat $2 | grep $1)
@@ -12,52 +9,68 @@ is_configured() {
   return 1
 }
 
-# 1.NTP授时服务
-if [ ! -f /etc/systemd/timesyncd.conf.d/local.conf ]; then
-  sudo mkdir /etc/systemd/timesyncd.conf.d/
-  echo '[Time]
-NTP=ntp.ntsc.ac.cn cn.ntp.org.cn ntp.ntsc.ac.cn
-FallbackNTP=ntp.aliyun.com time1.cloud.tencent.com time2.cloud.tencent.com time3.cloud.tencent.com time4.cloud.tencent.com time5.cloud.tencent.com' \
-  | sudo tee /etc/systemd/timesyncd.conf.d/local.conf
-fi
-sudo systemctl enable systemd-timesyncd.service
 
-# 2.Archlinuxcn源
-if ! is_configured 'archlinuxcn' /etc/pacman.conf; then
-  echo '[archlinuxcn]
-Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch' \
-  | sudo tee -a /etc/pacman.conf
-  sudo pacman -Sy && sudo pacman -S --noconfirm archlinuxcn-keyring
+# 启用alias
+shopt -s expand_aliases
+
+## 1. 设置变量
+user=$(whoami)
+# 设置脚本所在目录
+path=$(
+  cd "$(dirname "$0")"
+  pwd
+)
+# 设置默认的软件包管理器
+apm="yay"
+alias apm=$apm
+
+## 2. 判断是否联网
+if ping -c 1 -W 5 bilibili.com 1>/dev/null 2>&1; then
+  echo -e "\033[32mNetwork Connected! \033[0m"
+else
+  echo -e "\033[31mNetwork Not Connected! \033[0m"
+  exit 0
 fi
 
-# 3.如果不是pacman管理包，并且没有安装则安装该包管理器
+
+## 3. 执行 conf.d 中的脚本文件
+for script in $(find ${path}/conf.d/ -type f -name "*.sh"); do
+  source "$script"
+done
+
+# 3.1 如果不是pacman管理包，并且没有安装则安装该包管理器
 which $apm >/dev/null 2>&1
 exist=$?
 if [ -z "$(echo $apm | grep 'pacman')" ] && [ $exist -ne 0 ]; then
   sudo pacman -S --noconfirm $apm
 fi
 
-# now install it from archlinuxcn
-# install aur helper
-# if ! command -v yay >/dev/null 2>&1; then
-#   git clone https://aur.archlinux.org/yay-git.git /tmp/yay
-#   cd /tmp/yay
-#   makepkg -si
-#   cd -
-# fi
+## 4. 比较软件包到异同进行安装或卸载
+# 合并软件列表
+comment='s/#.*$//g;s/\;.*$//g'
+pkgs=$(sed $comment ${path}/packages.ini)
+for pkg in $(find ${path}/packages.d/ -type f -name "*.ini"); do
+  pkgs="$pkgs $(sed $comment $pkg)"
+done
 
-# 4.Configure home temp directory
-if ! is_configured "/home/$user/tmp" /etc/fstab; then
-  echo "# Home temp directory
-tmpfs       /home/$user/tmp    tmpfs      defaults,size=16g    0  0" | sudo tee -a /etc/fstab
-fi
+# 设置遇到错误不继续执行
+set -e
+# 第一次执行直接生产lock文件
+apm -Sy
+if [ ! -e ${path}/.packages.lock ]; then
+  apm -S --noconfirm --needed $pkgs
+  echo -n $pkgs | tr ' ' '\n' | sort >${path}/.packages.lock # 写入lock文件，提供下次安装时比较异同
+else
+  # 比对lock文件，找出修改的软件包
+  echo -n $pkgs | tr ' ' '\n' | sort >${path}/.packages.tmp
+  added=$(diff -u ${path}/.packages.lock ${path}/.packages.tmp | grep "^+[[:alpha:]].*" | sed s/+//)
+  removed=$(diff -u ${path}/.packages.lock ${path}/.packages.tmp | grep "^-[[:alpha:]].*" | sed s/-//)
 
-# 5.Configure apm alias
-if ! is_configured 'apm=' /home/$user/.bashrc; then
-  echo "alias apm=$path/install.sh" | sudo tee -a /home/$user/.bashrc
-fi
-
-# 6.Enable sshd start up
-if [ ! $(systemctl is-enabled sshd) == 'enabled' ]; then
-  sudo systemctl enable sshd
+  if [ -n "$(echo $added)" ]; then
+    apm -S --noconfirm --needed $(echo $added)
+  fi
+  if [ -n "$removed" ]; then
+    apm --noconfirm -Rns $(echo $removed)
+  fi
+  mv "${path}/.packages.tmp" "${path}/.packages.lock"
 fi
