@@ -111,11 +111,11 @@ if [ -n "$disk" ]; then
   parted $disk -- set 1 esp on
   check_success
 
-  # home partition
+  # root partition
   parted $disk -- mkpart primary ext4 1025MiB 50%
   check_success
 
-  # root partition
+  # home partition
 
   if [ is_nvme ]; then
     parted $disk -- mkpart primary ext4 50% 95%
@@ -124,9 +124,9 @@ if [ -n "$disk" ]; then
   fi
   check_success
 
-  root=${disk}${disk_suffix}3
-  home=${disk}${disk_suffix}2
   boot=${disk}${disk_suffix}1
+  root=${disk}${disk_suffix}2
+  home=${disk}${disk_suffix}3
 
   wipefs -af $boot
   mkfs.fat -F32 $boot
@@ -156,6 +156,7 @@ echo "4.Installation base system"
 # awk '/Server = .*/ && !done { print "Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch"; done=1 } 1' /etc/pacman.d/mirrorlist
 
 curl -L 'https://archlinux.org/mirrorlist/?country=CN&protocol=https' -o /etc/pacman.d/mirrorlist
+sed -i 's/#Server/Server/' /etc/pacman.d/mirrorlist
 pacstrap -K /mnt base linux linux-firmware base-devel grub efibootmgr sudo vim git networkmanager archlinux-keyring
 
 echo "5. Configure the system"
@@ -185,15 +186,16 @@ echo "root:$password" | chpasswd
 
 echo "5.4 Add user $user, and confiure sudo"
 if [ -n "$user" ] ; then
-  useradd -mN -g users -s /bin/bash -p $(perl -e "print crypt($password,'sa');") $user
+  useradd -mN -g users -s /bin/bash $user
+  echo "$user:$password" | chpasswd
   echo "$user ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/$user
 fi
 exit 0
 EFO
 
 chmod +x /mnt/tmp/configure.sh
-#  arch-chroot will mount /tmp again, so if /tmp/configure.sh is not exist, umount /tmp
-arch-chroot /mnt /bin/bash -c "if [ ! -f /tmp/configure.sh ]; then umount /tmp; fi & /tmp/configure.sh"
-umount /mnt
+# arch-chroot will mount /tmp again, so if /tmp/configure.sh is not exist, umount /tmp
+arch-chroot /mnt /bin/bash -c "umount /tmp; /tmp/configure.sh"
+# umount /mnt
 
 echo "Install finished. Your user [root] and [$user] password is $password ."
