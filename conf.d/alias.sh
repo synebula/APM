@@ -2,5 +2,5 @@
 
 # Configure apm alias
 if ! is_configured 'apm=' /home/$user/.bashrc; then
-  echo "alias apm=$path/install.sh" | sudo tee -a /home/$user/.bashrc
+  echo "alias apm=$path/setup.sh" | sudo tee -a /home/$user/.bashrc >/dev/null
 fi

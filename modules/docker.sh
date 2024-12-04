@@ -8,17 +8,14 @@ if [ ! -d /etc/docker/ ]; then
   sudo mkdir /etc/docker/
 fi
 
-if [ ! -f /etc/docker/daemon.json ] || [ -z "`cat /etc/docker/daemon.json | grep registry-mirrors`" ]; then
-echo '
-{
-  "registry-mirrors": [
-    "https://hub-mirror.c.163.com",
-    "https://mirror.baidubce.com",
-    "https://dockerproxy.com",
-    "https://ccr.ccs.tencentyun.com"
-  ]
-}' | sudo tee /etc/docker/daemon.json
-fi
+# 国内加速都关停
+# if [ ! -f /etc/docker/daemon.json ] || [ -z "`cat /etc/docker/daemon.json | grep registry-mirrors`" ]; then
+# echo '{
+#   "registry-mirrors": [
+#     "https://dockerproxy.com"
+#   ]
+# }' | sudo tee /etc/docker/daemon.json
+# fi
 
 if [ ! -f /etc/systemd/system/docker.service.d/proxy.conf ]; then
 sudo mkdir /etc/systemd/system/docker.service.d/
@@ -27,7 +24,7 @@ echo '
 Environment="HTTP_PROXY=http://10.7.43.30:1081"
 Environment="HTTPS_PROXY=http://10.7.43.30:1081"
 Environment="NO_PROXY=hub-mirror.c.163.com,mirror.baidubce.com,dockerproxy.com,ccr.ccs.tencentyun.com"
-' | sudo tee /etc/systemd/system/docker.service.d/proxy.conf
+' | sudo tee /etc/systemd/system/docker.service.d/proxy.conf > /dev/null
 fi
 
 sudo usermod -aG docker $user
