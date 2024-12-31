@@ -8,3 +8,5 @@ if [ ! $(nmcli --field ipv4.method c show "$connection" | awk '{print $2}') == '
   nmcli c mod "$connection" ipv4.method manual
   nmcli c mod "$connection" ipv4.dns "10.7.43.1"
 fi
+
+for c in `nmcli c | awk '{print $1}' | sed 1d`; do nmcli c mod "$c" 802-3-ethernet.wake-on-lan magic; done

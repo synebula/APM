@@ -28,6 +28,8 @@ if ! nmcli c show br0 > /dev/null; then
   nmcli con mod br0 ipv4.dns "10.7.43.1"
 
   nmcli con up br0
+
+  for c in `nmcli c | awk '{print $1}' | sed 1d`; do nmcli c mod "$c" 802-3-ethernet.wake-on-lan magic; done
 fi
 
 ### 创建hook

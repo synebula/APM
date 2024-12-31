@@ -2,7 +2,7 @@
 
 user=`whoami`
 
-sudo pacman -S --noconfirm --needed docker
+sudo pacman -S --noconfirm --needed docker docker-compose
 
 if [ ! -d /etc/docker/ ]; then
   sudo mkdir /etc/docker/
