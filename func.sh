@@ -9,6 +9,25 @@ is_configured() {
   return 1
 }
 
+# 判断当前用户使用的shell并返回shell配置文件路径
+get_shell_config_file() {
+  local user_shell=$(getent passwd $USER | cut -d: -f7)
+  case $user_shell in
+    /bin/bash)
+      echo "$HOME/.bashrc"
+      ;;
+    /bin/zsh)
+      echo "$HOME/.zshrc"
+      ;;
+    /bin/fish)
+      echo "$HOME/.config/fish/config.fish"
+      ;;
+    *)
+      echo "$HOME/.bashrc"
+      ;;
+  esac
+}
+
 # 解析 INI 文件，获取指定 section 下的所有项（不包括 section 标题），同时处理键值对中的空格
 parse_ini_section() {
     local ini=$1
