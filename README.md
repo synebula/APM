@@ -1,93 +1,191 @@
 # APM - Arch Linux Package Manager
 
-Arch Linux 软件包管理
+[中文版](README-zh.md)
 
-> Manage Arch linux packages like NPM
+> Manage Arch Linux packages like NPM
 >
-> 像管理 NPM 软件包一样管理 Arch linux 软件
-> 纯 shell 实现
+> A pure Shell implementation of Arch Linux package management tool
 
-## packages.ini
+## Project Introduction
 
-主软件包文件, 每行识别为一个软件包。
+APM is a simple and efficient Arch Linux package management tool that allows you to:
+
+- Declaratively manage packages through configuration files
+- Automatically install/uninstall packages
+- Group management of different types of packages
+- Automatically configure system and software
+- Provide optional complex package configuration modules
+
+APM uses `yay` as the default package manager backend, supporting installation of both Pacman and AUR packages.
+
+## Project Structure
+
+```
+.
+├── packages.d/        # Grouped package configuration directory
+├── conf.d/            # System configuration scripts directory
+├── modules/           # Optional modules directory
+├── packages.ini       # Main package configuration file
+├── setup.sh           # Main installation script
+├── func.sh            # Utility function library
+└── arch-installer.sh  # Arch Linux installation script
+```
+
+## Configuration Files
+
+### packages.ini
+
+Main package configuration file, each line represents a package. Supports sectioned configuration for packages from different sources:
 
 ```ini
+[Pacman]
+# Official repository packages
+zsh
 obsidian
-neofetch
-code
+vlc
+
+[AUR]
+# AUR packages
+visual-studio-code-bin
+wechat-universal-bwrap
 ```
 
-### 注释
+### Comment Syntax
 
-字符`#`和`;`后的内容为注释内容。 注释可以为行注释，也可以为行内注释，如：
+Use `#` or `;` to add comments, supporting line comments and inline comments:
 
 ```ini
-# ui theme
+# UI theme
 capitaine-cursors
-papirus-icon-theme # icon theme
-catppuccin-fcitx5-git
-; motrix
+papirus-icon-theme # Icon theme
+; motrix  # Disabled package
 ```
 
-## packages.d
+### packages.d Directory
 
-文件夹包含`.ini`格式文件， 可以把一系列的软件包单独分成一个`.ini`文件放到文件夹下。
+Used for group management of packages, containing multiple `.ini` format files, each file can include a group of related packages. For example:
 
-## conf.d
+- `gnome.ini` - GNOME desktop environment related packages
+- `dev.ini` - Development tools related packages
 
-文件夹包含`.sh`格式文件，`.sh`脚本文件可以是系统的配置，同时也可以在其中安装和初始化软件包。
+## System Configuration
 
-_需要避免脚本重复执行副作用_
+### conf.d Directory
 
-## modules
+Contains configuration scripts in `.sh` format, used for system configuration and software initialization. These scripts will run automatically when executing `setup.sh`.
 
-该文件夹下放置包含了**可选的**复杂设置的软件包，如：`systemd`启动、设置环境变量、增加配置文件等。使用文件夹内脚本可以直接实现软件包的安装和初始化设置。
+Implemented configurations include:
+- Input method configuration (fcitx)
+- Audio system configuration
+- Temporary directory mounting
+- Swap file configuration
+- NTP time synchronization
+- SSH service configuration
+- Alias settings
 
-_该文件夹下脚本不会在执行`./install.sh`或`apm`时执行，需要手动执行需要的脚本。_
+**Note:** All configuration scripts are designed to be repeatable without side effects.
 
-## 安装命令
+### modules Directory
 
-第一次需要使用`./install.sh`脚本安装，后续可以直接执行`apm`命令。
+Contains optional complex package configuration modules, such as:
+- Docker configuration
+- NVIDIA driver configuration
+- KVM virtualization configuration
+- Samba file sharing configuration
+- ZFS file system configuration
 
-脚本会对比文件的修改，安装新增软件包并卸载移除软件包。
+These modules need to be executed manually and will not run automatically when executing `setup.sh`.
 
-_可在 install.sh 脚本开头修改 apm 参数来修改脚本使用的包管理程序_
+## Usage
 
-### apm 命令
+### Installing Packages
 
-第一次执行`./install.sh`后会在`~/.bashrc`中设置 alias，后续执行`apm`即可。
+For first-time use, execute the `setup.sh` script to install:
 
-### setup.sh
+```bash
+./setup.sh
+```
 
-在调用`install.sh`时会先执行`setup.sh`脚本前进行一些系统设置，目前实现了以下内容的设置：
+The script will:
+1. Check network connection
+2. Configure software sources
+3. Install AUR helper (yay)
+4. Install all packages defined in packages.ini and packages.d
+5. Execute all configuration scripts in the conf.d directory
+6. Create the `apm` command alias
 
-1. 国内软件源的增加
-2. `AUR Helper`的安装（`yay`）
-3. 默认文件夹挂载等
-4. 写入`apm`命令的 alias
+### apm Command
 
-## 无重复副作用
+After executing `setup.sh` for the first time, an `apm` alias will be set in the shell configuration file, and you can directly use the `apm` command to update the system:
 
-软件的设置、文件的新增等都需要添加验证方法，以防止内容多次添加等重复副作用。
+```bash
+apm
+```
+
+Each time the `apm` command is executed, the script will:
+1. Compare the current configuration with the differences from the last execution
+2. Install newly added packages
+3. Uninstall removed packages
+4. Execute configuration scripts
+
+### Custom Configuration
+
+You can change the package manager used by modifying the `apm` variable at the beginning of the `setup.sh` file:
+
+```bash
+# Set the default package manager
+apm="yay"  # Can be changed to "pacman" or other package managers
+```
+
+## No Repeated Side Effects Design
+
+All configuration scripts are designed to be repeatable without side effects. Each configuration script checks if it has already been configured before execution to avoid repeated configuration.
 
 ---
 
-## Arch installer
+## Arch Linux Installation Script
 
-`arch-installer.sh` 是用来 `Arch Linux` 系统安装的脚本。
+`arch-installer.sh` is a script for automating the installation of Arch Linux systems.
 
-> 该脚本执行 UEFI 安装，若机器不支持该安装方式，请勿执行或修改脚本后执行。
+> **Note:** This script performs a UEFI installation. If your machine does not support this installation method, do not execute it or modify the script before execution.
 
-用法：
+### Usage
 
 ```shell
-# arch-installer.sh -h 主机名 -u 用户名 -p 密码 安装磁盘
-# arch-installer.sh -D -h 主机名 -u 用户名 -p 密码
+# Basic usage
+arch-installer.sh -h hostname -u username -p password installation_disk
 
-arch-installer.sh -h hostname -u user -p password /dev/sda
+# Example
+arch-installer.sh -h myarch -u alex -p mypassword /dev/sda
 
--h 主机名
--u 若不指定，则不新建用户
--p 若不指定，则默认密码 0000
--D 不指定安装磁盘，手动挂载需要安装的分区到 /mnt 目录
+# Manually mount partitions
+arch-installer.sh -D -h hostname -u username -p password
+
+# Parameter description
+-h hostname
+-u username (if not specified, no new user will be created)
+-p password (if not specified, the default password is 0000)
+-D do not specify installation disk, manually mount the partitions to be installed to the /mnt directory
 ```
+
+### Installation Process
+
+The script will automatically perform the following steps:
+1. Partition and format the disk (EFI, root partition, and home partition)
+2. Mount file systems
+3. Install the basic system
+4. Configure the system (timezone, language, hostname, etc.)
+5. Install the bootloader
+6. Set up user and password
+
+## Contribution Guidelines
+
+Issues and Pull Requests are welcome to improve this project. Before submitting code, please ensure:
+
+1. All scripts can be executed repeatedly without side effects
+2. Configuration file formats comply with project specifications
+3. Add appropriate comments and documentation
+
+## License
+
+This project is licensed under the MIT License.
