@@ -132,7 +132,7 @@
 
   "tray": {
     "icon-size": 14,
-    "spacing": 4
+    "spacing": 5
   },
 
   "cpu": {
@@ -150,22 +150,22 @@
 
   "memory": {
     "interval": 30,
-    "format": " {percentage}%",
-    "format-alt": " {used}GB",
+    "format": "  {percentage}%",
+    "format-alt": "  {used}GB",
     "max-length": 10,
     "tooltip": true,
-    "tooltip-format": " {used:0.1f}GB/{total:0.1f}GB"
+    "tooltip-format": "  {used:0.1f}GB/{total:0.1f}GB"
   },
 
   "network": {
     "interval": 5,
     // "interface": "wlp2*", // (Optional) To force the use of this interface
-    "format-wifi": "󰤨 {essid}",
-    "format-ethernet": "󱘖 Wired",
-    "tooltip-format": "󱘖 {ipaddr}  {bandwidthUpBytes}  {bandwidthDownBytes}",
-    "format-linked": "󱘖 {ifname} (No IP)",
-    "format-disconnected": " Disconnected",
-    "format-alt": "󰤨 {signalStrength}%"
+    "format-wifi": "󰤨  {essid}",
+    "format-ethernet": "󱘖  Wired",
+    "tooltip-format": "󱘖  {ipaddr}   {bandwidthUpBytes}   {bandwidthDownBytes}",
+    "format-linked": "󱘖  {ifname} (No IP)",
+    "format-disconnected": "  Disconnected",
+    "format-alt": "󰤨  {signalStrength}%"
   },
 
   "bluetooth": {
