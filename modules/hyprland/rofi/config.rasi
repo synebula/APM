@@ -1,0 +1,130 @@
+/* MACOS SPOTLIGHT LIKE THEME FOR ROFI  */
+/* Author: Newman Sanchez (https://github.com/newmanls) */
+/* 中文注释版本 */
+
+/* 基本配置项 */
+configuration {
+  show-icons: true;
+  icon-theme: "Papirus";
+  drun-display-format: "{icon} {name}";
+  display-drun: "";
+}
+
+/* 全局变量和样式设置 */
+* {
+  font: "Adwaita Sans 12";
+
+  bg0: #ffffff;
+  bg1: #e0e0e0;
+  bg2: #0860f2e6;
+  bg3: rgba(0, 0, 0, 0.015);
+
+  fg0: #242424;
+  fg1: #ffffff;
+  fg2: #24242480;
+
+  background-color: @bg0;
+  text-color: @fg0;
+
+  margin: 0;
+  padding: 0;
+  spacing: 0;
+}
+
+/* 主窗口样式 */
+window {
+  background-color: @bg0;
+  location: center;
+  width: 640;
+  border-radius: 8;
+  border: 1px;
+  border-color: @bg1;
+}
+
+/* 搜索输入栏样式 */
+inputbar {
+  font: "Adwaita Sans 20";
+  padding: 12px 12px 12px 12px;
+  spacing: 12px;
+  children: [ icon-search, entry];
+}
+
+/* 搜索图标样式 */
+icon-search {
+  expand: false;
+  filename: "search";
+  size: 28px;
+  /* rofi-theme(5): icon 是独立 widget，和 entry 的 padding 不一致会导致视觉“上下不齐” */
+  padding: 5px;
+}
+
+/* 元素垂直对齐设置 */
+icon-search,
+element-icon,
+element-text {
+  vertical-align: 0.5;
+}
+
+/* 搜索输入框样式 */
+entry {
+  font: "Adwaita Sans 20";
+  vertical-align: 0.5;
+  /* rofi-theme(5): 使用 horizontal-align，而不是 text-align */
+  horizontal-align: 0.0;
+  padding: 5px;
+  placeholder: "Search";
+  placeholder-markup: false;
+  placeholder-color: @fg2;
+}
+
+/* 消息区域样式 */
+message {
+  border: 2px 0 0;
+  border-color: @bg1;
+  background-color: @bg1;
+}
+
+/* 文本框样式 */
+textbox {
+  padding: 8px 24px;
+}
+
+/* 列表视图样式 */
+listview {
+  lines: 10;
+  columns: 1;
+  fixed-height: false;
+  border: 1px 0 0;
+  border-color: @bg1;
+}
+
+/* 列表项基本样式 */
+element {
+  padding: 8px 16px;
+  spacing: 16px;
+  border: 0;
+  border-radius: 4;
+  background-color: transparent;
+  children: [ element-icon, element-text];
+}
+
+
+element normal.normal {
+	background-color: @bg3;
+}
+
+element alternate.normal {
+  background-color: @bg3;
+}
+
+/* 选中状态的列表项样式 */
+element selected.active,
+element selected.normal {
+  text-color: @fg1;
+  background-color: @bg2;
+}
+
+/* 列表项图标样式 */
+element-icon {
+  size: 1.5em;
+}

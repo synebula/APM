@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-user=`whoami`
+user=${USER:-$(whoami)}
 
 sudo pacman -S --noconfirm --needed docker docker-compose
 
 if [ ! -d /etc/docker/ ]; then
-  sudo mkdir /etc/docker/
+  sudo mkdir -p /etc/docker/
 fi
 
 # 国内加速都关停
@@ -18,7 +18,7 @@ fi
 # fi
 
 if [ ! -f /etc/systemd/system/docker.service.d/proxy.conf ]; then
-sudo mkdir /etc/systemd/system/docker.service.d/
+sudo mkdir -p /etc/systemd/system/docker.service.d/
 echo '
 [Service]
 Environment="HTTP_PROXY=http://10.7.43.30:1081"
@@ -27,5 +27,5 @@ Environment="NO_PROXY=hub-mirror.c.163.com,mirror.baidubce.com,dockerproxy.com,c
 ' | sudo tee /etc/systemd/system/docker.service.d/proxy.conf > /dev/null
 fi
 
-sudo usermod -aG docker $user
+sudo usermod -aG docker "$user"
 sudo systemctl daemon-reload

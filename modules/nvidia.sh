@@ -11,12 +11,12 @@ sudo pacman -S --noconfirm --needed nvidia
 # EFO'
 # fi
 
-if [ ! -n "$(cat /etc/default/grub | grep nvidia_drm.modeset=1)" ]; then
+if [ -f /etc/default/grub ] && ! grep -q 'nvidia_drm.modeset=1' /etc/default/grub; then
   sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&nvidia_drm.modeset=1 /' /etc/default/grub
   sudo grub-mkconfig -o /boot/grub/grub.cfg
 fi
 
-if [ -n "$(cat /etc/mkinitcpio.conf | grep kms)" ]; then
+if [ -f /etc/mkinitcpio.conf ] && grep -q ' kms' /etc/mkinitcpio.conf; then
   sudo sed -i 's/ kms//' /etc/mkinitcpio.conf
   sudo mkinitcpio -P
 fi

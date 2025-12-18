@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-if [ ! -d /home/$user/tmp ]; then mkdir "/home/$user/tmp"; fi
+if [ ! -d "/home/$user/tmp" ]; then
+  mkdir -p "/home/$user/tmp"
+fi
 # Configure home temp directory
 if ! is_configured "/home/$user/tmp" /etc/fstab; then
   echo "

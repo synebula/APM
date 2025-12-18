@@ -4,7 +4,7 @@
 systemctl --user status wireplumber.service >/dev/null
 if [ $? == 0 ] && [ -f /usr/share/wireplumber/wireplumber.conf ] && [ ! -f /home/$user/.config/wireplumber/wireplumber.conf ]; then
     # 不存在配置目录则创建
-    if [ ! -d /home/$user/.config/wireplumber/ ]; then mkdir -p /home/$user/.config/wireplumber/wireplumber.conf; fi
+    if [ ! -d /home/$user/.config/wireplumber/ ]; then mkdir -p /home/$user/.config/wireplumber/; fi
     sed -e '1!{h;N;/suspend-node.lua/{N;N;d;}};' /usr/share/wireplumber/wireplumber.conf | sed -e ':a;N;s/hooks.node.suspend\n \+//' |
         tee /home/$user/.config/wireplumber/wireplumber.conf >/dev/null
 fi

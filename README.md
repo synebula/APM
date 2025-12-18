@@ -16,7 +16,8 @@ APM is a simple and efficient Arch Linux package management tool that allows you
 - Automatically configure system and software
 - Provide optional complex package configuration modules
 
-APM uses `yay` as the default package manager backend, supporting installation of both Pacman and AUR packages.
+APM uses `yay` as the default package manager backend by default, supporting installation of both Pacman and AUR packages.  
+You can switch to `pacman` or other helpers through configuration (see **Custom Configuration**).
 
 ## Project Structure
 
@@ -130,11 +131,16 @@ Each time the `apm` command is executed, the script will:
 
 ### Custom Configuration
 
-You can change the package manager used by modifying the `apm` variable at the beginning of the `setup.sh` file:
+You can change the package manager backend in two ways:
 
 ```bash
-# Set the default package manager
-apm="yay"  # Can be changed to "pacman" or other package managers
+# 1. Modify the default backend in setup.sh
+apm="yay"  # Can be changed to "pacman" or another AUR helper
+
+# 2. Or override via environment variable when running
+APM_BACKEND=pacman ./setup.sh
+# After the alias is created, you can also run:
+APM_BACKEND=pacman apm
 ```
 
 ## No Repeated Side Effects Design

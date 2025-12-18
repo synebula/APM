@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 if [ -f /usr/lib/wechat-universal/start.sh ] && [ ! -f /home/$user/.local/share/applications/wechat-universal.desktop ]; then
-  sed "s|^Exec=|Exec=env WECHAT_DATA_DIR=/home/$user/.local/WeChat |" /usr/share/applications/wechat-universal.desktop |
-    >/home/$user/.local/share/applications/wechat-universal.desktop
+  mkdir -p "/home/$user/.local/share/applications"
+  sed "s|^Exec=|Exec=env WECHAT_DATA_DIR=/home/$user/.local/WeChat |" /usr/share/applications/wechat-universal.desktop \
+    >"/home/$user/.local/share/applications/wechat-universal.desktop"
 fi
 
 if ! is_configured "zerociqher_516a" /etc/fstab; then

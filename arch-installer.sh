@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 # Define command exec sucess checker.
 check_success() {
-  if [ $? -ne 0 ]; then
+  if [ "$?" -ne 0 ]; then
     echo "Error occurred, exiting..."
     exit 1
   fi
@@ -13,16 +15,9 @@ check_success() {
 hostname=""
 password=""
 user=""
-manually_mount=""
+manually_mount=false
 
-for p in "$@"; do
-  if [ $p == "-D" ]; then
-    manually_mount=true
-    break
-  fi
-done
-
-while getopts ":h:p:u:" opt; do
+while getopts ":h:p:u:D" opt; do
   case $opt in
   h)
     hostname=$OPTARG
@@ -33,23 +28,26 @@ while getopts ":h:p:u:" opt; do
   u)
     user=$OPTARG
     ;;
+  D)
+    manually_mount=true
+    ;;
   esac
 done
-shift $(($OPTIND - 1)) # Remove option args, only leave /dev/**
+shift $((OPTIND - 1)) # Remove option args, only leave /dev/**
 
-disk=$1
+disk=${1:-}
 
 # 0.2 Read disk to install
 # not spesify disk and not manually mount, print usage
-if [ -z "$disk" ] && [ -z "$manually_mount" ]; then
+if [ -z "$disk" ] && [ "$manually_mount" = false ]; then
   echo "Please specify a disk to install! Usage: $0 -h hostname -u user -p password /dev/sda"
   echo "Or manually mount the hard drive, use parameter '-D', like: $0 -D -h hostname -u user -p password"
   echo ""
   echo -e "Options: \n -h hostname \n -u user name \n -p user password \n -D don't specify disk, manually mount it"
-  exit 0
+  exit 1
 fi
 
-if [ -z "$manually_mount" ]; then
+if [ "$manually_mount" = false ]; then
   echo -ne "\033[31mThis script will erase the disk you provide $disk !!! Please confirm to continue.\033[0m [y/N]"
   read -r input
 
@@ -116,34 +114,33 @@ if [ -n "$disk" ]; then
   check_success
 
   # home partition
-
-  if [ is_nvme ]; then
+  if [ "$is_nvme" = true ]; then
     parted $disk -- mkpart primary ext4 50% 95%
   else
     parted $disk -- mkpart primary ext4 50% 100%
   fi
   check_success
 
-  boot=${disk}${disk_suffix}1
-  root=${disk}${disk_suffix}2
-  home=${disk}${disk_suffix}3
+  boot="${disk}${disk_suffix}1"
+  root="${disk}${disk_suffix}2"
+  home="${disk}${disk_suffix}3"
 
-  wipefs -af $boot
-  mkfs.fat -F32 $boot
+  wipefs -af "$boot"
+  mkfs.fat -F32 "$boot"
   check_success
-  wipefs -af $root
-  mkfs.ext4 $root
+  wipefs -af "$root"
+  mkfs.ext4 "$root"
   check_success
-  wipefs -af $home
-  mkfs.ext4 $home
+  wipefs -af "$home"
+  mkfs.ext4 "$home"
   check_success
 
   echo "3. Mount the file system"
-  mount $root /mnt
+  mount "$root" /mnt
   check_success
-  mount --mkdir $boot /mnt/boot
+  mount --mkdir "$boot" /mnt/boot
   check_success
-  mount --mkdir $home /mnt/home
+  mount --mkdir "$home" /mnt/home
   check_success
 else
   echo "2. Skip Partition the disk"

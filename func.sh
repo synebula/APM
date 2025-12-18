@@ -1,18 +1,27 @@
 #!/usr/bin/env bash
 
-# 判断文件是否存在内容。用法：is_configured 'keyword' file;
+# 判断文件中是否包含指定关键字。
+# 用法：is_configured 'keyword' file
 is_configured() {
-  lines=$(cat $2 | grep $1)
-  if [ -n "$lines" ]; then
+  local keyword="$1"
+  local file="$2"
+
+  if [ ! -f "$file" ]; then
+    return 1
+  fi
+
+  if grep -q -- "$keyword" "$file"; then
     return 0
   fi
+
   return 1
 }
 
-# 判断当前用户使用的shell并返回shell配置文件路径
+# 判断当前用户使用的 shell 并返回 shell 配置文件路径
 get_shell_config_file() {
-  local user_shell=$(getent passwd $USER | cut -d: -f7)
-  case $user_shell in
+  local user_shell
+  user_shell="$(getent passwd "$USER" | cut -d: -f7)"
+  case "$user_shell" in
     /bin/bash)
       echo "$HOME/.bashrc"
       ;;
@@ -28,32 +37,68 @@ get_shell_config_file() {
   esac
 }
 
-# 解析 INI 文件，获取指定 section 下的所有项（不包括 section 标题），同时处理键值对中的空格
+# 解析 INI 文件，获取指定 section 下的所有项（不包括 section 标题）
 parse_ini_section() {
-    local ini=$1
-    local section=$2
-    local in_section=0
+  local ini="$1"
+  local section="$2"
 
-    # 使用 awk 解析文件，处理键值对中的空格
-    awk -v section="$section" '
-        # 忽略空行和注释行
-        /^[[:space:]]*$/ { next }
-        /^[[:space:]]*;/ { next }
-        /^[[:space:]]*#/ { next }
-        
-        # 遇到 section 标题时，根据是否匹配目标 section 来控制解析状态
-        /^\[.*\]/ {
-            # 如果遇到目标节标题，开启解析
-            if ($0 == "[" section "]") {
-                in_section = 1
-            } else {
-                in_section = 0
-            }
-        }
-        # 如果在目标 section 内，且不是节标题，打印键值对
-        in_section && $1 !~ /^\[/ && $1 != "" && $1 !~ /^\s*#/ {
-            # 使用正则表达式去除键和值两边的空格，并输出键值对
-            print $1
-        }
-    ' "$ini"
+  awk -v section="$section" '
+    # 忽略空行和注释行
+    /^[[:space:]]*$/ { next }
+    /^[[:space:]]*;/ { next }
+    /^[[:space:]]*#/ { next }
+
+    # section 标题
+    /^\[.*\]/ {
+      if ($0 == "[" section "]") {
+        in_section = 1
+      } else {
+        in_section = 0
+      }
+    }
+
+    # 在目标 section 内的非注释行，输出第一个字段
+    in_section && $1 !~ /^\[/ && $1 != "" {
+      print $1
+    }
+  ' "$ini"
+}
+
+# 从一组 INI 文件中解析所有包名（忽略注释、空行和 section 标题）
+# 用法：parse_all_packages file1.ini file2.ini ...
+parse_all_packages() {
+  local file
+  for file in "$@"; do
+    # 通配符未匹配时会保留原样，这里过滤掉不存在的路径
+    if [ ! -f "$file" ]; then
+      continue
+    fi
+
+    sed -e 's/[#;].*$//' \
+        -e '/^[[:space:]]*$/d' \
+        -e '/^[[:space:]]*\[.*\][[:space:]]*$/d' \
+        "$file"
+  done
+}
+
+# 检查网络连通性：优先使用 curl，不可用时回退到 ping
+check_network() {
+  local url host
+
+  for url in "https://archlinux.org" "https://mirrors.ustc.edu.cn"; do
+    if command -v curl >/dev/null 2>&1; then
+      if curl --silent --head --max-time 5 "$url" >/dev/null 2>&1; then
+        return 0
+      fi
+    elif command -v ping >/dev/null 2>&1; then
+      host=$(printf '%s\n' "$url" | sed 's~https\?://~~;s~/.*$~~')
+      if ping -c 1 -W 5 "$host" >/dev/null 2>&1; then
+        return 0
+      fi
+    else
+      break
+    fi
+  done
+
+  return 1
 }
