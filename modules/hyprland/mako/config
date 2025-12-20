@@ -1,0 +1,34 @@
+sort=-time
+layer=overlay
+background-color=#2e3440
+text-color=#eceff4
+width=360
+height=160
+padding=10
+border-size=2
+border-color=#88c0d0
+border-radius=15
+icons=1
+max-icon-size=64
+default-timeout=10000
+ignore-timeout=1
+font=monospace 10
+markup=1
+
+# 通知内容布局（Pango markup）
+# %a: app-name  %s: summary  %b: body
+format=<span foreground="#88c0d0"><b>%a</b></span> <span foreground="#5e81ac">•</span> <b>%s</b>\n%b
+
+[urgency=low]
+border-color=#cccccc
+
+[urgency=normal]
+border-color=#d08770
+
+[urgency=high]
+border-color=#bf616a
+default-timeout=0
+
+[category=mpd]
+default-timeout=2000
+group-by=category

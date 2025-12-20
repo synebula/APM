@@ -11,10 +11,10 @@
   "modules-left": [
     "custom/lr",
     "hyprland/workspaces",
+    "custom/rr",
+    "custom/lr",
+    "hyprland/window",
     "custom/rr"
-    // "custom/lr",
-    // "hyprland/window",
-    // "custom/rr"
   ],
   "modules-center": ["custom/lr", "clock", "custom/rr"],
   "modules-right": [
@@ -69,7 +69,7 @@
       "fcitx": "󰌌",
       "code": "󰨞",
       "Cursor": "󰅪",
-      "jetbrains-idea-ce": "",
+      "jetbrains-idea": "",
       "dbeaver": "",
       "antigravity":"󰲇",
 
