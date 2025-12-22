@@ -16,7 +16,7 @@
     "hyprland/window",
     "custom/rr"
   ],
-  "modules-center": ["custom/lr", "clock", "custom/rr"],
+  "modules-center": ["custom/lr", "clock", "custom/notification", "custom/rr"],
   "modules-right": [
     "custom/lr",
     "wlr/taskbar",
@@ -67,15 +67,20 @@
     "window-rewrite-default": "",
     "window-rewrite": {
       "fcitx": "󰌌",
-      "code": "󰨞",
       "Cursor": "󰅪",
       "jetbrains-idea": "",
       "dbeaver": "",
-      "antigravity":"󰲇",
+      "antigravity": "󰲇",
 
+      "class<code>": "󰨞",
       "class<microsoft-edge>": "",
       "class<chromium>": "",
+      "class<CherryStudio>": "",
+
       "title<.*youtube.*>": "",
+      "title<.*codex.*>": "󱄚",
+      "title<.*claude.*>": "󰖙",
+      "title<.*obsidian.*>": "",
       "rofi": "󱓞",
       "kitty": "",
       "nemo": "󰪶",
@@ -85,6 +90,27 @@
       "class<et>": "󰈛",
       "vlc": "󰕼"
     }
+  },
+
+  "custom/notification": {
+    "tooltip": true,
+    "format": "<span size='12pt'>{icon}</span>",
+    "format-icons": {
+      "notification": "󱅫",
+      "none": "󰂜",
+      "dnd-notification": "󰂠",
+      "dnd-none": "󰪓",
+      "inhibited-notification": "󰂛",
+      "inhibited-none": "󰪑",
+      "dnd-inhibited-notification": "󰂛",
+      "dnd-inhibited-none": "󰪑"
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
   },
 
   "hyprland/window": {
