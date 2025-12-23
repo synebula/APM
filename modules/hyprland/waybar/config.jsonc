@@ -76,10 +76,10 @@
       "class<microsoft-edge>": "",
       "class<chromium>": "",
       "class<CherryStudio>": "",
+      "class<kitty> title<.*claude.*|.*✳.*>": "✳",
+      "class<kitty> title<.*codex.*>": "󱄚",
 
       "title<.*youtube.*>": "",
-      "title<.*codex.*>": "󱄚",
-      "title<.*claude.*>": "󰖙",
       "title<.*obsidian.*>": "",
       "rofi": "󱓞",
       "kitty": "",
@@ -152,6 +152,7 @@
     "icon-theme": "Papirus-Dark",
     "spacing": 0,
     "tooltip-format": "{title}",
+    "ignore-list": ["kitty", "rofi"],
     "on-click": "activate",
     "on-click-middle": "close"
   },
