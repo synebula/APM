@@ -1,4 +1,4 @@
-@define-color bar-bg rgba(18, 18, 28, 0.4);
+@define-color bar-bg rgba(18, 18, 28, 0.22);
 @define-color main-color #cdd6f4;
 @define-color main-bg #11111b;
 @define-color tool-bg #1e1e2e;
@@ -50,6 +50,8 @@
 
 window#waybar {
   background: @bar-bg;
+  border: 1px solid alpha(@main-color, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 tooltip {
