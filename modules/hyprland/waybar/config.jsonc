@@ -70,7 +70,7 @@
       "Cursor": "󰅪",
       "jetbrains-idea": "",
       "dbeaver": "",
-      
+
       "class<Antigravity>": "󰲇",
       "class<code>": "󰨞",
       "class<microsoft-edge>": "",
@@ -152,7 +152,7 @@
     "icon-theme": "Papirus-Dark",
     "spacing": 0,
     "tooltip-format": "{title}",
-    "ignore-list": ["kitty", "rofi"],
+    "ignore-list": ["kitty", "rofi", "vlc", "org.qbittorrent.qBittorrent"],
     "on-click": "activate",
     "on-click-middle": "close"
   },
@@ -171,8 +171,15 @@
 
   "temperature": {
     "interval": 5,
-    "hwmon-path": "/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp1_input",
-    "format": " {temperatureC}°C"
+    // 注意：hwmon-path 与机器/内核探测结果强相关，路径不对会导致模块不显示。
+    // 如需使用 hwmon（更接近 CPU package 温度），请先在本机确认路径再填入：
+    //   ls -1 /sys/class/hwmon/hwmon*/name
+    //   for f in /sys/class/hwmon/hwmon*/temp*_input; do printf '%s: %s\n' "$f" "$(cat "$f" 2>/dev/null)"; done
+    "hwmon-path": "/sys/class/hwmon/hwmon0/temp1_input",
+    "critical-threshold": 85,
+    "format": "{icon} {temperatureC}°C",
+    "format-icons": ["", "", "", "", ""],
+    "tooltip": true
   },
 
   "memory": {
