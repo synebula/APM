@@ -127,3 +127,41 @@ tooltip {
   margin-left: 4px;
   padding-left: 2px;
 }
+
+window#waybar menu {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+window#waybar menuitem {
+  min-height: 28px;
+  padding: 2px 4px;
+}
+
+window#waybar menuitem image {
+  min-width: 18px;
+  min-height: 18px;
+  margin-right: 8px;
+}
+
+/* GTK 菜单勾选/单选指示器（如输入法菜单左侧圆圈） */
+window#waybar menuitem check,
+window#waybar menuitem radio {
+  min-width: 18px;
+  min-height: 18px;
+  margin-right: 8px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+/* GTK 菜单分隔线（避免被全局 min-height/padding 撑得过粗） */
+window#waybar menu separator {
+  min-height: 1px;
+  margin: 4px 10px;
+  background-color: alpha(@main-color, 0.5);
+}
+
+window#waybar menuitem.separator {
+  padding: 0;
+  min-height: 1px;
+}
