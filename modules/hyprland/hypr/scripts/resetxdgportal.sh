@@ -1,4 +1,5 @@
 #!/bin/bash
+# 作用：重启 xdg-desktop-portal 及常见后端进程（含 hyprland），用于修复截图/文件选择器等 portal 异常。
 sleep 1
 killall xdg-desktop-portal-hyprland
 killall xdg-desktop-portal-gnome
