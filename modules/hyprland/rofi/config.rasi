@@ -93,7 +93,7 @@ textbox {
 listview {
   lines: 10;
   columns: 1;
-  fixed-height: false;
+  fixed-height: true;
   border: 1px 0 0;
   border-color: @bg1;
 }
