@@ -5,11 +5,11 @@ gpu_driver=0
 gpu_nvidia=10
 gpu_nouveau=20
 gpu_amdgpu=30
-gpu_driver_info=/tmp/libvirt_win11_gpu_driver
+gpu_driver_info=/tmp/libvirt_win_gpu_driver
 gpu_slot="01:00"
-gpu_slot_info=/tmp/libvirt_win11_gpu_slot
+gpu_slot_info=/tmp/libvirt_win_gpu_slot
 extra_pcies="09:00.0" # allow multi pcie, separated by space. like '08:00.1 09:00.2'
-extra_pcies_info=/tmp/libvirt_win11_extra_pcies
+extra_pcies_info=/tmp/libvirt_win_extra_pcies
 
 # Xpad affects the work of the xbox controller and its wireless adapter
 # The xpad will shake hands with the handle/wireless adapter when it is plugged in. At this time,
@@ -22,31 +22,33 @@ extra_pcies_info=/tmp/libvirt_win11_extra_pcies
 # dGPU PCI slots
 
 get_gpu_driver() {
-    gpu_driver=$(lsmod | grep nvidia)
-    if [ -n "$gpu_driver" ]; then
+    local driver
+    driver=$(lspci -k -s "$gpu_slot" | awk -F': ' '/Kernel driver in use/ {print $2; exit}')
+    if [[ "$driver" == *nvidia* ]]; then
         return $gpu_nvidia
     fi
-    gpu_driver=$(lsmod | grep nouveau)
-    if [ -n "$gpu_driver" ]; then
+    if [[ "$driver" == *nouveau* ]]; then
         return $gpu_nouveau
     fi
-    gpu_driver=$(lsmod | grep amdgpu)
-    return $gpu_amdgpu
+    if [[ "$driver" == *amdgpu* ]]; then
+        return $gpu_amdgpu
+    fi
+    return 0
 }
 
 # Determine whether the graphics card has been used by VFIO kernel modules
-if [ -z "$(lspci -k -s $gpu_slot | grep vfio-pci)" ]; then
+if [ -z "$(lspci -k -s "$gpu_slot" | grep vfio-pci)" ]; then
     # Determine whether nvidia kernel modules has been loaded
     get_gpu_driver
     gpu_driver=$?
 
-    if [ $gpu_driver -ne 0 ]; then
+    if [ "$gpu_driver" -ne 0 ]; then
         # Stop display manager
         systemctl stop gdm
         sleep 2
 
         # Unload GPU kernel modules
-        case $gpu_driver in
+        case "$gpu_driver" in
         $gpu_nvidia)
             # Unload NVIDIA kernel modules
             modprobe -r nvidia_drm nvidia_modeset nvidia_uvm nvidia
@@ -59,15 +61,14 @@ if [ -z "$(lspci -k -s $gpu_slot | grep vfio-pci)" ]; then
             modprobe -r amdgpu
             ;;
         esac
-        echo $gpu_driver > $gpu_driver_info
+        echo "$gpu_driver" > "$gpu_driver_info"
 
         # Detach GPU devices from host
         # Use your GPU and HDMI Audio PCI host device, like below:
         # virsh nodedev-detach pci_0000_01_00_0
         # virsh nodedev-detach pci_0000_01_00_1
-        lspci -k -s $gpu_slot | grep $gpu_slot | awk '{print $1}' | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
-        echo $gpu_slot > $gpu_slot_info
-        
+        lspci -k -s "$gpu_slot" | grep "$gpu_slot" | awk '{print $1}' | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
+        echo "$gpu_slot" > "$gpu_slot_info"
 
         # Load vfio module
         modprobe vfio_pci
@@ -80,7 +81,7 @@ fi
 if [ -n "$extra_pcies" ]; then
     array=($extra_pcies)
     for pcie in "${array[@]}";  do 
-        echo $pcie | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
+        echo "$pcie" | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
     done;
-    echo $extra_pcies > $extra_pcies_info
+    echo "$extra_pcies" > "$extra_pcies_info"
 fi

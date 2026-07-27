@@ -71,13 +71,14 @@
       "jetbrains-idea": "",
       "dbeaver": "",
 
-      "class<Antigravity>": "󰲇",
+      "class<Antigravity|antigravity-ide>": "󰲇",
       "class<code>": "󰨞",
       "class<microsoft-edge>": "",
       "class<chromium>": "",
       "class<CherryStudio>": "",
       "class<kitty> title<.*claude.*|.*✳.*>": "✳",
-      "class<kitty> title<.*codex.*>": "󱄚",
+      "class<kitty> title<.*codex.*|.*Codex.*>": "",
+      "class<OrcaSlicer>": "󰹛",
 
       "title<.*youtube.*>": "",
       "title<.*obsidian.*>": "",

@@ -61,6 +61,9 @@ fi
 if [ "$brand" = 'intel' ] && [ -f /etc/default/grub ] && ! grep -q 'intel_iommu=on' /etc/default/grub; then
   sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&intel_iommu=on iommu=pt /' /etc/default/grub
   sudo grub-mkconfig -o /boot/grub/grub.cfg
+elif [ "$brand" = 'amd' ] && [ -f /etc/default/grub ] && ! grep -q 'amd_iommu=on' /etc/default/grub; then
+  sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&amd_iommu=on iommu=pt /' /etc/default/grub
+  sudo grub-mkconfig -o /boot/grub/grub.cfg
 fi
 
 sudo usermod -aG libvirt "$user"
