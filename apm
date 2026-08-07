@@ -4,29 +4,14 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# 全局环境: 复用 func.sh 工具; user/user_home 定位目标用户（兼容 sudo 执行）;
-# state_dir 存放互斥锁与审计日志（遵循 XDG 状态目录规范, 不污染仓库）
+# 全局环境
 path=$(cd "$(dirname "$0")" && pwd)
-. "$path/func.sh"
 
-user=$(get_current_user)
-user_home=$(getent passwd "$user" | cut -d: -f6)
-state_dir="${XDG_STATE_HOME:-$user_home/.local/state}/apm"
-audit_log="$state_dir/audit.log"
+# 配置清单路径: 默认 apm.conf (可由 -c/--config 覆盖)
+config_file="$path/apm.conf"
 
-# 配置清单路径: 优先 apm.conf, 自动回退兼容 packages.conf (可由 -c/--config 覆盖)
-if [ -f "$path/apm.conf" ] || [ ! -f "$path/packages.conf" ]; then
-  config_file="$path/apm.conf"
-else
-  config_file="$path/packages.conf"
-fi
-
-# apply 解析后的命令行选项状态
-opt_yes=0
-opt_conf=0
-
-# 清单 @include 引入的配置脚本执行清单（load_desired 填充, run_confd 消费）
-conf_scripts=()
+# 清单 @post 引入的后置脚本执行清单（load_desired 填充, run_post 消费）
+post_scripts=()
 # 清单 @group 声明的包组名（load_desired 填充, cmd_sync 保留与导出排除用）
 desired_groups=()
 
@@ -72,24 +57,37 @@ confirm() {
   esac
 }
 
-audit() {
-  printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$audit_log"
-}
-
-ensure_state() {
-  mkdir -p "$state_dir"
-  # 兼容 sudo 执行: 状态文件归属真实用户, 便于后续直接查看
-  if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ]; then
-    chown -R "$SUDO_USER:" "$state_dir" 2>/dev/null || true
-  fi
+# 各子命令共享的选项解析; 每次调用重置选项状态
+parse_opts() {
+  opt_yes=0
+  opt_scripts=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -y | --yes) opt_yes=1; shift ;;
+      --scripts) opt_scripts=1; shift ;;
+      -c | --config)
+        if [ $# -lt 2 ]; then
+          log_error "option $1 requires an argument"
+          return 1
+        fi
+        config_file="$2"
+        shift 2
+        ;;
+      *) log_error "unknown option: $1"; return 1 ;;
+    esac
+  done
 }
 
 acquire_lock() {
-  ensure_state
+  # XDG_RUNTIME_DIR 无效（不存在/不可写）时落到 /tmp, 避免失败重定向噪音
+  local lock_file=/tmp/apm.lock
+  if [ -d "${XDG_RUNTIME_DIR:-}" ] && [ -w "${XDG_RUNTIME_DIR:-}" ]; then
+    lock_file="$XDG_RUNTIME_DIR/apm.lock"
+  fi
   # 锁挂到高编号 fd, flock 后随进程退出自动释放; -n 非阻塞, 占用即报错
-  exec 9>"$state_dir/lock"
+  exec 9>"$lock_file"
   if ! flock -n 9; then
-    log_error "another apm instance is running ($state_dir/lock)"
+    log_error "another apm instance is running"
     exit 1
   fi
 }
@@ -110,10 +108,11 @@ run_as_user() {
 # 期望状态: 解析清单
 # ---------------------------------------------------------------------------
 
-# 输出 "src pkg" 每行; src ∈ {repo, aur, conf, prepare}
-# @include <path>: 引入包文件(.conf 递归解析)或配置脚本(.sh 登记执行);
+# 输出 "src pkg" 每行; src ∈ {repo, aur, post, pre}
+# @pkg <path>: 引入包清单文件(.conf 递归解析), 不处理脚本;
+# @post <path>: 登记后置脚本（安装后执行, 任意扩展名/无后缀）;
+# @pre <path>: 登记前置脚本（安装前执行, 任意扩展名/无后缀）;
 # 支持文件/目录/glob（目录与 glob 按文件名排序展开）, 相对路径基于引入文件所在目录
-# @prepare <path>: 只处理 .sh, 登记为准备脚本（安装前执行, 如源配置/密钥导入）
 parse_manifest() {
   local -A _seen=()
 
@@ -134,30 +133,29 @@ parse_manifest() {
       line=$(trim "$line")
       [ -n "$line" ] || continue
 
-      # 三类行: section 切换来源; @include 显式引入; 普通行输出 "src pkg"
+      # 四类行: section 切换来源; 指令显式引入; 组声明; 普通行输出 "src pkg"
       case "$line" in
         '['*']')
           case "$line" in
             '[AUR]' | '[aur]') src=aur ;;
-            '[System]' | '[system]')
-              log_warn "deprecated section [System], treating as [Pacman]"
-              src=repo
-              ;;
             *) src=repo ;;
           esac
           ;;
-        '@include '*)
-          _do_include "$(trim "${line#@include}")" "$(dirname "$file")" "$line"
+        '@pkg '*)
+          _do_pkg "$(trim "${line#@pkg}")" "$(dirname "$file")" "$line"
           ;;
-        '@prepare '*)
-          _do_prepare "$(trim "${line#@prepare}")" "$(dirname "$file")" "$line"
+        '@post '*)
+          _do_scripts post "$(trim "${line#@post}")" "$(dirname "$file")" "$line"
+          ;;
+        '@pre '*)
+          _do_scripts pre "$(trim "${line#@pre}")" "$(dirname "$file")" "$line"
           ;;
         '*'*)
           # 组声明: *<组名> 展开为成员参与对拍（组是官方仓库概念, 恒为 repo 源）
           printf 'group %s\n' "${line#\*}"
           ;;
         '@'*)
-          log_warn "unknown directive (use '@include <path>' / '*<group-name>'): $line"
+          log_warn "unknown directive (use '@pkg' / '@post' / '@pre' / '*<group-name>'): $line"
           ;;
         *)
           printf '%s %s\n' "$src" "$line"
@@ -166,78 +164,63 @@ parse_manifest() {
     done <"$file"
   }
 
-  # 展开引入目标: 目录 → 其下全部 .conf/.sh（不递归, 排序）; 含通配符 → glob 展开; 文件 → 自身
-  _do_include() {
-    local target="$1" base="$2" origin="$3" f canon
-    local -a files=()
+  # 展开指令引入目标为文件列表(NUL 分隔): 目录 → 按 find 谓词取文件; 文件/glob → nullglob 展开
+  # 在进程替换子 shell 执行, shopt 设置不外泄, 无需保存恢复
+  _expand_target() {
+    local target="$1" base="$2"
+    shift 2
     [[ "$target" == /* ]] || target="$base/$target"
-
     if [ -d "$target" ]; then
-      while IFS= read -r -d '' f; do files+=("$f"); done < <(
-        find "$target" -maxdepth 1 -type f \( -name '*.conf' -o -name '*.sh' \) -print0 | sort -z)
+      find "$target" -maxdepth 1 -type f "$@" -print0 | sort -z
     else
-      local had_nullglob=false
-      shopt -q nullglob && had_nullglob=true
       shopt -s nullglob
-      # 全局 IFS=$'\n\t', glob 展开不会拆散含空格的文件名; 展开结果按 LC_COLLATE 排序
-      files=( $target )
-      $had_nullglob || shopt -u nullglob
+      printf '%s\0' $target
     fi
+  }
+
+  # @pkg 展开引入目标: 目录 → 其下全部 .conf（不递归, 排序）; 含通配符 → glob 展开; 文件 → 自身
+  _do_pkg() {
+    local target="$1" base="$2" origin="$3" f
+    local -a files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(
+      _expand_target "$target" "$base" -name '*.conf')
 
     if [ "${#files[@]}" -eq 0 ]; then
-      log_warn "include not found: $origin"
+      log_warn "pkg not found: $origin"
+      return 0
+    fi
+
+    for f in "${files[@]}"; do
+      case "$f" in
+        *.conf) _walk "$f" ;;
+        *) log_warn "pkg ignored (not .conf): $f" ;;
+      esac
+    done
+  }
+
+  # @post/@pre 登记脚本: 目录 → 其下全部非 .conf 文件; 逐文件/glob → 非 .conf 即脚本
+  _do_scripts() {
+    local src="$1" target="$2" base="$3" origin="$4" f canon
+    local -a files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(
+      _expand_target "$target" "$base" ! -name '*.conf')
+
+    if [ "${#files[@]}" -eq 0 ]; then
+      log_warn "$src not found: $origin"
       return 0
     fi
 
     for f in "${files[@]}"; do
       case "$f" in
         *.conf)
-          _walk "$f"
-          ;;
-        *.sh)
-          canon=$(realpath -m "$f")
-          [ -n "${_seen[$canon]:-}" ] && continue
-          _seen[$canon]=1
-          printf 'conf %s\n' "$canon"
+          log_warn "$src ignored (package manifest, use '@pkg'): $f"
           ;;
         *)
-          log_warn "include ignored (not .conf/.sh): $f"
-          ;;
-      esac
-    done
-  }
-
-  # @prepare 仅处理 .sh, 输出 prepare 源; 支持目录/glob, 相对路径基于引入文件所在目录
-  _do_prepare() {
-    local target="$1" base="$2" origin="$3" f canon
-    local -a files=()
-    [[ "$target" == /* ]] || target="$base/$target"
-
-    if [ -d "$target" ]; then
-      while IFS= read -r -d '' f; do files+=("$f"); done < <(
-        find "$target" -maxdepth 1 -type f -name '*.sh' -print0 | sort -z)
-    else
-      local had_nullglob=false
-      shopt -q nullglob && had_nullglob=true
-      shopt -s nullglob
-      files=( $target )
-      $had_nullglob || shopt -u nullglob
-    fi
-
-    if [ "${#files[@]}" -eq 0 ]; then
-      log_warn "prepare not found: $origin"
-      return 0
-    fi
-
-    for f in "${files[@]}"; do
-      case "$f" in
-        *.sh)
           canon=$(realpath -m "$f")
           [ -n "${_seen[$canon]:-}" ] && continue
           _seen[$canon]=1
-          printf 'prepare %s\n' "$canon"
+          printf '%s %s\n' "$src" "$canon"
           ;;
-        *) log_warn "prepare ignored (not .sh): $f" ;;
       esac
     done
   }
@@ -273,6 +256,57 @@ expand_groups() {
   done
 }
 
+# 自动识别可收拢的包组: 组成员全部已安装（显式或依赖）时导出 *组名
+# 未安装的组成员会在 apply 时被补装, 依赖装的成员会转为显式 — 这是导出组的语义
+# 开销: 3 次 pacman 调用（组名列表 + 全量"组 成员"对 + 已装包全集）, 检查全在内存完成
+detect_groups() {
+  local -A members_of=() pkg_groups=() cand=() inst_map=() _seen=()
+  local g p
+  # 无参数 -Sg 只输出组名; 带上全部组名才输出"组 成员"对
+  local -a groups=()
+  mapfile -t groups < <(pacman -Sg 2>/dev/null || true)
+  while IFS=' ' read -r g p; do
+    [ -n "$g" ] && [ -n "$p" ] || continue
+    members_of[$g]+=" $p"
+    pkg_groups[$p]+=" $g"
+  done < <(pacman -Sg "${groups[@]}" 2>/dev/null || true)
+
+  # 候选组 = 已装包（含依赖）所属的组; 官方组不含 AUR 包名, -Qq 无需剔除
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    inst_map[$p]=1
+    local -a gs=()
+    IFS=' ' read -r -a gs <<<"${pkg_groups[$p]:-}"
+    for g in "${gs[@]:-}"; do
+      [ -n "$g" ] && cand[$g]=1
+    done
+  done < <(pacman -Qq 2>/dev/null || true)
+
+  # 内存递归展开组成员（组嵌套时成员可能是组名, 防环）; 全部已装才为真
+  _all_installed() {
+    local m
+    local -a ms=()
+    # 全局 IFS 是 \n\t, 成员串须显式按空格拆分
+    IFS=' ' read -r -a ms <<<"$1"
+    for m in "${ms[@]}"; do
+      if [ -n "${members_of[$m]:-}" ]; then
+        [ -n "${_seen[$m]:-}" ] && continue
+        _seen[$m]=1
+        _all_installed "${members_of[$m]}" || return 1
+      elif [ -z "${inst_map[$m]:-}" ]; then
+        return 1
+      fi
+    done
+    return 0
+  }
+  for g in "${!cand[@]}"; do
+    _seen=()
+    if [ -n "${members_of[$g]:-}" ] && _all_installed "${members_of[$g]}"; then
+      printf '%s\n' "$g"
+    fi
+  done
+}
+
 load_desired() {
   local src pkg
   # 配置缺失时显式报错, 避免 parse_manifest 静默返回空 → 期望集合为空 → 全部包被判定待移除
@@ -282,19 +316,19 @@ load_desired() {
   fi
   # 以包名为键去重; 全局 IFS 是 \n\t, 这里显式按空格切分 "src pkg"
   declare -A pkg_src=()
-  conf_scripts=()
+  post_scripts=()
   prepare_scripts=()
 
   while IFS=' ' read -r src pkg; do
     [ -n "$pkg" ] || continue
-    # @prepare 引入的准备脚本: 不参与包调和, 登记到准备清单
-    if [ "$src" = prepare ]; then
+    # @pre 引入的前置脚本: 不参与包调和, 登记到准备清单
+    if [ "$src" = pre ]; then
       prepare_scripts+=("$pkg")
       continue
     fi
-    # @include 引入的配置脚本: 不参与包调和, 登记到执行清单
-    if [ "$src" = conf ]; then
-      conf_scripts+=("$pkg")
+    # @post 引入的后置脚本: 不参与包调和, 登记到执行清单
+    if [ "$src" = post ]; then
+      post_scripts+=("$pkg")
       continue
     fi
     # @group 声明: 展开为成员参与对拍; 组名记录供 sync 保留与导出排除
@@ -325,25 +359,6 @@ load_desired() {
       *) desired_repo+=("$pkg") ;;
     esac
   done
-
-  # 组名兜底: 批量 pacman -Q 一次查明已装情况, 预取所有组名避免逐包 fork
-  # 只对未安装的组名引导改用 *<组名> 声明
-  local -a repo_pkgs=()
-  local -A installed_map=() all_groups=()
-  for pkg in "${!pkg_src[@]}"; do
-    [ "${pkg_src[$pkg]}" = repo ] && repo_pkgs+=("$pkg")
-  done
-  while IFS=' ' read -r name _; do
-    installed_map[$name]=1
-  done < <(LC_ALL=C pacman -Q "${repo_pkgs[@]}" 2>/dev/null || true)
-  while IFS= read -r g; do
-    all_groups[$g]=1
-  done < <(pacman -Sg 2>/dev/null | sed 's/ .*//' | sort -u || true)
-  for pkg in "${repo_pkgs[@]}"; do
-    if [ -z "${installed_map[$pkg]:-}" ] && [ -n "${all_groups[$pkg]:-}" ]; then
-      log_warn "$pkg is a package group, not a package; use '*$pkg' to declare the group"
-    fi
-  done
 }
 
 # ---------------------------------------------------------------------------
@@ -358,11 +373,7 @@ load_installed() {
   mapfile -t foreign_explicit < <(pacman -Qemq 2>/dev/null | sort -u || true)
 
   inst_repo=()
-  inst_aur=()
-  local f
-  for f in "${foreign_explicit[@]}"; do
-    inst_aur+=("$f")
-  done
+  inst_aur=("${foreign_explicit[@]}")
   while read -r f; do
     [ -n "$f" ] && inst_repo+=("$f")
   done < <(comm -23 <(printf '%s\n' "${all_explicit[@]:-}") \
@@ -384,6 +395,18 @@ compute_diffs() {
   mapfile -t added_aur < <(comm -13 <(print_sorted "${inst_aur[@]:-}") <(print_sorted "${desired_aur[@]:-}"))
   mapfile -t removed_repo < <(comm -23 <(print_sorted "${inst_repo[@]:-}") <(print_sorted "${desired_repo[@]:-}"))
   mapfile -t removed_aur < <(comm -23 <(print_sorted "${inst_aur[@]:-}") <(print_sorted "${desired_aur[@]:-}"))
+}
+
+# 期望/实际装载并计算差异（apply/diff/status 共用）
+load_and_compute() {
+  load_desired
+  load_installed
+  compute_diffs
+}
+
+# 待变更包总数; 全 0 即 in sync
+pending_total() {
+  echo $(( ${#added_repo[@]} + ${#added_aur[@]} + ${#removed_repo[@]} + ${#removed_aur[@]} ))
 }
 
 print_diff() {
@@ -412,15 +435,22 @@ sysupgrade() {
   fi
 }
 
-# 装前预检: 一次批量查询确认在已配置仓库中存在, 避免单个坏名字让整批事务失败
-verify_repo_pkgs() {
-  local found p
-  found=$(LC_ALL=C pacman -Si "$@" 2>/dev/null | sed -n 's/^Name[[:space:]]*: //p') || true
+# 装前预检: 一次批量查询确认包在对应来源存在, 避免单个坏名字让整批事务失败
+verify_pkgs() {
+  local src="$1" found p
+  shift
+  if [ "$src" = repo ]; then
+    found=$(LC_ALL=C pacman -Si "$@" 2>/dev/null | sed -n 's/^Name[[:space:]]*: //p') || true
+  else
+    found=$(run_as_user env LC_ALL=C "$APM_BACKEND" -Si "$@" 2>/dev/null | sed -n 's/^Name[[:space:]]*: //p') || true
+  fi
   for p in "$@"; do
     if printf '%s\n' "$found" | grep -qx "$p"; then
       printf '%s\n' "$p"
-    else
+    elif [ "$src" = repo ]; then
       log_warn "skip $p: not found in configured repos (typo, or belongs to [AUR]/third-party repo)"
+    else
+      log_warn "skip $p: not found in AUR (removed or renamed upstream)"
     fi
   done
 }
@@ -429,64 +459,36 @@ verify_repo_pkgs() {
 install_repo_round() {
   [ "${#added_repo[@]:-}" -gt 0 ] || return 0
   local -a ok=()
-  mapfile -t ok < <(verify_repo_pkgs "${added_repo[@]}")
+  mapfile -t ok < <(verify_pkgs repo "${added_repo[@]}")
   [ "${#ok[@]}" -gt 0 ] || return 0
   log_info "installing repo packages: ${ok[*]}"
   sudo pacman -S --noconfirm --needed "${ok[@]}"
 }
 
 # AUR 预检: 一次批量经 helper 查询包是否存在（仓库或 AUR）, 过滤上游删除/改名/拼错的包
-verify_aur_pkgs() {
-  local found p
-  found=$(run_as_user env LC_ALL=C "$APM_BACKEND" -Si "$@" 2>/dev/null | sed -n 's/^Name[[:space:]]*: //p') || true
-  for p in "$@"; do
-    if printf '%s\n' "$found" | grep -qx "$p"; then
-      printf '%s\n' "$p"
-    else
-      log_warn "skip $p: not found in AUR (removed or renamed upstream)"
-    fi
-  done
-}
-
-# 确保 AUR 后端可用: 优先 pacman -S (若有 cn 源), 降级走官方 AUR git clone + makepkg-bin 编译
-ensure_aur_backend() {
-  [ "$APM_BACKEND" != pacman ] || return 0
-  if command -v "$APM_BACKEND" >/dev/null 2>&1; then
-    return 0
-  fi
-  log_info "AUR helper ($APM_BACKEND) not found, attempting auto-install..."
-  if sudo pacman -S --noconfirm "$APM_BACKEND" 2>/dev/null; then
-    return 0
-  fi
-  if [ "$APM_BACKEND" = "yay" ] && command -v git >/dev/null 2>&1 && command -v makepkg >/dev/null 2>&1; then
-    log_info "installing yay-bin via official AUR git clone & makepkg..."
-    local tmpdir
-    tmpdir=$(mktemp -d)
-    if run_as_user git clone --depth=1 https://aur.archlinux.org/yay-bin.git "$tmpdir/yay-bin" 2>/dev/null; then
-      (cd "$tmpdir/yay-bin" && run_as_user makepkg -si --noconfirm) || true
-    fi
-    rm -rf "$tmpdir"
-  fi
-  if ! command -v "$APM_BACKEND" >/dev/null 2>&1; then
-    log_error "failed to auto-install AUR helper ($APM_BACKEND)"
-    return 1
-  fi
-}
-
 # AUR 包必须经 helper 安装; backend=pacman 时跳过并记录而非失败, 清单可跨后端使用
 install_aur_round() {
   [ "${#added_aur[@]:-}" -gt 0 ] || return 0
   if [ "$APM_BACKEND" = pacman ]; then
     log_warn "backend=pacman, skipping AUR packages: ${added_aur[*]}"
-    audit "apply: skipped AUR (backend=pacman): ${added_aur[*]}"
     return 0
   fi
   ensure_aur_backend || return 1
   local -a ok=()
-  mapfile -t ok < <(verify_aur_pkgs "${added_aur[@]}")
+  mapfile -t ok < <(verify_pkgs aur "${added_aur[@]}")
   [ "${#ok[@]}" -gt 0 ] || return 0
   log_info "installing AUR packages: ${ok[*]}"
   run_as_user "$APM_BACKEND" -S --noconfirm --needed "${ok[@]}"
+}
+
+# 确保 AUR 后端可用: 缺失时直接报错, 由用户自行安装（不再自动引导）
+ensure_aur_backend() {
+  [ "$APM_BACKEND" != pacman ] || return 0
+  if command -v "$APM_BACKEND" >/dev/null 2>&1; then
+    return 0
+  fi
+  log_error "AUR helper '$APM_BACKEND' not found, install it first (e.g. 'sudo pacman -S $APM_BACKEND') or set APM_BACKEND=pacman"
+  return 1
 }
 
 # 安全删除判定: Required By 列表中只要存在"不在本次移除集合内"的包
@@ -509,11 +511,14 @@ removal_safe() {
   return 0
 }
 
+# 合并待移除列表; ${arr[@]:-} 在空数组时会展开出一个空串参数, sed 剔除避免幻影包名
+removed_all() {
+  printf '%s\n' "${removed_repo[@]:-}" "${removed_aur[@]:-}" | sed '/^$/d'
+}
+
 remove_round() {
   local -a all=() to_remove=()
-  # 不用 "${arr[@]:-}" 合并: 空数组会展开出幻影空元素, 导致 pacman -Rns "" 失败
-  if [ "${#removed_repo[@]}" -gt 0 ]; then all+=("${removed_repo[@]}"); fi
-  if [ "${#removed_aur[@]}" -gt 0 ]; then all+=("${removed_aur[@]}"); fi
+  mapfile -t all < <(removed_all)
   [ "${#all[@]}" -gt 0 ] || return 0
 
   local remove_set pkg
@@ -533,16 +538,16 @@ remove_round() {
   fi
 }
 
-# 只执行清单经 @include 声明的脚本（按声明序）, 未声明的不执行;
-# 用 source 而非 bash 执行: conf.d 脚本依赖主进程的 func.sh 函数与 $path 等变量;
+# 只执行清单经 @post 声明的脚本（按声明序）, 未声明的不执行;
+# 用 source 而非 bash 执行: post 脚本依赖主进程的 $path 等变量;
 # 包裹子 shell 防止脚本对环境(PATH/选项/cwd)的修改污染主进程
-run_confd() {
+run_post() {
   local script
-  if [ "${#conf_scripts[@]}" -eq 0 ]; then
-    log_warn "manifest references no conf scripts (try '@include conf.d/' in apm.conf)"
+  if [ "${#post_scripts[@]}" -eq 0 ]; then
+    log_warn "manifest references no post scripts (try '@post post.d/' in apm.conf)"
     return 0
   fi
-  for script in "${conf_scripts[@]}"; do
+  for script in "${post_scripts[@]}"; do
     # set +e 保持"中途失败不中断、只看最终状态"的既有语义（子 shell 内）
     # shellcheck disable=SC1090
     if ! ( set +e; source "$script" ); then
@@ -551,7 +556,7 @@ run_confd() {
   done
 }
 
-# 执行 @prepare 声明的脚本（安装前前置步骤, 如源配置/密钥导入）;
+# 执行 @pre 声明的脚本（安装前前置步骤, 如源配置/密钥导入）;
 # 准备步骤系基础环境构建, 失败时立即报错并中断流程, 防止带病继续执行安装
 run_prepare() {
   local script
@@ -572,34 +577,15 @@ run_prepare() {
 # ---------------------------------------------------------------------------
 
 cmd_apply() {
-  opt_yes=0
-  opt_conf=0
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      -y | --yes) opt_yes=1; shift ;;
-      --conf) opt_conf=1; shift ;;
-      -c | --config)
-        if [ $# -lt 2 ]; then
-          log_error "option $1 requires an argument"
-          return 1
-        fi
-        config_file="$2"
-        shift 2
-        ;;
-      *) log_error "unknown option: $1"; return 1 ;;
-    esac
-  done
+  parse_opts "$@" || return 1
 
   acquire_lock
-  load_desired
-  load_installed
-  compute_diffs
+  load_and_compute
 
-  local total=$(( ${#added_repo[@]} + ${#added_aur[@]} + ${#removed_repo[@]} + ${#removed_aur[@]} ))
-  if [ "$total" -eq 0 ]; then
+  if [ "$(pending_total)" -eq 0 ]; then
     log_info "in sync: repo=${#desired_repo[@]} aur=${#desired_aur[@]}"
-    if [ "$opt_conf" -eq 1 ]; then
-      run_confd
+    if [ "$opt_scripts" -eq 1 ]; then
+      run_post
     fi
     return 0
   fi
@@ -608,24 +594,20 @@ cmd_apply() {
   print_diff
 
   # 删除确认在变更前完成，拒绝则整体中止
-  local n_removed=$(( ${#removed_repo[@]} + ${#removed_aur[@]} ))
-  if [ "$n_removed" -gt 0 ]; then
+  local -a rem_preview=()
+  mapfile -t rem_preview < <(removed_all)
+  if [ "${#rem_preview[@]}" -gt 0 ]; then
     # 预览 pacman -Rns 的真实递归闭包（含孤儿依赖级联），而不只是候选计数
-    local -a rem_preview=()
-    if [ "${#removed_repo[@]}" -gt 0 ]; then rem_preview+=("${removed_repo[@]}"); fi
-    if [ "${#removed_aur[@]}" -gt 0 ]; then rem_preview+=("${removed_aur[@]}"); fi
     log_info "pacman -Rns 实际将移除（含递归依赖）:"
     pacman -Rns --print "${rem_preview[@]}" 2>/dev/null | sed 's/^/  - /' || true
-    if ! confirm "remove $n_removed package(s)?"; then
-      audit "apply: aborted (removal declined)"
+    if ! confirm "remove ${#rem_preview[@]} package(s)?"; then
       log_error "aborted by user"
       return 1
     fi
   fi
 
-  # 执行顺序: 确认 → 准备(prepare) → upgrade → 装 repo → 装 AUR → 删 → 审计 → 配置(conf.d)
+  # 执行顺序: 确认 → 准备(prepare) → upgrade → 装 repo → 装 AUR → 删 → 后置(post)
   if ! run_prepare; then
-    audit "apply: aborted (prepare script failed)"
     log_error "aborted due to prepare script failure"
     return 1
   fi
@@ -644,30 +626,15 @@ cmd_apply() {
   install_aur_round
   remove_round
 
-  run_confd
+  run_post
 
-  audit "apply: +repo(${#added_repo[@]}) +aur(${#added_aur[@]}) -repo(${#removed_repo[@]}) -aur(${#removed_aur[@]})"
   log_info "done"
 }
 
 cmd_diff() {
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      -c | --config)
-        if [ $# -lt 2 ]; then
-          log_error "option $1 requires an argument"
-          return 1
-        fi
-        config_file="$2"
-        shift 2
-        ;;
-      *) log_error "unknown option: $1"; return 1 ;;
-    esac
-  done
-  load_desired
-  load_installed
-  compute_diffs
-  if [ $(( ${#added_repo[@]} + ${#added_aur[@]} + ${#removed_repo[@]} + ${#removed_aur[@]} )) -eq 0 ]; then
+  parse_opts "$@" || return 1
+  load_and_compute
+  if [ "$(pending_total)" -eq 0 ]; then
     log_info "in sync: repo=${#desired_repo[@]} aur=${#desired_aur[@]}"
   else
     print_diff
@@ -675,77 +642,63 @@ cmd_diff() {
 }
 
 cmd_status() {
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      -c | --config)
-        if [ $# -lt 2 ]; then
-          log_error "option $1 requires an argument"
-          return 1
-        fi
-        config_file="$2"
-        shift 2
-        ;;
-      *) log_error "unknown option: $1"; return 1 ;;
-    esac
-  done
-  load_desired
-  load_installed
-  compute_diffs
+  parse_opts "$@" || return 1
+  load_and_compute
   echo "desired:      repo=${#desired_repo[@]} aur=${#desired_aur[@]}"
   echo "installed:    repo=${#inst_repo[@]} aur=${#inst_aur[@]}"
   echo "pending:      +repo=${#added_repo[@]} +aur=${#added_aur[@]} -repo=${#removed_repo[@]} -aur=${#removed_aur[@]}"
 }
 
 cmd_upgrade() {
+  parse_opts "$@" || return 1
   acquire_lock
   log_info "upgrading with backend=$APM_BACKEND"
   sysupgrade
-  audit "upgrade: system upgraded via $APM_BACKEND"
 }
 
 # 反向 reconcile: 以系统为真相重新生成配置清单（导出, 供迁移/重建清单用）
 # 覆盖前确认, --yes 跳过
-# @include 与 *组名 行原样保留置顶: 组文件/脚本/组声明是清单的声明性入口, 不能被导出冲掉
+# @pkg/@post/@pre 与 *组名 行原样保留置顶: 组文件/脚本/组声明是清单的声明性入口, 不能被导出冲掉
 cmd_sync() {
-  opt_yes=0
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      -y | --yes) opt_yes=1; shift ;;
-      -c | --config)
-        if [ $# -lt 2 ]; then
-          log_error "option $1 requires an argument"
-          return 1
-        fi
-        config_file="$2"
-        shift 2
-        ;;
-      *) log_error "unknown option: $1"; return 1 ;;
-    esac
-  done
+  parse_opts "$@" || return 1
 
   acquire_lock
   load_desired
   load_installed
 
-  # 组声明已覆盖其成员, 导出时排除, 避免成员重复落入 [Pacman]
-  local -a export_repo=() export_aur=() group_members=()
-  if [ "${#desired_groups[@]}" -gt 0 ]; then
-    mapfile -t group_members < <(expand_groups "${desired_groups[@]}" | sort -u)
+  # 组声明与自动检测的组一起展开排除成员; 清单已声明的组不重复导出
+  local -a group_members=() detected_groups=()
+  local -A detected_map=()
+  local g
+  while IFS= read -r g; do
+    [ -n "$g" ] || continue
+    if ! printf '%s\n' "${desired_groups[@]:-}" | grep -qx "$g"; then
+      detected_map[$g]=1
+    fi
+  done < <(detect_groups)
+  # 空数组时 printf 无参数会输出一个空行, 先判空再取键列表
+  if [ "${#detected_map[@]}" -gt 0 ]; then
+    mapfile -t detected_groups < <(printf '%s\n' "${!detected_map[@]}" | sort)
   fi
+  local -a all_groups=("${desired_groups[@]}" "${detected_groups[@]}")
+  if [ "${#all_groups[@]}" -gt 0 ]; then
+    mapfile -t group_members < <(expand_groups "${all_groups[@]}" | sort -u)
+  fi
+  local -a export_repo=() export_aur=()
   mapfile -t export_repo < <(comm -23 <(print_sorted "${inst_repo[@]:-}") <(print_sorted "${group_members[@]:-}"))
   mapfile -t export_aur < <(print_sorted "${inst_aur[@]:-}")
 
   local manifest="$config_file"
-  if ! confirm "rewrite $manifest: repo=${#export_repo[@]} aur=${#export_aur[@]}? (@include lines kept, comments replaced)"; then
-    audit "sync: aborted"
+  if ! confirm "rewrite $manifest: repo=${#export_repo[@]} aur=${#export_aur[@]} group=${#detected_groups[@]}? (@pkg/@post/@pre lines kept, comments replaced)"; then
     log_error "aborted by user"
     return 1
   fi
 
-  # 抽出原清单的 @include/*组名 行（组文件/脚本/组声明引用）, 重写后置顶保留
+  # 抽出原清单的 @pkg/@post/@pre/*组名 行（组文件/脚本/组声明引用）, 重写后置顶保留
+  # 裸 *（无组名）是历史损坏产物, 一并清洗不保留
   local -a includes=()
   if [ -f "$manifest" ]; then
-    mapfile -t includes < <(grep -E '^[[:space:]]*(@include|@prepare|\*)' "$manifest" || true)
+    mapfile -t includes < <(grep -E '^[[:space:]]*(@pkg|@post|@pre|\*[^[:space:]]+)' "$manifest" || true)
   fi
 
   # 临时文件 + mv 原子写, 避免写一半留下损坏的清单
@@ -757,34 +710,28 @@ cmd_sync() {
       printf '\n'
     fi
     printf '[Pacman]\n'
+    for g in "${detected_groups[@]}"; do printf '*%s\n' "$g"; done
     for p in "${export_repo[@]}"; do printf '%s\n' "$p"; done
     printf '\n[AUR]\n'
     for p in "${export_aur[@]}"; do printf '%s\n' "$p"; done
   } >"$manifest.tmp"
   mv "$manifest.tmp" "$manifest"
 
-  audit "sync: exported repo=${#export_repo[@]} aur=${#export_aur[@]} to $manifest"
-  log_info "$manifest rewritten: repo=${#export_repo[@]} aur=${#export_aur[@]}"
+  log_info "$manifest rewritten: repo=${#export_repo[@]} aur=${#export_aur[@]} group=${#detected_groups[@]}"
 }
 
-# 生成清单模板: 默认写 apm.conf（缺失时回退 packages.conf）; 已存在则拒绝（--force 覆盖）,
-# 模板内置注释掉的 @include 候选, 取消注释即启用
+# 生成清单模板: 默认写 apm.conf; 已存在则拒绝（--force 覆盖）,
+# 模板内置注释掉的 @pkg/@post/@pre 候选, 取消注释即启用
 cmd_gen() {
   local force=0
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      -f | --force) force=1; shift ;;
-      -c | --config)
-        if [ $# -lt 2 ]; then
-          log_error "option $1 requires an argument"
-          return 1
-        fi
-        config_file="$2"
-        shift 2
-        ;;
-      *) log_error "unknown option: $1"; return 1 ;;
+  local -a rest=()
+  for a in "$@"; do
+    case "$a" in
+      -f | --force) force=1 ;;
+      *) rest+=("$a") ;;
     esac
   done
+  parse_opts "${rest[@]}" || return 1
 
   local manifest="$config_file"
   if [ -f "$manifest" ] && [ "$force" -eq 0 ]; then
@@ -797,15 +744,16 @@ cmd_gen() {
   cat >"$manifest" <<'EOF'
 # apm 清单 — 期望状态声明; 修改后运行 apm apply 调和到系统
 # 语法: [Pacman]/[AUR] 分节 + 每行一个包名; # 注释
-# @include <path> 显式引入: .conf 递归解析为包, .sh 登记为配置脚本; 支持文件/目录/glob
+# 指令: @pkg 引包清单(.conf) / @pre 前置脚本(安装前) / @post 后置脚本(安装后);
+# 支持文件/目录/glob, 相对路径基于本文件所在目录
 #
 # 包组候选（取消注释即启用, 需先创建对应文件）:
-#@include apm.d/base.conf
-#@include apm.d/desktop.conf
-# 准备脚本（安装前执行, 如源配置/密钥导入）:
-#@prepare pre.d/
-# 配置脚本候选:
-#@include conf.d/
+#@pkg apm.d/base.conf
+#@pkg apm.d/desktop.conf
+# 准备脚本候选（安装前执行, 如源配置/密钥导入）:
+#@pre pre.d/
+# 后置脚本候选（安装后执行, 服务/用户态配置）:
+#@post post.d/
 # 包组声明候选: *组名 展开为成员参与对拍（无需创建文件, 组恒为 repo 源）:
 #*xorg
 #*fcitx5-im
@@ -827,33 +775,11 @@ EOF
   log_info "generated $manifest"
 }
 
-# 环境引导: 校验网络 → 自动引导 AUR Helper → 系统初始升级
-cmd_bootstrap() {
-  acquire_lock
-  if ! check_network; then
-    log_error "network not connected"
-    exit 1
-  fi
-  ensure_aur_backend
-  sysupgrade
-  audit "init: backend=$APM_BACKEND"
-  log_info "init done, run 'apm a' (or 'apm apply') to reconcile"
-}
-
-cmd_conf() {
+cmd_run() {
+  parse_opts "$@" || return 1
   acquire_lock
   load_desired
-  run_confd
-}
-
-cmd_log() {
-  local n="${1:-30}"
-  [[ "$n" =~ ^[0-9]+$ ]] || n=30
-  if [ ! -f "$audit_log" ]; then
-    echo "no audit log yet"
-    return 0
-  fi
-  tail -n "$n" "$audit_log"
+  run_post
 }
 
 cmd_install() {
@@ -870,29 +796,27 @@ usage() {
 apm — declarative Arch package manager
 
 usage:
-  apm <command> [options]       (默认: status)
+  apm <command> [options]       (默认: help)
 
-  # 查看
-  apm d | diff [-c <path>]              显示待变更
-  apm st | stat | status [-c <path>]    期望 vs 已装摘要
-  apm logs | history | log [n]          审计日志尾部 (默认 30 行)
+  # 查看与对比
+  apm d | diff [-c <path>]              显示待变更包 (期望 vs 已装)
+  apm st | stat | status [-c <path>]    显示统计摘要
 
-  # 变更
-  apm a | apply [-y] [--conf] [-c <path>]   调和清单与系统 (先打印 diff)
+  # 状态调和与清单管理
+  apm a | apply [-y] [--scripts] [-c <path>]   调和清单与系统 (先打印 diff)
   apm s | sync [-y] [-c <path>]             导出已装包到清单
-  apm new | gen [-f] [-c <path>]            生成清单模板 (拒绝覆盖)
+  apm g | gen [-f] [-c <path>]            生成清单模板 (拒绝覆盖)
 
-  # 系统安装与维护
-  apm ins | install [options]           Arch Linux 系统全新安装交互引导
-  apm i | init | bootstrap              环境初始化 (网络 + AUR helper)
+  # 系统运维与脚本
   apm up | update | upgrade             全系统升级 (repo + aur)
-  apm run | exec | conf                 强制执行 conf.d 脚本
+  apm run | exec                        强制执行后置脚本 (@post)
+  apm ins | install [options]           Arch Linux 系统全新安装交互引导
   apm help | -h | --help                显示帮助
 
 options:
-  -y, --yes     跳过确认 (删除 / 重写清单)
-  -c, --config  指定清单路径 (默认: 脚本同目录 apm.conf)
-  --conf        即使 in sync 也执行 conf.d 脚本
+  -y, --yes       跳过确认 (删除 / 重写清单)
+  -c, --config    指定清单路径 (默认: 脚本同目录 apm.conf)
+  --scripts       即使 in sync 也执行后置脚本
 
 env:
   APM_BACKEND   pacman | yay | paru (默认: 自动检测, 兜底 yay)
@@ -903,16 +827,19 @@ main() {
   local cmd="${1:--h}"
   shift || true
   case "$cmd" in
-    install | ins) cmd_install "$@" ;;
-    apply | a) cmd_apply "$@" ;;
-    diff | d) cmd_diff "$@" ;;
-    status | st | stat) cmd_status "$@" ;;
-    sync | s) cmd_sync "$@" ;;
-    gen | new) cmd_gen "$@" ;;
+    # 查看与对比
+    d | diff) cmd_diff "$@" ;;
+    st | stat | status) cmd_status "$@" ;;
+
+    # 状态调和与清单管理
+    a | apply) cmd_apply "$@" ;;
+    s | sync) cmd_sync "$@" ;;
+    g | gen) cmd_gen "$@" ;;
+
+    # 系统运维与脚本
     up | update | upgrade) cmd_upgrade ;;
-    init | bootstrap | i) cmd_bootstrap ;;
-    conf | run | exec) cmd_conf ;;
-    log | logs | history) cmd_log "$@" ;;
+    run | exec) cmd_run "$@" ;;
+    ins | install) cmd_install "$@" ;;
     help | -h | --help) usage ;;
     *) usage; return 1 ;;
   esac
