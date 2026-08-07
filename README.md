@@ -24,12 +24,11 @@ You can switch to `pacman` or other helpers through configuration (see **Custom 
 ```
 .
 ├── apm.d/             # Grouped package configuration directory
-├── pre.d/             # Pre-installation prepare scripts directory (mirrors, keyrings, etc.)
-├── conf.d/            # Post-installation configuration script directory
+├── pre.d/             # Pre-install scripts directory (mirrors, keyrings, etc.)
+├── post.d/            # Post-install scripts directory
 ├── modules/           # Optional modules directory
 ├── apm.conf           # Main package configuration file
-├── apm                # Declarative package manager (replaces setup.sh)
-├── func.sh            # Utility function library
+├── apm                # Declarative package manager (single-file CLI)
 └── installer.sh       # Arch Linux installation script
 ```
 
@@ -63,32 +62,35 @@ papirus-icon-theme # icon theme
 ; motrix  # disabled package
 ```
 
-### @include and @prepare Directives
+### @pkg / @pre / @post Directives
 
 ```conf
-@prepare pre.d/               # include prepare scripts (executed BEFORE system upgrade & install)
-@include apm.d/base.conf   # include a package group file (.conf, parsed recursively)
-@include conf.d/                 # include post-install configuration scripts
-;@include apm.d/gnome.conf   # commented out = disabled
+@pkg apm.d/base.conf     # include a package group file (.conf, parsed recursively)
+@pkg apm.d/gnome.conf    # multiple group files are allowed
+#@pkg apm.d/desktop.conf # commented out = disabled
+@pre pre.d/              # prepare scripts (executed BEFORE system upgrade & install)
+@post post.d/            # post scripts (executed AFTER install: services/user config)
 
 [Pacman]
 *xorg        # declare a package group: expanded to members for reconcile and install
 *fcitx5-im
 ```
 
-- `@prepare <path>` — only processes `.sh` files, executed BEFORE system upgrade & package installation (e.g. mirrors, network setup). If a prepare script fails, reconciliation is aborted.
-- `@include <path>` — supports three forms:
-  - `@include apm.d/base.conf` — a single file
-  - `@include conf.d/` — directory
-  - `@include apm.d/*.conf` — glob pattern
+- `@pkg <path>` — include package manifests: only `.conf` files (parsed recursively), scripts are ignored
+- `@post <path>` — register post-install scripts (any extension or none)
+- `@pre <path>` — register pre-install scripts (any extension or none)
+- All three support three forms:
+  - `@pkg apm.d/base.conf` — a single file
+  - `@post post.d/` — directory (all scripts inside, sorted by name)
+  - `@pkg apm.d/*.conf` — glob pattern
 
-Rules: `.conf` files are parsed recursively as package manifests, `.sh` files are registered as configuration scripts; **files never referenced by directives are not loaded at all**; an included `.conf` does not inherit the caller's section and must declare its own `[Pacman]`/`[AUR]`.
+Rules: dispatch by extension — `@pkg` takes only `.conf`, `@pre`/`@post` take only non-`.conf` files; **files never referenced by directives are not loaded at all**; an included `.conf` does not inherit the caller's section and must declare its own `[Pacman]`/`[AUR]`; a failing `@pre` script aborts the reconciliation, a failing `@post` script only warns and continues.
 
 **Package Group Declarations `*<group>`:** To declare a package group without listing all members in the config, use `*xorg`. APM expands it to members for reconciliation.
 
 ### pre.d Directory
 
-Used for **pre-installation prepare scripts** (e.g., mirror config `archlinuxcn.sh`, network/proxy preparation). Scripts must be enabled via `@prepare` in apm.conf and run before package installation during `apm apply`. Returning a non-zero exit code will immediately abort the `apply` process.
+Used for **pre-installation prepare scripts** (e.g., mirror config `archlinuxcn.sh`, network/proxy preparation). Scripts must be enabled via `@pre` in apm.conf and run before package installation during `apm apply`. Returning a non-zero exit code will immediately abort the `apply` process.
 
 ### apm.d Directory
 
@@ -97,16 +99,16 @@ Used for group management of packages, containing multiple `.conf` format files,
 - `gnome.conf` - GNOME desktop environment packages
 - `base.conf` - Base system packages
 
-**Note:** Group files only take effect when explicitly included via `@include` in apm.conf (`base.conf` is included by default, `gnome.conf` is commented out by default). Group files may contain plain package names as well as `*<group>` declarations (e.g. `*xorg` in `gnome.conf`).
+**Note:** Group files only take effect when explicitly included via `@pkg` in apm.conf (`base.conf` and `gnome.conf` are currently included; comment the line to disable). Group files may contain plain package names as well as `*<group>` declarations (e.g. `*xorg` in `gnome.conf`).
 
 ## System Configuration
 
-### conf.d Directory
+### post.d Directory
 
-Contains configuration scripts in `.sh` format, used for system configuration and software initialization. Scripts must be enabled via `@include` in apm.conf (currently `@include conf.d/`, i.e. all enabled); they then run automatically when changes are applied via `apm apply` (or can be forced with `apm conf`).
+Contains configuration scripts (`.sh` or extensionless), used for system configuration and software initialization. Scripts must be enabled via `@post` in apm.conf (currently `@post post.d/`, i.e. all enabled); they then run automatically when changes are applied via `apm apply` (or can be forced with `apm run`).
 
 Implemented configurations include:
-- archlinuxcn mirror and keyring configuration (conf.d/archlinuxcn.sh)
+- archlinuxcn mirror and keyring configuration (pre.d/archlinuxcn.sh)
 - Input method configuration (fcitx)
 - Audio system configuration (disable wireplumber idle suspend)
 - Temporary directory mounting
@@ -136,46 +138,40 @@ These modules need to be executed manually and will not run automatically when e
 
 ### Installing Packages
 
-For first-time use, bootstrap the package manager, then reconcile:
+For first-time use, just reconcile — the AUR helper is auto-detected (or auto-installed when an AUR package needs it):
 
 ```bash
-./apm init
 ./apm apply
 ```
 
-`init` will:
-1. Check network connection
-2. Verify and autodetect/install AUR helper (yay)
-3. Run initial system upgrade
-
 `apply` will:
-1. Install packages defined in apm.conf and apm.d (upgrades the system first when installs are needed)
-2. **Fully declarative reconciliation**: propose removal of every explicitly installed package outside the manifest; prints the real recursive closure and asks for confirmation before removal
-3. Execute configuration scripts in conf.d (only when changes were applied)
-4. Create the `apm` command alias (via conf.d/alias.sh)
+1. Run `@pre` prepare scripts (mirrors, keyring import, etc.)
+2. Install packages defined in apm.conf and apm.d (upgrades the system first when installs are needed)
+3. **Fully declarative reconciliation**: propose removal of every explicitly installed package outside the manifest; prints the real recursive closure and asks for confirmation before removal
+4. Run `@post` scripts from post.d (use `--scripts` to force even when no changes)
+5. Create the `apm` command alias (via post.d/alias.sh)
 
 ### apm Command
 
-The `apm` alias is set in the shell configuration file by conf.d/alias.sh; you can then use the `apm` command directly:
+The `apm` alias is set in the shell configuration file by post.d/alias.sh; you can then use the `apm` command directly:
 
 | Command / Alias | Description |
 |---|---|
 | `apm ins`, `install` | fresh system install: trigger Arch Linux interactive installer (`installer.sh`) |
-| `apm a`, `apply [--yes] [--conf]` | reconcile manifest → system (prints diff first, then install/remove) |
-| `apm d`, `diff` | show pending changes |
-| `apm st`, `status` | summary of desired vs installed (default) |
-| `apm s`, `sync [--yes]` | export installed packages → apm.conf (system → manifest) |
-| `apm new`, `gen [--force]` | generate a apm.conf template (refuses to overwrite existing file) |
+| `apm a`, `apply [-y] [--scripts] [-c <path>]` | reconcile manifest → system (prints diff first, then install/remove) |
+| `apm d`, `diff [-c <path>]` | show pending changes |
+| `apm st`, `stat`, `status [-c <path>]` | summary of desired vs installed |
+| `apm s`, `sync [-y] [-c <path>]` | export installed packages → apm.conf (system → manifest) |
+| `apm new`, `gen [-f] [-c <path>]` | generate a apm.conf template (refuses to overwrite existing file) |
 | `apm up`, `update`, `upgrade` | full system upgrade (repo + AUR) |
-| `apm i`, `init`, `bootstrap` | first-time setup: network check + AUR helper + initial upgrade |
-| `apm run`, `conf` | force-run conf.d scripts |
-| `apm log`, `logs [n]` | tail audit log (default 30 lines) |
+| `apm run`, `exec` | force-run `@post` scripts |
+| `apm help`, `-h` | show help (default command) |
 
 Each time `apm apply` is executed, the script will:
 1. Compare the manifest with the current system state and print a diff
 2. Install newly added packages
 3. Remove explicitly installed packages outside the manifest (prints the recursive closure and asks for confirmation, `--yes` to skip)
-4. Execute configuration scripts
+4. Run post scripts (use `--scripts` to force even when no changes)
 
 ### Custom Configuration
 
@@ -189,7 +185,7 @@ APM_BACKEND=pacman apm
 
 Other environment variables:
 
-- `APM_IFACE`: wired NIC name used by conf.d/ip.sh and modules/kvm (default `eno1`)
+- `APM_IFACE`: wired NIC name used by post.d/ip.sh and modules/kvm (default `eno1`)
 
 ## No Repeated Side Effects Design
 
