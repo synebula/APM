@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 # enable sshd start up

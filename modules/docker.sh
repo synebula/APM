@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-user=${USER:-$(whoami)}
+user="${SUDO_USER:-${LOGNAME:-$(whoami)}}"
 
 sudo pacman -S --noconfirm --needed docker docker-compose
 
@@ -8,8 +8,7 @@ if [ ! -d /etc/docker/ ]; then
   sudo mkdir -p /etc/docker/
 fi
 
-# 国内加速都关停
-if [ ! -f /etc/docker/daemon.json ] || [ -z "`cat /etc/docker/daemon.json | grep registry-mirrors`" ]; then
+if [ ! -f /etc/docker/daemon.json ]; then
 echo '{
   "experimental": true,
   "fixed-cidr-v6": "fd00::/80",

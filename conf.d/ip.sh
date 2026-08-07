@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-# 设置固定 IP（需存在 eno1 且安装 nmcli）
+# 设置固定 IP（需安装 nmcli）
 if ! command -v nmcli >/dev/null 2>&1; then
-  exit 0
+  return 0 2>/dev/null || exit 0
 fi
 
-connection=$(nmcli -g GENERAL.CONNECTION d show eno1 2>/dev/null | sed 's/^[[:space:]]*//')
+iface="${APM_IFACE:-eno1}"
+connection=$(nmcli -g GENERAL.CONNECTION d show "$iface" 2>/dev/null | sed 's/^[[:space:]]*//')
 if [ -z "$connection" ]; then
-  # 未找到 eno1，对当前环境忽略
-  exit 0
+  return 0 2>/dev/null || exit 0
 fi
 
 current_method=$(nmcli -g ipv4.method c show "$connection" 2>/dev/null | sed 's/^[[:space:]]*//')

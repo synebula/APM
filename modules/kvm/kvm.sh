@@ -2,8 +2,9 @@
 
 brand_condition=$(awk -F':' '/vendor_id/ {v=$2} END {gsub(/^[[:space:]]+/, "", v); print v}' /proc/cpuinfo)
 brand='intel'
-user=${USER:-$(whoami)}
+user="${SUDO_USER:-${LOGNAME:-$(whoami)}}"
 path=$(cd "$(dirname "$0")" && pwd)
+iface="${APM_IFACE:-eno1}"
 
 if [ "$brand_condition" = "GenuineIntel" ]; then
   brand='intel'
@@ -20,7 +21,7 @@ sudo pacman -S --noconfirm --needed libvirt qemu-full virt-manager
 if ! nmcli c show br0 >/dev/null 2>&1; then
   nmcli con down "Wired connection 1" || true
   nmcli con add type bridge ifname br0 con-name br0
-  nmcli con add type bridge-slave ifname eno1 master br0 con-name eno1-slave
+  nmcli con add type bridge-slave ifname "$iface" master br0 con-name "${iface}-slave"
 
   nmcli con mod br0 ipv4.address 10.7.43.20/24
   nmcli con mod br0 ipv4.gateway 10.7.43.1

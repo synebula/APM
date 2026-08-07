@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-if [ ! -d "/home/$user/tmp" ]; then
-  mkdir -p "/home/$user/tmp"
+target_user="${user:-${SUDO_USER:-${LOGNAME:-$(whoami)}}}"
+user_home="$(getent passwd "$target_user" | cut -d: -f6)"
+
+if [ ! -d "$user_home/tmp" ]; then
+  mkdir -p "$user_home/tmp"
 fi
 # Configure home temp directory
-if ! is_configured "/home/$user/tmp" /etc/fstab; then
+if ! is_configured "$user_home/tmp" /etc/fstab; then
   echo "
 # Home temp directory
-tmpfs       /home/$user/tmp    tmpfs      defaults,size=16g    0  0
+tmpfs       $user_home/tmp    tmpfs      defaults,size=16g    0  0
 " | sudo tee -a /etc/fstab > /dev/null
 fi

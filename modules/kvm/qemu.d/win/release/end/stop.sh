@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+set -euo pipefail
 
 gpu_driver=0
 gpu_nvidia=10
@@ -30,15 +30,16 @@ fi
 if [ -n "$gpu_slot" ]; then
     while read -r bdf; do
         [ -n "$bdf" ] || continue
-        reattach_nodedev "$bdf"
+        # 收尾尽力而为: 单个设备失败不阻断其余恢复流程
+        reattach_nodedev "$bdf" || echo "WARN: failed to reattach $bdf" >&2
     done < <(lspci -D -s "$gpu_slot" | awk '{print $1}')
 fi
 
 if [ -f "$extra_pcies_info" ]; then
     extra_pcies="$(cat "$extra_pcies_info")"
-    array=($extra_pcies)
-    for pcie in "${array[@]}"; do
-        reattach_nodedev "$pcie"
+    read -ra pcie_array <<< "$extra_pcies"
+    for pcie in "${pcie_array[@]}"; do
+        reattach_nodedev "$pcie" || echo "WARN: failed to reattach $pcie" >&2
     done
     rm -f "$extra_pcies_info"
 fi

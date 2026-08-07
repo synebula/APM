@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-user=${USER:-$(whoami)}
+user="${SUDO_USER:-${LOGNAME:-$(whoami)}}"
 path=$(cd "$(dirname "$0")" && pwd)
 
 sudo pacman -S --noconfirm --needed samba

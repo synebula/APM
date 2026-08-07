@@ -15,8 +15,11 @@ for item in "$script_dir"/*; do
     # Get just the basename of the item
     item_name=$(basename "$item")
     
+    # Skip hidden files/directories (e.g. .agent)
+    [[ "$item_name" == .* ]] && continue
+
     # Skip if the item is the current script itself
-    if [[ "$item_name" == "$(basename "$0")" ]]; then
+    if [[ "$item_name" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
         continue
     fi
     

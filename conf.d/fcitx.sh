@@ -11,9 +11,13 @@ EOF
 fi
 
 # 禁用 V 键触发快速输入
-PINYIN_CONF="$HOME/.config/fcitx5/conf/pinyin.conf"
+# 兼容 sudo 执行: 配置路径取真实用户家目录; 后台进程关闭 fd 9 避免继承 apm 的 flock 锁
+target_user="${user:-${SUDO_USER:-${LOGNAME:-$(whoami)}}}"
+user_home="$(getent passwd "$target_user" | cut -d: -f6)"
+
+PINYIN_CONF="$user_home/.config/fcitx5/conf/pinyin.conf"
 if [[ -f "$PINYIN_CONF" ]] && grep -q "VAsQuickphrase=True" "$PINYIN_CONF"; then
   pkill fcitx5 2>/dev/null || true
   sed -i 's/VAsQuickphrase=True/VAsQuickphrase=False/' "$PINYIN_CONF"
-  nohup fcitx5 -d &>/dev/null &
+  nohup fcitx5 -d &>/dev/null 9>&- &
 fi

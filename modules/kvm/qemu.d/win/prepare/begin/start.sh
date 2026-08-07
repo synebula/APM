@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+set -euo pipefail
 
 gpu_driver=0
 gpu_nvidia=10
@@ -39,8 +39,8 @@ get_gpu_driver() {
 # Determine whether the graphics card has been used by VFIO kernel modules
 if [ -z "$(lspci -k -s "$gpu_slot" | grep vfio-pci)" ]; then
     # Determine whether nvidia kernel modules has been loaded
-    get_gpu_driver
-    gpu_driver=$?
+    # 返回值即驱动类型（10/20/30）; 必须用 || 捕获, 否则 set -e 下直接终止脚本
+    get_gpu_driver || gpu_driver=$?
 
     if [ "$gpu_driver" -ne 0 ]; then
         # Stop display manager
@@ -64,10 +64,11 @@ if [ -z "$(lspci -k -s "$gpu_slot" | grep vfio-pci)" ]; then
         echo "$gpu_driver" > "$gpu_driver_info"
 
         # Detach GPU devices from host
-        # Use your GPU and HDMI Audio PCI host device, like below:
-        # virsh nodedev-detach pci_0000_01_00_0
-        # virsh nodedev-detach pci_0000_01_00_1
-        lspci -k -s "$gpu_slot" | grep "$gpu_slot" | awk '{print $1}' | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
+        if ! lspci -k -s "$gpu_slot" | grep "$gpu_slot" | awk '{print $1}' | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach; then
+            echo "ERROR: Failed to detach GPU devices at slot $gpu_slot" >&2
+            systemctl start gdm
+            exit 1
+        fi
         echo "$gpu_slot" > "$gpu_slot_info"
 
         # Load vfio module
@@ -79,9 +80,13 @@ if [ -z "$(lspci -k -s "$gpu_slot" | grep vfio-pci)" ]; then
 fi
 
 if [ -n "$extra_pcies" ]; then
-    array=($extra_pcies)
-    for pcie in "${array[@]}";  do 
-        echo "$pcie" | sed 's/:/_/;s/\./_/;s/^/pci_0000_/' | xargs virsh nodedev-detach 
-    done;
+    read -ra pcie_array <<< "$extra_pcies"
+    for pcie in "${pcie_array[@]}"; do
+        nodedev=$(echo "$pcie" | sed 's/:/_/;s/\./_/;s/^/pci_0000_/')
+        if ! virsh nodedev-detach "$nodedev"; then
+            echo "ERROR: Failed to detach PCIe device $pcie" >&2
+            exit 1
+        fi
+    done
     echo "$extra_pcies" > "$extra_pcies_info"
 fi
