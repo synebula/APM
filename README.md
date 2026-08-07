@@ -23,24 +23,25 @@ You can switch to `pacman` or other helpers through configuration (see **Custom 
 
 ```
 .
-├── packages.d/        # Grouped package configuration directory
-├── conf.d/            # System configuration scripts directory
+├── apm.d/             # Grouped package configuration directory
+├── pre.d/             # Pre-installation prepare scripts directory (mirrors, keyrings, etc.)
+├── conf.d/            # Post-installation configuration script directory
 ├── modules/           # Optional modules directory
-├── packages.ini       # Main package configuration file
-├── setup.sh           # Main installation script
+├── apm.conf           # Main package configuration file
+├── apm                # Declarative package manager (replaces setup.sh)
 ├── func.sh            # Utility function library
-└── arch-installer.sh  # Arch Linux installation script
+└── installer.sh       # Arch Linux installation script
 ```
 
 ## Configuration Files
 
-### packages.ini
+### apm.conf
 
 Main package configuration file, each line represents a package. Supports sectioned configuration for packages from different sources:
 
-```ini
+```conf
 [Pacman]
-# Official repository packages
+# Official repo packages
 zsh
 obsidian
 vlc
@@ -53,36 +54,70 @@ wechat-universal-bwrap
 
 ### Comment Syntax
 
-Use `#` or `;` to add comments, supporting line comments and inline comments:
+Use `#` or `;` to add comments, supporting both line comments and inline comments:
 
-```ini
-# UI theme
+```conf
+# UI themes
 capitaine-cursors
-papirus-icon-theme # Icon theme
-; motrix  # Disabled package
+papirus-icon-theme # icon theme
+; motrix  # disabled package
 ```
 
-### packages.d Directory
+### @include and @prepare Directives
 
-Used for group management of packages, containing multiple `.ini` format files, each file can include a group of related packages. For example:
+```conf
+@prepare pre.d/               # include prepare scripts (executed BEFORE system upgrade & install)
+@include apm.d/base.conf   # include a package group file (.conf, parsed recursively)
+@include conf.d/                 # include post-install configuration scripts
+;@include apm.d/gnome.conf   # commented out = disabled
 
-- `gnome.ini` - GNOME desktop environment related packages
-- `dev.ini` - Development tools related packages
+[Pacman]
+*xorg        # declare a package group: expanded to members for reconcile and install
+*fcitx5-im
+```
+
+- `@prepare <path>` — only processes `.sh` files, executed BEFORE system upgrade & package installation (e.g. mirrors, network setup). If a prepare script fails, reconciliation is aborted.
+- `@include <path>` — supports three forms:
+  - `@include apm.d/base.conf` — a single file
+  - `@include conf.d/` — directory
+  - `@include apm.d/*.conf` — glob pattern
+
+Rules: `.conf` files are parsed recursively as package manifests, `.sh` files are registered as configuration scripts; **files never referenced by directives are not loaded at all**; an included `.conf` does not inherit the caller's section and must declare its own `[Pacman]`/`[AUR]`.
+
+**Package Group Declarations `*<group>`:** To declare a package group without listing all members in the config, use `*xorg`. APM expands it to members for reconciliation.
+
+### pre.d Directory
+
+Used for **pre-installation prepare scripts** (e.g., mirror config `archlinuxcn.sh`, network/proxy preparation). Scripts must be enabled via `@prepare` in apm.conf and run before package installation during `apm apply`. Returning a non-zero exit code will immediately abort the `apply` process.
+
+### apm.d Directory
+
+Used for group management of packages, containing multiple `.conf` format files, each file can include a group of related packages. For example:
+
+- `gnome.conf` - GNOME desktop environment packages
+- `base.conf` - Base system packages
+
+**Note:** Group files only take effect when explicitly included via `@include` in apm.conf (`base.conf` is included by default, `gnome.conf` is commented out by default). Group files may contain plain package names as well as `*<group>` declarations (e.g. `*xorg` in `gnome.conf`).
 
 ## System Configuration
 
 ### conf.d Directory
 
-Contains configuration scripts in `.sh` format, used for system configuration and software initialization. These scripts will run automatically when executing `setup.sh`.
+Contains configuration scripts in `.sh` format, used for system configuration and software initialization. Scripts must be enabled via `@include` in apm.conf (currently `@include conf.d/`, i.e. all enabled); they then run automatically when changes are applied via `apm apply` (or can be forced with `apm conf`).
 
 Implemented configurations include:
+- archlinuxcn mirror and keyring configuration (conf.d/archlinuxcn.sh)
 - Input method configuration (fcitx)
-- Audio system configuration
+- Audio system configuration (disable wireplumber idle suspend)
 - Temporary directory mounting
 - Swap file configuration
 - NTP time synchronization
 - SSH service configuration
 - Alias settings
+- Periodic SSD TRIM (fstrim.timer)
+- Basic vim configuration
+- Static IP / Wake-on-LAN (requires nmcli, NIC selectable via `APM_IFACE`, default eno1)
+- WeChat data directory and tmpfs optimization
 
 **Note:** All configuration scripts are designed to be repeatable without side effects.
 
@@ -95,53 +130,66 @@ Contains optional complex package configuration modules, such as:
 - Samba file sharing configuration
 - ZFS file system configuration
 
-These modules need to be executed manually and will not run automatically when executing `setup.sh`.
+These modules need to be executed manually and will not run automatically when executing `apm apply`.
 
 ## Usage
 
 ### Installing Packages
 
-For first-time use, execute the `setup.sh` script to install:
+For first-time use, bootstrap the package manager, then reconcile:
 
 ```bash
-./setup.sh
+./apm init
+./apm apply
 ```
 
-The script will:
+`init` will:
 1. Check network connection
-2. Configure software sources
-3. Install AUR helper (yay)
-4. Install all packages defined in packages.ini and packages.d
-5. Execute all configuration scripts in the conf.d directory
-6. Create the `apm` command alias
+2. Verify and autodetect/install AUR helper (yay)
+3. Run initial system upgrade
+
+`apply` will:
+1. Install packages defined in apm.conf and apm.d (upgrades the system first when installs are needed)
+2. **Fully declarative reconciliation**: propose removal of every explicitly installed package outside the manifest; prints the real recursive closure and asks for confirmation before removal
+3. Execute configuration scripts in conf.d (only when changes were applied)
+4. Create the `apm` command alias (via conf.d/alias.sh)
 
 ### apm Command
 
-After executing `setup.sh` for the first time, an `apm` alias will be set in the shell configuration file, and you can directly use the `apm` command to update the system:
+The `apm` alias is set in the shell configuration file by conf.d/alias.sh; you can then use the `apm` command directly:
 
-```bash
-apm
-```
+| Command / Alias | Description |
+|---|---|
+| `apm ins`, `install` | fresh system install: trigger Arch Linux interactive installer (`installer.sh`) |
+| `apm a`, `apply [--yes] [--conf]` | reconcile manifest → system (prints diff first, then install/remove) |
+| `apm d`, `diff` | show pending changes |
+| `apm st`, `status` | summary of desired vs installed (default) |
+| `apm s`, `sync [--yes]` | export installed packages → apm.conf (system → manifest) |
+| `apm new`, `gen [--force]` | generate a apm.conf template (refuses to overwrite existing file) |
+| `apm up`, `update`, `upgrade` | full system upgrade (repo + AUR) |
+| `apm i`, `init`, `bootstrap` | first-time setup: network check + AUR helper + initial upgrade |
+| `apm run`, `conf` | force-run conf.d scripts |
+| `apm log`, `logs [n]` | tail audit log (default 30 lines) |
 
-Each time the `apm` command is executed, the script will:
-1. Compare the current configuration with the differences from the last execution
+Each time `apm apply` is executed, the script will:
+1. Compare the manifest with the current system state and print a diff
 2. Install newly added packages
-3. Uninstall removed packages
+3. Remove explicitly installed packages outside the manifest (prints the recursive closure and asks for confirmation, `--yes` to skip)
 4. Execute configuration scripts
 
 ### Custom Configuration
 
-You can change the package manager backend in two ways:
+apm auto-detects an installed AUR helper (`yay`/`paru`) and falls back to `yay`. Override the backend via environment variable:
 
 ```bash
-# 1. Modify the default backend in setup.sh
-apm="yay"  # Can be changed to "pacman" or another AUR helper
-
-# 2. Or override via environment variable when running
-APM_BACKEND=pacman ./setup.sh
+APM_BACKEND=pacman ./apm apply
 # After the alias is created, you can also run:
 APM_BACKEND=pacman apm
 ```
+
+Other environment variables:
+
+- `APM_IFACE`: wired NIC name used by conf.d/ip.sh and modules/kvm (default `eno1`)
 
 ## No Repeated Side Effects Design
 
@@ -149,40 +197,47 @@ All configuration scripts are designed to be repeatable without side effects. Ea
 
 ---
 
-## Arch Linux Installation Script
+## Arch Linux Installation Script (installer.sh / apm ins)
 
-`arch-installer.sh` is a script for automating the installation of Arch Linux systems.
+`installer.sh` (can also be invoked via `apm ins` / `apm install`) is a script for automating fresh Arch Linux system installations. Phase-based design: each phase is idempotent and resumable (progress markers live in `/tmp/.install-steps`; resume requires /mnt still mounted, or use `-D` to mount manually).
 
-> **Note:** This script performs a UEFI installation. If your machine does not support this installation method, do not execute it or modify the script before execution.
+> **Note:** The script auto-detects UEFI and falls back to Legacy BIOS installation when UEFI is not available.
 
 ### Usage
 
 ```shell
-# Basic usage
-arch-installer.sh -h hostname -u username -p password installation_disk
+# Via apm or direct installer.sh execution
+apm ins -h hostname -u username -p password installation_disk
+./installer.sh -h hostname -u username -p password installation_disk
 
 # Example
-arch-installer.sh -h myarch -u alex -p mypassword /dev/sda
+./installer.sh -h myarch -u alex -p mypassword /dev/sda
 
 # Manually mount partitions
-arch-installer.sh -D -h hostname -u username -p password
+./installer.sh -D -h hostname -u username -p password
+
+# Resume from a phase / validate only
+./installer.sh --from configure -h hostname -u username -p password
+./installer.sh --dry-run -h hostname /dev/sda
 
 # Parameter description
--h hostname
+-h hostname (letters/digits/hyphens only; prompted or randomized if not specified)
 -u username (if not specified, no new user will be created)
--p password (if not specified, the default password is 0000)
+-p password (if not specified, a random password is generated and printed at the end)
 -D do not specify installation disk, manually mount the partitions to be installed to the /mnt directory
+--from <phase> start from a phase (prepare/disk/install/configure/user/bootloader/tuning)
+--dry-run run pre-flight validation only, without any changes
 ```
 
 ### Installation Process
 
 The script will automatically perform the following steps:
 1. Partition and format the disk (EFI, root partition, and home partition)
-2. Mount file systems
-3. Install the basic system
-4. Configure the system (timezone, language, hostname, etc.)
-5. Install the bootloader
-6. Set up user and password
+2. Install the basic system (pacstrap with optimized mirrorlist)
+3. Configure the system (fstab, timezone, locale, hostname, root password)
+4. Create user and configure sudo
+5. Install the bootloader (GRUB, UEFI/BIOS auto-selected)
+6. Enable network services and create a dynamically sized swapfile
 
 ## Contribution Guidelines
 

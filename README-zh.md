@@ -25,22 +25,23 @@ APM 默认使用 `yay` 作为包管理器后端，支持 Pacman 和 AUR 软件�
 
 ```
 .
-├── packages.d/        # 分组软件包配置目录
-├── conf.d/            # 系统配置脚本目录
+├── apm.d/             # 分组软件包配置目录
+├── pre.d/             # 安装前准备脚本目录（源配置、密钥导入等）
+├── conf.d/            # 系统后置配置脚本目录
 ├── modules/           # 可选模块目录
-├── packages.ini       # 主软件包配置文件
-├── setup.sh           # 主安装脚本
+├── apm.conf           # 主软件包配置文件
+├── apm                # 声明式软件包管理器（替代 setup.sh）
 ├── func.sh            # 工具函数库
-└── arch-installer.sh  # Arch Linux 安装脚本
+└── installer.sh       # Arch Linux 系统全新安装脚本
 ```
 
 ## 配置文件
 
-### packages.ini
+### apm.conf
 
 主软件包配置文件，每行表示一个软件包。支持分节配置不同来源的软件包：
 
-```ini
+```conf
 [Pacman]
 # 官方仓库软件包
 zsh
@@ -57,34 +58,67 @@ wechat-universal-bwrap
 
 使用 `#` 或 `;` 添加注释，支持行注释和行内注释：
 
-```ini
+```conf
 # UI 主题
 capitaine-cursors
 papirus-icon-theme # 图标主题
 ; motrix  # 已禁用的软件包
 ```
 
-### packages.d 目录
+### @include 与 @prepare 指令
 
-用于分组管理软件包，包含多个 `.ini` 格式文件，每个文件可以包含一组相关的软件包。例如：
+```conf
+@prepare pre.d/               # 引入准备脚本（在系统升级与包安装前优先执行）
+@include apm.d/base.conf   # 引入包组文件（.conf 递归解析）
+@include conf.d/                 # 引入后置配置脚本（目录 = 其下全部 .sh，按文件名序执行）
+;@include apm.d/gnome.conf   # 注释即停用
 
-- `gnome.ini` - GNOME 桌面环境相关软件包
-- `dev.ini` - 开发工具相关软件包
+[Pacman]
+*xorg        # 声明包组: 展开为成员参与对拍与安装
+*fcitx5-im
+```
+
+- `@prepare <path>` — 仅处理 `.sh` 文件，在系统升级与包安装前执行（如源配置、网络准备）。若准备脚本报错，将中断调和流程。
+- `@include <path>` — 支持三种形式：
+  - `@include apm.d/base.conf` — 单个文件
+  - `@include conf.d/` — 目录（取其下全部 `.conf`/`.sh`，排序展开）
+  - `@include apm.d/*.conf` — glob 通配
+
+规则：`.conf` 递归解析为包清单，`.sh` 登记为配置脚本；**未经指令引用的文件一律不加载**；被引入的 `.conf` 不继承调用点的 section，需自带 `[Pacman]`/`[AUR]` 声明。
+
+**包组声明 `*<组名>`：** 不想在配置里列出组的全部成员时，用 `*xorg` 这种形式声明包组。apm 将其展开为成员参与对拍（缺失成员会补装，已装的不动），删除该行即期望移除该组。元包（如 `base`、`base-devel`）本身是普通包，直接写包名即可；普通行误写组名时会警告并引导使用 `*` 前缀。
+
+### pre.d 目录
+
+用于存放**安装前准备脚本**（如镜像源配置 `archlinuxcn.sh`、网络/代理准备等）。脚本需在 apm.conf 中经 `@prepare` 声明启动，在 `apm apply` 执行包安装前优先运行。准备脚本返回非零值时会立即终止 `apply` 过程，防止环境未就绪时带病安装。
+
+### apm.d 目录
+
+用于分组管理软件包，包含多个 `.conf` 格式文件，每个文件可以包含一组相关的软件包。例如：
+
+- `gnome.conf` - GNOME 桌面环境相关软件包
+- `base.conf` - 基础软件包（内核、引导器、系统工具等）
+
+**注意：** 组文件需在 apm.conf 中经 `@include` 显式引入才生效（`base.conf` 默认已引入，`gnome.conf` 默认注释停用）。组文件内既可以用普通包名，也可以用 `*<组名>` 声明包组（如 `gnome.conf` 中的 `*xorg`）。
 
 ## 系统配置
 
 ### conf.d 目录
 
-包含 `.sh` 格式的配置脚本，用于系统配置和软件初始化。这些脚本会在执行 `setup.sh` 时自动运行。
+包含 `.sh` 格式的配置脚本，用于系统配置和软件初始化。脚本需在 apm.conf 中经 `@include` 声明启用（当前为 `@include conf.d/`，即全部启用），之后会在 `apm apply` 产生变更时自动运行（也可用 `apm conf` 强制运行）。
 
 已实现的配置包括：
 - 输入法配置 (fcitx)
-- 音频系统配置
+- 音频系统配置（禁用 wireplumber 闲置挂起）
 - 临时目录挂载
 - 交换文件配置
 - NTP 时间同步
 - SSH 服务配置
 - 别名设置
+- SSD 定期 TRIM (fstrim.timer)
+- vim 基础配置
+- 固定 IP / 网络唤醒（需 nmcli，可用 `APM_IFACE` 指定网卡，默认 eno1）
+- 微信数据目录与 tmpfs 优化
 
 **注意：** 所有配置脚本都设计为可重复执行，不会产生副作用。
 
@@ -97,53 +131,66 @@ papirus-icon-theme # 图标主题
 - Samba 文件共享配置
 - ZFS 文件系统配置
 
-这些模块需要手动执行，不会在执行 `setup.sh` 时自动运行。
+这些模块需要手动执行，不会在执行 `apm apply` 时自动运行。
 
 ## 使用方法
 
 ### 安装软件包
 
-首次使用时，执行 `setup.sh` 脚本进行安装：
+首次使用时，先引导初始化，再执行调和：
 
 ```bash
-./setup.sh
+./apm init
+./apm apply
 ```
 
-脚本会：
+`init` 会：
 1. 检查网络连接
-2. 配置软件源
-3. 安装 AUR 助手 (yay)
-4. 安装 packages.ini 和 packages.d 中定义的所有软件包
-5. 执行 conf.d 目录中的所有配置脚本
-6. 创建 `apm` 命令别名
+2. 校验并自动引导 AUR 助手 (yay)
+3. 执行系统初始升级
+
+`apply` 会：
+1. 安装 apm.conf 和 apm.d 中定义的软件包（有安装需求时先升级系统）
+2. **全量声明式调和**：提议移除清单之外的所有显式安装包，移除前打印真实递归闭包并需确认
+3. 在产生变更时执行 conf.d 目录中的配置脚本
+4. 创建 `apm` 命令别名（由 conf.d/alias.sh 完成）
 
 ### apm 命令
 
-首次执行 `setup.sh` 后，会在 shell 配置文件中设置 `apm` 别名，之后可以直接使用 `apm` 命令更新系统：
+`apm` 别名由 conf.d/alias.sh 写入 shell 配置文件，之后可以直接使用 `apm` 命令：
 
-```bash
-apm
-```
+| 命令 / 别名 | 说明 |
+|---|---|
+| `apm ins`, `install` | 系统全新安装：触发交互式 Arch 系统安装引导 (`installer.sh`) |
+| `apm a`, `apply [--yes] [--conf]` | 调和：清单 → 系统（先打印 diff，再安装/移除） |
+| `apm d`, `diff` | 查看待执行变更 |
+| `apm st`, `status` | 期望 vs 已装的摘要（默认无参数命令） |
+| `apm s`, `sync [--yes]` | 导出：系统已装 → apm.conf（反向调和） |
+| `apm new`, `gen [--force]` | 生成 apm.conf 模板（已存在时拒绝覆盖） |
+| `apm up`, `update`, `upgrade` | 全系统升级（repo + AUR） |
+| `apm i`, `init`, `bootstrap` | 首次引导：网络检查 + AUR 助手 + 初始升级 |
+| `apm run`, `conf` | 强制运行 conf.d 脚本 |
+| `apm log`, `logs [n]` | 查看审计日志（默认 30 行） |
 
-每次执行 `apm` 命令时，脚本会：
-1. 比较当前配置与上次执行的差异
+每次执行 `apm apply` 时，脚本会：
+1. 将清单与当前系统状态对拍并打印 diff
 2. 安装新增的软件包
-3. 卸载已移除的软件包
+3. 移除清单之外的显式安装包（打印递归闭包并需确认，`--yes` 跳过）
 4. 执行配置脚本
 
 ### 自定义配置
 
-可以通过两种方式更改使用的包管理器后端：
+apm 会自动检测已安装的 AUR 助手（`yay`/`paru`），未找到时默认 `yay`。可以通过环境变量覆盖后端：
 
 ```bash
-# 1. 修改 setup.sh 文件开头的默认后端
-apm="yay"  # 可以改为 "pacman" 或其它 AUR 助手
-
-# 2. 通过环境变量在运行时覆盖
-APM_BACKEND=pacman ./setup.sh
-# 在创建好 apm 别名后，也可以这样使用：
+APM_BACKEND=pacman ./apm apply
+# 创建别名后也可以这样使用：
 APM_BACKEND=pacman apm
 ```
+
+其它环境变量：
+
+- `APM_IFACE`：conf.d/ip.sh 与 modules/kvm 使用的有线网卡名（默认 `eno1`）
 
 ## 无重复副作用设计
 
@@ -151,40 +198,47 @@ APM_BACKEND=pacman apm
 
 ---
 
-## Arch Linux 安装脚本
+## Arch Linux 安装脚本 (installer.sh / apm ins)
 
-`arch-installer.sh` 是一个用于自动化安装 Arch Linux 系统的脚本。
+`installer.sh`（也可通过 `apm ins` / `apm install` 触发）是一个用于自动化全新安装 Arch Linux 系统的脚本。阶段化设计，每阶段幂等，支持断点续跑（阶段标记存于 `/tmp/.install-steps`，续跑需保持 /mnt 挂载或用 `-D` 手动挂载）。
 
-> **注意：** 该脚本执行 UEFI 安装，若机器不支持该安装方式，请勿执行或修改脚本后执行。
+> **注意：** 脚本自动检测 UEFI 环境，未检测到时回退 Legacy BIOS 安装。
 
 ### 使用方法
 
 ```shell
-# 基本用法
-arch-installer.sh -h 主机名 -u 用户名 -p 密码 安装磁盘
+# 通过 apm 或 installer.sh 直接调用
+apm ins -h 主机名 -u 用户名 -p 密码 安装磁盘
+./installer.sh -h 主机名 -u 用户名 -p 密码 安装磁盘
 
 # 示例
-arch-installer.sh -h myarch -u alex -p mypassword /dev/sda
+./installer.sh -h myarch -u alex -p mypassword /dev/sda
 
 # 手动挂载分区
-arch-installer.sh -D -h 主机名 -u 用户名 -p 密码
+./installer.sh -D -h 主机名 -u 用户名 -p 密码
+
+# 从指定阶段续跑 / 只验证不执行
+./installer.sh --from configure -h 主机名 -u 用户名 -p 密码
+./installer.sh --dry-run -h 主机名 /dev/sda
 
 # 参数说明
--h 主机名
+-h 主机名（仅限字母/数字/连字符；若不指定，交互输入或使用随机值）
 -u 用户名 (若不指定，则不新建用户)
--p 密码 (若不指定，则默认密码为 0000)
+-p 密码 (若不指定，则自动生成随机密码并在结束时打印)
 -D 不指定安装磁盘，手动挂载需要安装的分区到 /mnt 目录
+--from <phase> 从指定阶段开始（prepare/disk/install/configure/user/bootloader/tuning）
+--dry-run 只做前置验证，不执行任何操作
 ```
 
 ### 安装过程
 
 脚本会自动执行以下步骤：
 1. 分区和格式化磁盘 (EFI、根分区和家目录分区)
-2. 挂载文件系统
-3. 安装基本系统
-4. 配置系统 (时区、语言、主机名等)
-5. 安装引导程序
-6. 设置用户和密码
+2. 安装基本系统（pacstrap，镜像源自动优化）
+3. 配置系统 (fstab、时区、语言、主机名、root 密码)
+4. 创建用户并配置 sudo
+5. 安装引导程序（GRUB，UEFI/BIOS 自动选择）
+6. 启用网络服务并创建动态大小 swapfile
 
 ## 贡献指南
 
