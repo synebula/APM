@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# 判断文件中是否包含指定关键字（固定字符串匹配, 幂等检查用）
+is_configured() {
+  local keyword="$1" file="$2"
+  [ -f "$file" ] || return 1
+  grep -qF -- "$keyword" "$file"
+}
+
 # 系统已有 swap 条目（如 installer.sh 创建的 /swapfile）时不再重复创建
 if awk '$3 == "swap" { found = 1 } END { exit !found }' /etc/fstab 2>/dev/null; then
   return 0 2>/dev/null || exit 0
