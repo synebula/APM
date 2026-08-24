@@ -56,11 +56,11 @@
       "3": ["HDMI-A-1"],
       "4": ["HDMI-A-1"],
       "5": ["HDMI-A-1"],
-      "6": ["DP-2"],
-      "7": ["DP-2"],
-      "8": ["DP-2"],
-      "9": ["DP-2"],
-      "10": ["DP-2"]
+      "6": ["HDMI-A-2"],
+      "7": ["HDMI-A-2"],
+      "8": ["HDMI-A-2"],
+      "9": ["HDMI-A-2"],
+      "10": ["HDMI-A-2"]
     },
     "format": "<sub>{icon}</sub> {windows}",
     "format-window-separator": " ",
