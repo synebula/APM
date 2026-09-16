@@ -1,0 +1,5 @@
+ApplicationProvider 1.0 ApplicationProvider.qml
+CommandProvider 1.0 CommandProvider.qml
+LaunchHistoryStore 1.0 LaunchHistoryStore.qml
+LauncherController 1.0 LauncherController.qml
+LauncherWindow 1.0 LauncherWindow.qml

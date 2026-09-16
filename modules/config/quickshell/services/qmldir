@@ -1,0 +1,7 @@
+CommandQueue 1.0 CommandQueue.qml
+singleton AudioService 1.0 AudioService.qml
+singleton BluetoothService 1.0 BluetoothService.qml
+singleton BrightnessService 1.0 BrightnessService.qml
+singleton MediaService 1.0 MediaService.qml
+singleton SystemMetricsService 1.0 SystemMetricsService.qml
+singleton WindowManagerService 1.0 WindowManagerService.qml

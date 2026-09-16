@@ -1,0 +1,4 @@
+WheelScrollController 1.0 WheelScrollController.qml
+singleton ConfirmationController 1.0 ConfirmationController.qml
+singleton PopupCoordinator 1.0 PopupCoordinator.qml
+singleton TooltipController 1.0 TooltipController.qml

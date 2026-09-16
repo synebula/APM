@@ -1,0 +1,5 @@
+HyprlandBackend 1.0 HyprlandBackend.qml
+NiriBackend 1.0 NiriBackend.qml
+WindowInfo 1.0 WindowInfo.qml
+WindowManagerBackend 1.0 WindowManagerBackend.qml
+WorkspaceInfo 1.0 WorkspaceInfo.qml

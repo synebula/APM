@@ -1,0 +1,6 @@
+BarGroup 1.0 BarGroup.qml
+ConfirmationDialog 1.0 ConfirmationDialog.qml
+ModalWindow 1.0 ModalWindow.qml
+PopupBackdrop 1.0 PopupBackdrop.qml
+PopupPanel 1.0 PopupPanel.qml
+TooltipWindow 1.0 TooltipWindow.qml

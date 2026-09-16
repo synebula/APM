@@ -1,0 +1,8 @@
+NotificationCard 1.0 NotificationCard.qml
+NotificationCenterPopup 1.0 NotificationCenterPopup.qml
+NotificationIndicator 1.0 NotificationIndicator.qml
+NotificationRecord 1.0 NotificationRecord.qml
+NotificationStore 1.0 NotificationStore.qml
+NotificationToastWindow 1.0 NotificationToastWindow.qml
+ToastLifetime 1.0 ToastLifetime.qml
+singleton NotificationService 1.0 NotificationService.qml

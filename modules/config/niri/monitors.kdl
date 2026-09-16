@@ -1,0 +1,35 @@
+// ============================================================================
+// 显示器与工作区配置 (Monitors & Workspaces)
+// ============================================================================
+
+// 显示器定义
+// HDMI-A-2: 位于上方 (0x0)
+output "HDMI-A-2" {
+    mode "1920x1080@60"
+    position x=0 y=0
+    scale 1.0
+}
+
+// HDMI-A-1: 位于下方 (0x1080)，为主屏
+output "HDMI-A-1" {
+    mode "1920x1080@60"
+    position x=0 y=1080
+    scale 1.0
+}
+
+// ----------------------------------------------------------------------------
+// 工作区与显示器绑定
+// ----------------------------------------------------------------------------
+// 主显示器 (HDMI-A-1) 工作区
+workspace "1"  { open-on-output "HDMI-A-1"; }
+workspace "2"  { open-on-output "HDMI-A-1"; }
+workspace "3"  { open-on-output "HDMI-A-1"; }
+workspace "4"  { open-on-output "HDMI-A-1"; }
+workspace "5"  { open-on-output "HDMI-A-1"; }
+
+// 副显示器 (HDMI-A-2) 工作区
+workspace "6"  { open-on-output "HDMI-A-2"; }
+workspace "7"  { open-on-output "HDMI-A-2"; }
+workspace "8"  { open-on-output "HDMI-A-2"; }
+workspace "9"  { open-on-output "HDMI-A-2"; }
+workspace "10" { open-on-output "HDMI-A-2"; }

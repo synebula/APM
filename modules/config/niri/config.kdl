@@ -1,0 +1,103 @@
+// ============================================================================
+// Niri 主配置文件 (Main Configuration)
+// Wiki: https://niri-wm.github.io/niri/Configuration:-Introduction
+// ============================================================================
+
+// 禁用客户端自带装饰 (CSD)，交由 Niri 统一绘制抗锯齿圆角与投影 (仿 Hyprland 风格)
+prefer-no-csd
+
+// 开机不弹出快捷键帮助 overlay（仍可用 Mod+Shift+/ 手动打开）
+hotkey-overlay {
+    skip-at-startup
+}
+
+// ----------------------------------------------------------------------------
+// 输入设备配置 (Input)
+// ----------------------------------------------------------------------------
+input {
+    keyboard {
+        xkb {
+            layout "us"
+        }
+        numlock
+    }
+
+    touchpad {
+        tap
+        // natural-scroll  // 取消注释可启用自然滚动（默认反向）
+    }
+
+    mouse {
+        accel-profile "flat"  // 禁用鼠标加速度
+    }
+
+    // 焦点策略：默认点击聚焦（Click to focus），注释掉悬停聚焦（focus-follows-mouse）
+    // focus-follows-mouse max-scroll-amount="0%"
+}
+
+// ----------------------------------------------------------------------------
+// 核心布局与外观 (Layout)
+// ----------------------------------------------------------------------------
+layout {
+    gaps 4
+    center-focused-column "never"
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+        proportion 1.0
+    }
+
+    default-column-width { proportion 0.5; }
+
+    // 禁用独立的 focus-ring，改用全窗口持续 border 边框
+    focus-ring {
+        off
+    }
+
+    // 窗口边框：Catppuccin 45 度双色渐变（激活高亮，未激活深邃半透明）
+    border {
+        width 1
+        active-gradient from="#ca9ee6" to="#f2d5cf" angle=45
+        inactive-gradient from="#6c708680" to="#31324480" angle=45
+        urgent-color "#f38ba8"
+    }
+
+    // 窗口阴影：仿 Hyprland 柔和环境光弥散投影（激活窗口更具层次感与深度）
+    shadow {
+        on
+        softness 12
+        spread 2
+        offset x=0 y=4
+        draw-behind-window true
+        color "#00000075"
+        inactive-color "#00000030"
+    }
+
+    // 标签页列指示器 (Tab Indicator)：单列包含多窗口时的精致指示条
+    tab-indicator {
+        hide-when-single-tab
+        place-within-column
+        gap 4
+        width 4
+        position "right"
+        corner-radius 6
+        active-gradient from="#ca9ee6" to="#f2d5cf" angle=45
+        inactive-color "#585b70"
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 截图存储路径 (Screenshot Path)
+// ----------------------------------------------------------------------------
+screenshot-path "~/tmp/screenshot/Screenshot_%Y%m%d_%H%M%S.png"
+
+// ----------------------------------------------------------------------------
+// 模块化子配置引入 (Includes)
+// ----------------------------------------------------------------------------
+include "monitors.kdl"
+include "autostart.kdl"
+include "theme.kdl"
+include "windowrules.kdl"
+include "keybindings.kdl"

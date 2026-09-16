@@ -1,0 +1,64 @@
+// ============================================================================
+// 窗口与图层规则 (Window & Layer Rules)
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// 全局窗口装饰与圆角（仿 Hyprland rounding = 10 风格）
+// ----------------------------------------------------------------------------
+window-rule {
+    geometry-corner-radius 8
+    clip-to-geometry true
+    draw-border-with-background false
+}
+
+// 弹出菜单与气泡窗口圆角裁剪
+window-rule {
+    popups {
+        geometry-corner-radius 8
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 终端与开发应用：背景高斯模糊
+// ----------------------------------------------------------------------------
+window-rule {
+    match app-id=r#"^(kitty|alacritty|foot|org\.wezfurlong\.wezterm)$"#
+    background-effect {
+        blur true
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 浮动窗口与系统工具：半透明毛玻璃与尺寸行为
+// ----------------------------------------------------------------------------
+// 文件选择与保存对话框自动浮动
+window-rule {
+    match title=r#"^(Open [Ff]iles?|打开|Open [Ff]older|Save [Ff]ile|Save [Aa]s)"#
+    open-floating true
+}
+
+// 微信图片与视频预览窗口自动浮动
+window-rule {
+    match app-id=r#"^wechat$"# title=r#"^(预览|图片和视频)$"#
+    open-floating true
+}
+
+// 混音器与蓝牙管理器：浮动显示、90% 不透明度与毛玻璃背景
+window-rule {
+    match app-id=r#"^(pavucontrol|org\.pulseaudio\.pavucontrol)$"#
+    open-floating true
+    opacity 0.90
+    background-effect {
+        blur true
+    }
+}
+
+window-rule {
+    match app-id=r#"^blueman-manager$"#
+    open-floating true
+    opacity 0.90
+    background-effect {
+        blur true
+    }
+}
+

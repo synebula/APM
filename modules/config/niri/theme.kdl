@@ -1,0 +1,92 @@
+// ============================================================================
+// 主题、光标与动效装饰 (Theme, Visuals & Animations)
+// ============================================================================
+
+environment {
+    XCURSOR_THEME "Bibata-Modern-Classic"
+    XCURSOR_SIZE "18"
+    XDG_CURRENT_DESKTOP "niri:GNOME"
+}
+
+cursor {
+    xcursor-theme "Bibata-Modern-Classic"
+    xcursor-size 18
+}
+
+// ----------------------------------------------------------------------------
+// 工作区概览 (Overview)：类似 Hyprland 的景深缩放与暗色毛玻璃遮罩
+// ----------------------------------------------------------------------------
+overview {
+    zoom 0.55
+    backdrop-color "#181825cc"
+    workspace-shadow {
+        softness 35
+        spread 8
+        offset x=0 y=8
+        color "#00000060"
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 全局背景模糊 (Dual Kawase Blur)：提供类似 Hyprland 的亚克力毛玻璃视觉
+// ----------------------------------------------------------------------------
+blur {
+    passes 3
+    offset 3.0
+    noise 0.02
+    saturation 1.4
+}
+
+// ----------------------------------------------------------------------------
+// 动画系统 (Animations)：移植 Hyprland 定制贝塞尔曲线与物理弹簧 (Spring) 阻尼
+// ----------------------------------------------------------------------------
+animations {
+    // 工作区切换：紧凑灵动的物理弹簧
+    workspace-switch {
+        spring damping-ratio=0.82 stiffness=750 epsilon=0.0001
+    }
+
+    // 列横向平移与滚动：轻微 overshoot 弹性，顺滑跟手
+    horizontal-view-movement {
+        spring damping-ratio=0.85 stiffness=800 epsilon=0.0001
+    }
+
+    // 窗口打开：仿 Hyprland "wind" / "winIn" 贝塞尔曲线，带轻微灵动回弹
+    window-open {
+        duration-ms 200
+        curve "cubic-bezier" 0.05 0.9 0.1 1.05
+    }
+
+    // 窗口关闭：仿 Hyprland "winOut" 贝塞尔曲线，快速干脆地退出
+    window-close {
+        duration-ms 180
+        curve "cubic-bezier" 0.3 -0.3 0 1
+    }
+
+    // 窗口移动与重排
+    window-movement {
+        spring damping-ratio=0.85 stiffness=800 epsilon=0.0001
+    }
+
+    // 窗口尺寸缩放
+    window-resize {
+        spring damping-ratio=0.85 stiffness=800 epsilon=0.0001
+    }
+
+    // 工作区概览开关
+    overview-open-close {
+        spring damping-ratio=0.85 stiffness=800 epsilon=0.0001
+    }
+
+    // 配置重载/错误通知淡入淡出
+    config-notification-open-close {
+        spring damping-ratio=0.6 stiffness=1000 epsilon=0.001
+    }
+
+    // 截图交互界面打开
+    screenshot-ui-open {
+        duration-ms 200
+        curve "ease-out-quad"
+    }
+}
+

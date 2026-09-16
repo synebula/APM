@@ -666,10 +666,10 @@ cmd_apply() {
   if [ "${#added_aur[@]}" -gt 0 ] && [ "$APM_BACKEND" != pacman ]; then
     needs_upgrade=1
   fi
-  if [ "$needs_upgrade" -eq 1 ]; then
-    log_info "upgrading system before install"
-    sysupgrade
-  fi
+  # if [ "$needs_upgrade" -eq 1 ]; then
+  #   log_info "upgrading system before install"
+  #   sysupgrade
+  # fi
 
   install_repo_round
   install_aur_round

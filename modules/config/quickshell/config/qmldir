@@ -1,0 +1,2 @@
+singleton AppearanceSettings 1.0 AppearanceSettings.qml
+singleton ShellSettings 1.0 ShellSettings.qml

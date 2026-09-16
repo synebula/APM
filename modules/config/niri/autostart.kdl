@@ -1,0 +1,9 @@
+// ============================================================================
+// 开机自启动项 (Autostart)
+// ============================================================================
+
+spawn-at-startup "quickshell"                                      // 桌面状态栏与应用启动器面板
+spawn-at-startup "fcitx5" "-d" "-r"                                // Fcitx5 输入法守护进程
+spawn-at-startup "hyprpaper"                                       // 壁纸守护进程
+spawn-at-startup "systemctl" "--user" "start" "hyprpolkitagent"    // 用户态权限提权认证代理
+spawn-at-startup "/home/alex/app/rti" "-token" "thisisrtitoken"    // 后台网络/服务进程
