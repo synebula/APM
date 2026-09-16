@@ -18,7 +18,7 @@ T.Button {
     property real cornerRadius: Theme.shape.controlRadius
     property int glyphSize: Theme.components.iconButton.iconSize
     property int borderWidth: root.fillColor.a > 0.99 ? Theme.components.surface.borderWidth : (root.visualFocus ? Theme.shape.borderWidth : 0)
-    property color borderColor: root.fillColor.a > 0.99 ? Theme.components.surface.borderColor : Theme.components.actionButton.borderColor(root.visualFocus, root.checked)
+    property color borderColor: root.fillColor.a > 0.99 ? Theme.components.surface.borderColor : Theme.components.actionButton.borderColor(root.visualFocus, root.checked, root.destructive)
 
     font: Theme.typography.body
     padding: Theme.spacing.medium

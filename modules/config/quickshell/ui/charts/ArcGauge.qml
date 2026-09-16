@@ -114,13 +114,6 @@ Item {
         font.pixelSize: root.glyphSize
         color: root.glyphColor
         visible: root.glyph.length > 0
-
-        Behavior on color {
-            ColorAnimation {
-                duration: root.animationDuration
-                easing.type: Easing.OutCubic
-            }
-        }
     }
 
     Behavior on displayedAngle {

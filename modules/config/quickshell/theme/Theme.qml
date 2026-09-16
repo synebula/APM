@@ -65,6 +65,8 @@ Singleton {
                 return root.colors.disabledSurface;
             if (destructive && (primary || checked))
                 return root.colors.danger;
+            if (destructive && tonal)
+                return root.colors.dangerContainer;
             if (primary || checked)
                 return root.colors.accent;
             if (tonal)
@@ -79,18 +81,18 @@ Singleton {
                 return root.colors.dangerForeground;
             if (primary || checked)
                 return root.colors.accentForeground;
+            if (destructive)
+                return root.colors.danger;
             if (tonal)
                 return root.colors.accent;
-            if (destructive)
-                return root.colors.dangerForeground;
             return root.colors.textPrimary;
         }
 
-        function borderColor(visualFocus: bool, checked: bool): color {
+        function borderColor(visualFocus: bool, checked: bool, destructive: var): color {
             if (visualFocus)
-                return root.colors.focusRing;
+                return destructive ? root.colors.danger : root.colors.focusRing;
             if (checked)
-                return root.colors.accent;
+                return destructive ? root.colors.danger : root.colors.accent;
             return Qt.color("transparent");
         }
     }
@@ -99,9 +101,9 @@ Singleton {
         readonly property int height: Math.round(32 * root.controlScale)
         readonly property int padding: Math.round(10 * root.spacingScale)
 
-        function background(enabled: bool, selected: bool): color {
+        function background(enabled: bool, selected: bool, destructive: var): color {
             if (selected)
-                return root.colors.selectedSurface;
+                return destructive ? root.colors.dangerContainer : root.colors.selectedSurface;
             return Qt.color("transparent");
         }
 
@@ -109,17 +111,15 @@ Singleton {
             if (!enabled)
                 return root.colors.disabledText;
             if (destructive)
-                return root.colors.dangerForeground;
+                return root.colors.danger;
             if (selected)
                 return root.colors.accent;
             return root.colors.textPrimary;
         }
 
-        function borderColor(visualFocus: bool, selected: bool): color {
-            if (visualFocus)
-                return root.colors.focusRing;
-            if (selected)
-                return root.colors.accent;
+        function borderColor(visualFocus: bool, selected: bool, destructive: var): color {
+            if (visualFocus || selected)
+                return destructive ? root.colors.danger : (visualFocus ? root.colors.focusRing : root.colors.accent);
             return Qt.color("transparent");
         }
     }

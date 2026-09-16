@@ -13,7 +13,7 @@ Row {
 
     property var barWindow
 
-    spacing: 4
+    spacing: Theme.spacing.small
 
     NetworkIndicator {}
 

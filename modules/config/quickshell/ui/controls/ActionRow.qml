@@ -27,10 +27,10 @@ T.ItemDelegate {
     opacity: enabled ? 1 : 0.6
 
     background: Rectangle {
-        color: Theme.components.actionRow.background(root.enabled, root.selected)
+        color: Theme.components.actionRow.background(root.enabled, root.selected, root.destructive)
         radius: Theme.shape.controlRadius
         border.width: root.selected || root.visualFocus ? Theme.shape.borderWidth : 0
-        border.color: Theme.components.actionRow.borderColor(root.visualFocus, root.selected)
+        border.color: Theme.components.actionRow.borderColor(root.visualFocus, root.selected, root.destructive)
 
         Behavior on color {
             ColorAnimation { duration: Theme.motion.standard.duration }

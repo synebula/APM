@@ -147,18 +147,21 @@ TestSuite {
         compare(Theme.components.actionButton.background(true, false, true, false, false).toString(), Theme.colors.accent.toString());
         compare(Theme.components.actionButton.background(true, false, false, true, false).toString(), Theme.colors.accentContainer.toString());
         compare(Theme.components.actionButton.background(true, false, true, false, true).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.actionButton.background(true, false, false, true, true).toString(), Theme.colors.dangerContainer.toString());
         compare(Theme.components.actionButton.foreground(false, false, false).toString(), Theme.colors.disabledText.toString());
         compare(Theme.components.actionButton.foreground(true, true, false).toString(), Theme.colors.accentForeground.toString());
-        compare(Theme.components.actionButton.foreground(true, false, true).toString(), Theme.colors.dangerForeground.toString());
+        compare(Theme.components.actionButton.foreground(true, false, true).toString(), Theme.colors.accentForeground.toString());
         compare(Theme.components.actionButton.foreground(true, false, false).toString(), Theme.colors.textPrimary.toString());
         compare(Theme.components.actionButton.foreground(true, false, false, true, false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.actionButton.foreground(true, false, false, false, true).toString(), Theme.colors.danger.toString());
         compare(Theme.components.actionButton.foreground(true, false, true, false, true).toString(), Theme.colors.dangerForeground.toString());
 
         // ActionRow state mapping
         compare(Theme.components.actionRow.background(true, true).toString(), Theme.colors.selectedSurface.toString());
+        compare(Theme.components.actionRow.background(true, true, true).toString(), Theme.colors.dangerContainer.toString());
         compare(Theme.components.actionRow.background(true, false).toString(), "#00000000");
         compare(Theme.components.actionRow.foreground(false, false, false).toString(), Theme.colors.disabledText.toString());
-        compare(Theme.components.actionRow.foreground(true, false, true).toString(), Theme.colors.dangerForeground.toString());
+        compare(Theme.components.actionRow.foreground(true, false, true).toString(), Theme.colors.danger.toString());
         compare(Theme.components.actionRow.foreground(true, false, false).toString(), Theme.colors.textPrimary.toString());
         compare(Theme.components.actionRow.foreground(true, true, false).toString(), Theme.colors.accent.toString());
 

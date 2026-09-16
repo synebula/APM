@@ -111,7 +111,7 @@ ModalWindow {
                     width: results.width
                     height: 50 * Theme.controlScale
                     iconSize: 26 * Theme.controlScale
-                    font.pixelSize: 14 * Theme.fontScale
+                    font.pixelSize: Theme.typography.titleSize
                     leftPadding: Theme.spacing.large
                     rightPadding: Theme.spacing.large
                     spacing: Theme.spacing.large
