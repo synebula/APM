@@ -11,13 +11,13 @@ Singleton {
     readonly property string paletteId: appearanceData.paletteId
     readonly property string colorMode: appearanceData.colorMode
     readonly property string accentId: appearanceData.accentId
-    readonly property var userOverrides: appearanceData.userOverrides
     readonly property string fontFamily: appearanceData.fontFamily
     readonly property string iconFontFamily: appearanceData.iconFontFamily
     readonly property real fontScale: appearanceData.fontScale
     readonly property real radiusScale: appearanceData.radiusScale
     readonly property real spacingScale: appearanceData.spacingScale
     readonly property real motionScale: appearanceData.motionScale
+    readonly property int version: appearanceData.version
     property bool ready: false
     property var pendingChanges: ({})
 
@@ -33,6 +33,38 @@ Singleton {
 
     function finishLoading() {
         root.ready = true;
+        if (appearanceData.schemeId && appearanceData.schemeId.length > 0) {
+            const scheme = appearanceData.schemeId;
+            let targetPalette = "catppuccin";
+            let targetMode = "dark";
+            if (scheme === "catppuccin-latte") {
+                targetPalette = "catppuccin";
+                targetMode = "light";
+            } else if (scheme === "catppuccin-mocha") {
+                targetPalette = "catppuccin";
+                targetMode = "dark";
+            } else if (scheme === "tokyo-night") {
+                targetPalette = "tokyo-night";
+                targetMode = "dark";
+            } else if (scheme === "everforest-dark") {
+                targetPalette = "everforest";
+                targetMode = "dark";
+            } else if (scheme === "everforest-light") {
+                targetPalette = "everforest";
+                targetMode = "light";
+            } else if (scheme === "nord-dark") {
+                targetPalette = "nord";
+                targetMode = "dark";
+            } else if (scheme === "nord-light") {
+                targetPalette = "nord";
+                targetMode = "light";
+            }
+            appearanceData.paletteId = targetPalette;
+            appearanceData.colorMode = targetMode;
+            appearanceData.schemeId = "";
+            appearanceData.version = 1;
+            saveTimer.restart();
+        }
         if (Object.keys(root.pendingChanges).length > 0) {
             const changes = root.pendingChanges;
             root.pendingChanges = {};
@@ -64,11 +96,12 @@ Singleton {
 
         JsonAdapter {
             id: appearanceData
+            property int version: 1
+            property string schemeId: ""
             property string themeId: "neumorphic"
             property string paletteId: "pastel-relief"
             property string colorMode: "system"
             property string accentId: ""
-            property var userOverrides: ({})
             property string fontFamily: "SpaceMono Nerd Font"
             property string iconFontFamily: "SpaceMono Nerd Font Propo"
             property real fontScale: 1

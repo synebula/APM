@@ -1,5 +1,6 @@
 import "../config"
 import "../features/theme"
+import "../services"
 import "../theme"
 import "../theme/ColorMath.js" as ColorMath
 import QtQuick
@@ -51,16 +52,205 @@ TestSuite {
             for (const paletteId of theme.recommendedPaletteIds)
                 verify(PaletteCatalog.find(paletteId) !== null, theme.themeId + " recommendation");
             verify(theme.shape !== null);
+            verify(theme.shape.smallRadius >= 0);
+            verify(theme.shape.controlRadius >= 0);
+            verify(theme.shape.panelRadius >= 0);
+            verify(theme.shape.roundRadius >= 0);
+
             verify(theme.border !== null);
+            verify(theme.border.width >= 0);
+            verify(theme.border.opacity >= 0 && theme.border.opacity <= 1);
+            verify(["outline", "surfaceVariant", "transparent"].includes(theme.border.colorPolicy));
+
             verify(theme.elevation !== null);
+            verify(["flat", "elevated"].includes(theme.elevation.level));
+            verify(["none", "soft", "hard"].includes(theme.elevation.shadowStyle));
+            verify(theme.elevation.shadowOpacity >= 0 && theme.elevation.shadowOpacity <= 1);
+            verify(theme.elevation.highlightOpacity >= 0 && theme.elevation.highlightOpacity <= 1);
+
             verify(theme.surface !== null);
+            verify(["solid", "gradient", "acrylic"].includes(theme.surface.mode));
+            verify(theme.surface.fillOpacity >= 0 && theme.surface.fillOpacity <= 1);
+            verify(theme.surface.blurRadius >= 0);
+
             verify(theme.spacing !== null);
+            verify(theme.spacing.density > 0);
+            verify(theme.spacing.tiny >= 0);
+            verify(theme.spacing.small >= 0);
+            verify(theme.spacing.medium >= 0);
+            verify(theme.spacing.large >= 0);
+
             verify(theme.typography !== null);
+
             verify(theme.motion !== null);
+            verify(theme.motion.duration >= 0);
         }
         verify(ThemeCatalog.find("flat") !== null);
         verify(ThemeCatalog.find("neumorphic") !== null);
         verify(ThemeCatalog.find("missing") === null);
+    }
+
+    function test_paletteFindVariantStrict() {
+        verify(PaletteCatalog.findVariant("catppuccin", "dark") !== null);
+        verify(PaletteCatalog.findVariant("catppuccin", "light") !== null);
+        verify(PaletteCatalog.findVariant("catppuccin", "invalid_mode") === null);
+        verify(PaletteCatalog.findVariant("non_existing_palette", "dark") === null);
+
+        verify(PaletteCatalog.variant("catppuccin", "invalid_mode") !== null);
+        verify(PaletteCatalog.variant("non_existing_palette", "dark") !== null);
+    }
+
+    function test_canSetColorModeStrict() {
+        verify(ThemeController.canSetColorMode("dark"));
+        verify(ThemeController.canSetColorMode("light"));
+        verify(ThemeController.canSetColorMode("system"));
+        verify(!ThemeController.canSetColorMode("invalid_mode"));
+        verify(!ThemeController.canSetColorMode(""));
+
+        const oldMode = AppearanceSettings.colorMode;
+        verify(!ThemeController.setColorMode("invalid_mode"));
+        compare(AppearanceSettings.colorMode, oldMode);
+    }
+
+    function test_semanticTokensAndColorMath() {
+        verify(Theme.colors.textPrimary !== undefined);
+        verify(Theme.colors.textSecondary !== undefined);
+        verify(Theme.colors.accentForeground !== undefined);
+        verify(Theme.colors.dangerForeground !== undefined);
+        verify(Theme.colors.disabledText !== undefined);
+        verify(Theme.colors.disabledSurface !== undefined);
+        verify(Theme.colors.focusRing !== undefined);
+        verify(Theme.colors.hoveredSurface !== undefined);
+        verify(Theme.colors.selectedSurface !== undefined);
+
+        const c1 = Qt.rgba(1, 0, 0, 1);
+        const c2 = Qt.rgba(0, 0, 1, 1);
+        const blended = ColorMath.blend(c1, c2, 0.5);
+        verify(Math.abs(blended.r - 0.5) < 0.01);
+        verify(Math.abs(blended.b - 0.5) < 0.01);
+        const withAlpha = ColorMath.alpha(c1, 0.3);
+        verify(Math.abs(withAlpha.a - 0.3) < 0.01);
+    }
+
+    function test_componentStateTokens() {
+        // BarButton state mapping
+        compare(Theme.components.barButton.background(true, false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.barButton.background(false, true).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.barButton.background(false, false).toString(), "#00000000");
+        compare(Theme.components.barButton.foreground(true, false).toString(), Theme.colors.accentForeground.toString());
+        compare(Theme.components.barButton.foreground(false, true).toString(), Theme.colors.dangerForeground.toString());
+        compare(Theme.components.barButton.foreground(false, false).toString(), Theme.colors.textPrimary.toString());
+
+        // ActionButton state mapping (with primary, tonal, destructive)
+        compare(Theme.components.actionButton.background(true, true).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.actionButton.background(true, false).toString(), "#00000000");
+        compare(Theme.components.actionButton.background(true, false, true, false, false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.actionButton.background(true, false, false, true, false).toString(), Theme.colors.accentContainer.toString());
+        compare(Theme.components.actionButton.background(true, false, true, false, true).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.actionButton.foreground(false, false, false).toString(), Theme.colors.disabledText.toString());
+        compare(Theme.components.actionButton.foreground(true, true, false).toString(), Theme.colors.accentForeground.toString());
+        compare(Theme.components.actionButton.foreground(true, false, true).toString(), Theme.colors.dangerForeground.toString());
+        compare(Theme.components.actionButton.foreground(true, false, false).toString(), Theme.colors.textPrimary.toString());
+        compare(Theme.components.actionButton.foreground(true, false, false, true, false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.actionButton.foreground(true, false, true, false, true).toString(), Theme.colors.dangerForeground.toString());
+
+        // ActionRow state mapping
+        compare(Theme.components.actionRow.background(true, true).toString(), Theme.colors.selectedSurface.toString());
+        compare(Theme.components.actionRow.background(true, false).toString(), "#00000000");
+        compare(Theme.components.actionRow.foreground(false, false, false).toString(), Theme.colors.disabledText.toString());
+        compare(Theme.components.actionRow.foreground(true, false, true).toString(), Theme.colors.dangerForeground.toString());
+        compare(Theme.components.actionRow.foreground(true, false, false).toString(), Theme.colors.textPrimary.toString());
+        compare(Theme.components.actionRow.foreground(true, true, false).toString(), Theme.colors.accent.toString());
+
+        // ToggleSwitch state mapping
+        compare(Theme.components.toggleSwitch.trackColor(false, false).toString(), Theme.colors.disabledSurface.toString());
+        compare(Theme.components.toggleSwitch.trackColor(true, true).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.toggleSwitch.trackColor(true, false).toString(), Theme.colors.surfaceVariant.toString());
+        compare(Theme.components.toggleSwitch.knobColor(false, false).toString(), Theme.colors.disabledText.toString());
+        compare(Theme.components.toggleSwitch.knobColor(true, true).toString(), Theme.colors.accentForeground.toString());
+        compare(Theme.components.toggleSwitch.knobColor(true, false).toString(), Theme.colors.textSecondary.toString());
+
+        // StatusTokens state mapping
+        compare(Theme.components.status.tone(true).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.status.tone(false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.status.foreground(true).toString(), Theme.colors.dangerForeground.toString());
+        compare(Theme.components.status.foreground(false).toString(), Theme.colors.accentForeground.toString());
+        compare(Theme.components.status.text(true).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.status.text(false).toString(), Theme.colors.textPrimary.toString());
+
+        // CalendarTokens state mapping
+        compare(Theme.components.calendar.dayBackground(true, false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.calendar.dayBackground(false, true).toString(), Theme.colors.hoveredSurface.toString());
+        compare(Theme.components.calendar.dayBackground(false, false).toString(), "#00000000");
+        compare(Theme.components.calendar.dayForeground(true).toString(), Theme.colors.accentForeground.toString());
+        compare(Theme.components.calendar.dayForeground(false).toString(), Theme.colors.textPrimary.toString());
+
+        // ThemeCardTokens state mapping
+        compare(Theme.components.themeCard.background(true).toString(), Theme.colors.selectedSurface.toString());
+        compare(Theme.components.themeCard.background(false).toString(), "#00000000");
+        compare(Theme.components.themeCard.borderColor(true, false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.themeCard.borderColor(false, false).toString(), Theme.colors.outline.toString());
+        compare(Theme.components.themeCard.accentColor(true).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.themeCard.accentColor(false).toString(), Theme.colors.textSecondary.toString());
+
+        // ColorModeToggleTokens state mapping
+        compare(Theme.components.colorModeToggle.trackBorder(true).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.colorModeToggle.trackBorder(false).toString(), Theme.colors.outline.toString());
+        compare(Theme.components.colorModeToggle.knobColor(true).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.colorModeToggle.knobColor(false).toString(), Theme.colors.background.toString());
+        compare(Theme.components.colorModeToggle.knobForeground(true).toString(), Theme.colors.accentForeground.toString());
+        compare(Theme.components.colorModeToggle.knobForeground(false).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.colorModeToggle.iconColor(true).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.colorModeToggle.iconColor(false).toString(), Theme.colors.textSecondary.toString());
+
+        // NotificationTokens state mapping
+        compare(Theme.components.notification.indicatorTone(true, false).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.notification.indicatorTone(false, true).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.notification.indicatorTone(false, false).toString(), Theme.colors.textPrimary.toString());
+        compare(Theme.components.notification.urgencyColor(2).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.notification.urgencyColor(1).toString(), Theme.colors.accent.toString());
+
+        // PopupTokens state mapping
+        compare(Theme.components.popup.swatchBorderColor(true, false).toString(), Theme.colors.textPrimary.toString());
+        compare(Theme.components.popup.swatchBorderColor(false, false).toString(), Theme.colors.outline.toString());
+    }
+
+    function test_colorModeResolverState() {
+        verify(["portal", "gsettings", "darkman", "fallback"].includes(ColorModeResolver.source));
+        verify(["light", "dark"].includes(ColorModeResolver.systemMode));
+    }
+
+    function test_schemaVersion() {
+        compare(AppearanceSettings.version, 1);
+    }
+
+    function test_stateContrast_data() {
+        const rows = [];
+        for (const palette of PaletteCatalog.palettes) {
+            for (const variant of palette.variants) {
+                rows.push({
+                    "tag": palette.paletteId + "/" + variant.variantId,
+                    "variant": variant
+                });
+            }
+        }
+        return rows;
+    }
+
+    function test_stateContrast(data) {
+        const v = data.variant;
+        const textOnBg = ColorMath.contrast(v.textPrimary, v.background);
+        verify(textOnBg >= 4.5, data.tag + " textPrimary on background: " + textOnBg);
+
+        const textOnSurface = ColorMath.contrast(v.textPrimary, v.surface);
+        verify(textOnSurface >= 4.5, data.tag + " textPrimary on surface: " + textOnSurface);
+
+        const secOnSurface = ColorMath.contrast(v.textSecondary, v.surface);
+        verify(secOnSurface >= 3.0, data.tag + " textSecondary on surface: " + secOnSurface);
+
+        const dangerFg = ColorMath.foreground(v.danger.r, v.danger.g, v.danger.b);
+        const dangerContrast = ColorMath.contrast(v.danger, dangerFg);
+        verify(dangerContrast >= 4.5, data.tag + " danger contrast: " + dangerContrast);
     }
 
     function test_accentContrast_data() {
@@ -203,6 +393,13 @@ TestSuite {
         popup.close();
         verify(!popup.isOpen, "ThemePopup should close");
         popup.destroy();
+    }
+
+    function test_themeSyncService() {
+        verify(ThemeSyncService !== null);
+        verify(ThemeSyncService.enabled);
+        verify(ThemeSyncService.scriptPath.endsWith("sync-desktop-theme.sh"));
+        ThemeSyncService.syncNow();
     }
 
     name: "ThemeContract"

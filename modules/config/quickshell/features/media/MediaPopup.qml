@@ -122,8 +122,7 @@ PopupPanel {
                 glyph: root.player && root.player.isPlaying ? "󰏤" : "󰐊"
                 tooltipText: root.player && root.player.isPlaying ? "暂停" : "播放"
                 enabled: !!root.player && root.player.canTogglePlaying
-                fillColor: Theme.colors.accentContainer
-                foreground: Theme.colors.accent
+                tonal: true
                 onClicked: root.player.togglePlaying()
             }
 

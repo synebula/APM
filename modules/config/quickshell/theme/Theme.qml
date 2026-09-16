@@ -17,7 +17,6 @@ Singleton {
     readonly property string displayName: root.definition.displayName
     readonly property string accentId: PaletteCatalog.accentIds(root.paletteVariant).includes(AppearanceSettings.accentId) ? AppearanceSettings.accentId : root.paletteVariant.defaultAccentId
     readonly property bool accentCustomized: root.accentId !== root.paletteVariant.defaultAccentId
-    readonly property var userOverrides: AppearanceSettings.userOverrides
     readonly property real fontScale: Math.max(0.75, Math.min(2, AppearanceSettings.fontScale))
     readonly property real spacingScale: Math.max(0.5, Math.min(2, AppearanceSettings.spacingScale))
     readonly property real controlScale: Math.max(root.fontScale, root.spacingScale)
@@ -46,6 +45,10 @@ Singleton {
     component PopupTokens: QtObject {
         readonly property int padding: root.spacing.large
         readonly property int gap: root.spacing.small
+
+        function swatchBorderColor(selected: bool, visualFocus: bool): color {
+            return (selected || visualFocus) ? root.colors.textPrimary : root.colors.outline;
+        }
     }
 
     component IconButtonTokens: QtObject {
@@ -54,14 +57,116 @@ Singleton {
         readonly property int iconSize: Math.round(14 * root.fontScale)
     }
 
+    component ActionButtonTokens: QtObject {
+        readonly property int height: Math.round(32 * root.controlScale)
+
+        function background(enabled: bool, checked: bool, primary: var, tonal: var, destructive: var): color {
+            if (!enabled)
+                return root.colors.disabledSurface;
+            if (destructive && (primary || checked))
+                return root.colors.danger;
+            if (primary || checked)
+                return root.colors.accent;
+            if (tonal)
+                return root.colors.accentContainer;
+            return Qt.color("transparent");
+        }
+
+        function foreground(enabled: bool, checked: bool, primary: var, tonal: var, destructive: var): color {
+            if (!enabled)
+                return root.colors.disabledText;
+            if (destructive && (primary || checked))
+                return root.colors.dangerForeground;
+            if (primary || checked)
+                return root.colors.accentForeground;
+            if (tonal)
+                return root.colors.accent;
+            if (destructive)
+                return root.colors.dangerForeground;
+            return root.colors.textPrimary;
+        }
+
+        function borderColor(visualFocus: bool, checked: bool): color {
+            if (visualFocus)
+                return root.colors.focusRing;
+            if (checked)
+                return root.colors.accent;
+            return Qt.color("transparent");
+        }
+    }
+
     component ActionRowTokens: QtObject {
         readonly property int height: Math.round(32 * root.controlScale)
         readonly property int padding: Math.round(10 * root.spacingScale)
+
+        function background(enabled: bool, selected: bool): color {
+            if (selected)
+                return root.colors.selectedSurface;
+            return Qt.color("transparent");
+        }
+
+        function foreground(enabled: bool, selected: bool, destructive: bool): color {
+            if (!enabled)
+                return root.colors.disabledText;
+            if (destructive)
+                return root.colors.dangerForeground;
+            if (selected)
+                return root.colors.accent;
+            return root.colors.textPrimary;
+        }
+
+        function borderColor(visualFocus: bool, selected: bool): color {
+            if (visualFocus)
+                return root.colors.focusRing;
+            if (selected)
+                return root.colors.accent;
+            return Qt.color("transparent");
+        }
     }
 
     component BarButtonTokens: QtObject {
         readonly property int height: Math.round(22 * root.controlScale)
         readonly property int padding: root.spacing.small
+
+        function background(active: bool, urgent: bool): color {
+            if (active)
+                return root.colors.accent;
+            if (urgent)
+                return root.colors.danger;
+            return "transparent";
+        }
+
+        function foreground(active: bool, urgent: bool): color {
+            if (active)
+                return root.colors.accentForeground;
+            if (urgent)
+                return root.colors.dangerForeground;
+            return root.colors.textPrimary;
+        }
+    }
+
+    component ToggleSwitchTokens: QtObject {
+        function trackColor(enabled: bool, checked: bool): color {
+            if (!enabled)
+                return root.colors.disabledSurface;
+            if (checked)
+                return root.colors.accent;
+            return root.colors.surfaceVariant;
+        }
+
+        function knobColor(enabled: bool, checked: bool): color {
+            if (!enabled)
+                return root.colors.disabledText;
+            if (checked)
+                return root.colors.accentForeground;
+            return root.colors.textSecondary;
+        }
+
+        function borderColor(visualFocus: bool): color {
+            if (visualFocus)
+                return root.colors.focusRing;
+            return "transparent";
+        }
     }
 
     component BarGroupTokens: QtObject {
@@ -97,15 +202,106 @@ Singleton {
         readonly property real gradientDarken: root.definition.surface.gradientDarken
     }
 
+    component StatusTokens: QtObject {
+        function tone(urgent: bool): color {
+            return urgent ? root.colors.danger : root.colors.accent;
+        }
+
+        function foreground(urgent: bool): color {
+            return urgent ? root.colors.dangerForeground : root.colors.accentForeground;
+        }
+
+        function text(urgent: bool): color {
+            return urgent ? root.colors.danger : root.colors.textPrimary;
+        }
+    }
+
+    component CalendarTokens: QtObject {
+        function dayBackground(today: bool, hovered: bool): color {
+            if (today)
+                return root.colors.accent;
+            if (hovered)
+                return root.colors.hoveredSurface;
+            return Qt.color("transparent");
+        }
+
+        function dayForeground(today: bool): color {
+            if (today)
+                return root.colors.accentForeground;
+            return root.colors.textPrimary;
+        }
+    }
+
+    component ThemeCardTokens: QtObject {
+        function background(checked: bool): color {
+            return checked ? root.colors.selectedSurface : Qt.color("transparent");
+        }
+
+        function borderColor(checked: bool, visualFocus: bool): color {
+            return (checked || visualFocus) ? root.colors.accent : root.colors.outline;
+        }
+
+        function accentColor(checked: bool): color {
+            return checked ? root.colors.accent : root.colors.textSecondary;
+        }
+    }
+
+    component ColorModeToggleTokens: QtObject {
+        function trackColor(checked: bool): color {
+            return checked ? Qt.rgba(root.colors.accent.r, root.colors.accent.g, root.colors.accent.b, 0.2) : root.colors.surfaceVariant;
+        }
+
+        function trackBorder(checked: bool): color {
+            return checked ? root.colors.accent : root.colors.outline;
+        }
+
+        function knobColor(checked: bool): color {
+            return checked ? root.colors.accent : root.colors.background;
+        }
+
+        function knobBorder(checked: bool): color {
+            return checked ? root.colors.accent : root.colors.outline;
+        }
+
+        function knobForeground(checked: bool): color {
+            return checked ? root.colors.accentForeground : root.colors.accent;
+        }
+
+        function iconColor(active: bool): color {
+            return active ? root.colors.accent : root.colors.textSecondary;
+        }
+    }
+
+    component NotificationTokens: QtObject {
+        function indicatorTone(dnd: bool, unread: bool): color {
+            if (dnd)
+                return root.colors.danger;
+            if (unread)
+                return root.colors.accent;
+            return root.colors.textPrimary;
+        }
+
+        function urgencyColor(urgency: int): color {
+            return urgency === 2 ? root.colors.danger : root.colors.accent;
+        }
+    }
+
     component ComponentTokens: QtObject {
         readonly property SurfaceTokens surface: SurfaceTokens {}
         readonly property BarTokens bar: BarTokens {}
         readonly property BarGroupTokens barGroup: BarGroupTokens {}
         readonly property BarButtonTokens barButton: BarButtonTokens {}
+        readonly property ActionButtonTokens actionButton: ActionButtonTokens {}
         readonly property ActionRowTokens actionRow: ActionRowTokens {}
+        readonly property ToggleSwitchTokens toggleSwitch: ToggleSwitchTokens {}
         readonly property IconButtonTokens iconButton: IconButtonTokens {}
         readonly property PopupTokens popup: PopupTokens {}
         readonly property SliderTokens slider: SliderTokens {}
+        readonly property StatusTokens status: StatusTokens {}
+        readonly property CalendarTokens calendar: CalendarTokens {}
+        readonly property ThemeCardTokens themeCard: ThemeCardTokens {}
+        readonly property ColorModeToggleTokens colorModeToggle: ColorModeToggleTokens {}
+        readonly property NotificationTokens notification: NotificationTokens {}
     }
 
     component ShapeTokens: QtObject {
@@ -157,7 +353,6 @@ Singleton {
     }
 
     component ColorTokens: QtObject {
-        id: palette
         readonly property color background: root.paletteVariant.background
         readonly property color surface: root.paletteVariant.surface
         readonly property color surfaceVariant: root.paletteVariant.surfaceVariant
@@ -169,15 +364,15 @@ Singleton {
         readonly property color success: root.paletteVariant.success
         readonly property color info: root.paletteVariant.info
         readonly property color accent: root.paletteVariant.accents[root.accentId]
-        readonly property color accentForeground: {
-            const result = ColorMath.foreground(palette.accent.r, palette.accent.g, palette.accent.b);
-            return result;
-        }
-        readonly property color dangerForeground: ColorMath.foreground(palette.danger.r, palette.danger.g, palette.danger.b)
-        readonly property color hoveredSurface: Qt.rgba(palette.textPrimary.r, palette.textPrimary.g, palette.textPrimary.b, 0.08)
-        readonly property color selectedSurface: Qt.rgba(palette.accent.r, palette.accent.g, palette.accent.b, 0.16)
-        readonly property color accentContainer: Qt.rgba(palette.accent.r, palette.accent.g, palette.accent.b, 0.15)
-        readonly property color dangerContainer: Qt.rgba(palette.danger.r, palette.danger.g, palette.danger.b, 0.15)
+        readonly property color accentForeground: ColorMath.foreground(accent.r, accent.g, accent.b)
+        readonly property color dangerForeground: ColorMath.foreground(danger.r, danger.g, danger.b)
+        readonly property color disabledText: ColorMath.alpha(textSecondary, 0.45)
+        readonly property color disabledSurface: ColorMath.alpha(surfaceVariant, 0.5)
+        readonly property color focusRing: ColorMath.alpha(accent, 0.5)
+        readonly property color hoveredSurface: ColorMath.blend(surface, textPrimary, 0.08)
+        readonly property color selectedSurface: ColorMath.blend(surface, accent, 0.16)
+        readonly property color accentContainer: ColorMath.alpha(accent, 0.15)
+        readonly property color dangerContainer: ColorMath.alpha(danger, 0.15)
         readonly property color scrim: Qt.rgba(0, 0, 0, root.resolvedColorMode === "dark" ? 0.45 : 0.25)
     }
 

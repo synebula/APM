@@ -32,12 +32,14 @@ Singleton {
     }
 
     function canSetColorMode(mode: string): bool {
-        return ["system", "light", "dark"].includes(mode)
-            && PaletteCatalog.variant(Theme.palette.paletteId, mode === "system" ? Theme.resolvedColorMode : mode) !== null;
+        if (!["system", "light", "dark"].includes(mode))
+            return false;
+        const targetMode = mode === "system" ? Theme.resolvedColorMode : mode;
+        return PaletteCatalog.findVariant(Theme.palette.paletteId, targetMode) !== null;
     }
 
     function setColorMode(mode: string): bool {
-        if (!["system", "light", "dark"].includes(mode))
+        if (!root.canSetColorMode(mode))
             return false;
         AppearanceSettings.update({ "colorMode": mode });
         return true;

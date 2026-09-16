@@ -162,7 +162,7 @@ PopupPanel {
                             glyph: Theme.accentId === modelData.accentId ? "󰄬" : ""
                             tooltipText: modelData.accentId
                             borderWidth: Theme.accentId === modelData.accentId || visualFocus ? 2 : 1
-                            borderColor: Theme.accentId === modelData.accentId || visualFocus ? Theme.colors.textPrimary : Theme.colors.outline
+                            borderColor: Theme.components.popup.swatchBorderColor(Theme.accentId === modelData.accentId, visualFocus)
                             onClicked: ThemeController.setAccent(modelData.accentId)
 
                             contentItem: IconGlyph {

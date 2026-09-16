@@ -29,7 +29,7 @@ Column {
         }
         TextLabel {
             text: AudioService.nodeMuted(root.node) ? "静音" : Math.round(AudioService.nodeVolume(root.node) * 100) + "%"
-            color: AudioService.nodeMuted(root.node) ? Theme.colors.danger : Theme.colors.accent
+            color: Theme.components.status.tone(AudioService.nodeMuted(root.node))
         }
     }
 
@@ -37,7 +37,7 @@ Column {
         width: parent.width
         enabled: root.node !== null
         value: AudioService.nodeVolume(root.node)
-        progressColor: AudioService.nodeMuted(root.node) ? Theme.colors.danger : Theme.colors.accent
+        progressColor: Theme.components.status.tone(AudioService.nodeMuted(root.node))
         onMoved: AudioService.setNodeVolume(root.node, value)
     }
 

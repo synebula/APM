@@ -84,8 +84,7 @@ ActionButton {
                 delegate: ActionButton {
                     required property var modelData
                     text: modelData.text || modelData.identifier
-                    fillColor: Theme.colors.accentContainer
-                    foreground: Theme.colors.accent
+                    tonal: true
                     onClicked: root.actionRequested(modelData.identifier)
                 }
             }
@@ -98,7 +97,7 @@ ActionButton {
             Rectangle {
                 width: parent.width * root.notification.toast.progress
                 height: parent.height
-                color: root.notification.urgency === 2 ? Theme.colors.danger : Theme.colors.accent
+                color: Theme.components.notification.urgencyColor(root.notification.urgency)
             }
         }
     }

@@ -5,3 +5,4 @@ singleton BrightnessService 1.0 BrightnessService.qml
 singleton MediaService 1.0 MediaService.qml
 singleton SystemMetricsService 1.0 SystemMetricsService.qml
 singleton WindowManagerService 1.0 WindowManagerService.qml
+singleton ThemeSyncService 1.0 ThemeSyncService.qml

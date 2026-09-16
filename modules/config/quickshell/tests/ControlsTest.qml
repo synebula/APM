@@ -63,6 +63,13 @@ TestSuite {
         ThemeController.setScale("fontScale", 1);
     }
 
+    function test_controlsInheritUnifiedTextColor() {
+        compare(barButton.foreground.toString(), Theme.colors.textPrimary.toString());
+        compare(button.foreground.toString(), Theme.colors.textPrimary.toString());
+        compare(row.foreground.toString(), Theme.colors.textPrimary.toString());
+        compare(barLabel.color.toString(), Theme.colors.textPrimary.toString());
+    }
+
     name: "Controls"
     visible: true
     when: root.Window.window !== null && root.Window.window.visible

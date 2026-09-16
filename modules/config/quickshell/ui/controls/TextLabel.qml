@@ -4,7 +4,7 @@ import QtQuick
 Text {
     font.family: Theme.typography.family
     font.pixelSize: Theme.typography.bodySize
-    color: Theme.colors.textPrimary
+    color: enabled ? Theme.colors.textPrimary : Theme.colors.disabledText
     verticalAlignment: Text.AlignVCenter
     renderType: Text.NativeRendering
 }

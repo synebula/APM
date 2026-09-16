@@ -45,11 +45,23 @@ shell.qml
 - 展示组件使用 `*Window`、`*Popup`、`*Indicator` 或 `*View`。
 - 颜色、尺寸和动效从 `Theme` 读取；功能模块不要重复定义设计 token。
 
+### QML 属性与 Token 命名约束（严防语法陷阱）
+
+- **严禁使用 `on[A-Z]*` 命名任何属性**：
+  - **禁忌**：禁止定义如 `onSurface`、`onAccent`、`onPrimary`、`onBackground` 等属性。
+  - **根因**：QML 语法引擎强制将所有以 `on` 开头且紧跟大写字母的标识符识别为**信号处理器（Signal Handler）**。若对象中存在同名信号或属性（如 `surface`、`accent`），该属性声明会被拦截为信号处理槽，导致其作为属性读取时永远静默失效并回退为默认空值（对于 `color` 类型将回退为 `QColor(0,0,0)` 即纯黑 `#000000`）。
+  - **规范**：容器或状态背景上的高对比前景色一律采用 `*Foreground` 或 `*Text` 规范命名，例如 `accentForeground`、`dangerForeground`、`disabledText`。
+- **设计令牌与控件前景色收敛**：
+  - 常规前景色统一使用 `Theme.colors.textPrimary`（主文本与图标）和 `Theme.colors.textSecondary`（次级说明文字），亮暗模式由调色板自动切换。
+  - 容器与按钮控件（如 `BarButton`、`ActionButton`、`ActionRow`）统一对外暴露 `foreground` 属性；业务委托或子组件只需绑定容器的 `foreground` 或直接使用默认前景色，严禁逐个业务组件硬编码颜色。
+  - 基础文本控件（如 `TextLabel`、`BarText`）禁止在 `color` 上挂载 `Behavior on color`，防止组件实例化阶段从 Qt 默认黑色产生过渡滞后或值冻结。
+
+
 ## 主题与配色
 
 主题是外观语言的主入口：`ThemeDefinition` 组合形状、边框、层级、表面、间距、字体和动效 token。`ThemeCatalog` 注册命名主题；推荐配色只用于预览和初始搭配，不参与主题运行时继承。主题 token 不包含具体颜色，也没有 `raised` 这类派生类别字段。
 
-`Palette` 表示颜色家族，`PaletteVariant` 提供同一家族的 light/dark 语义颜色。`AppearanceSettings` 独立保存 `themeId`、`paletteId`、`colorMode`、`accentId` 和 `userOverrides`；`colorMode` 可选 `system`、`light`、`dark`，系统模式由 `ColorModeResolver` 解析。最终颜色由 palette、解析后的模式和强调色组合得到。
+`Palette` 表示颜色家族，`PaletteVariant` 提供同一家族的 light/dark 语义颜色。`AppearanceSettings` 独立保存 `themeId`、`paletteId`、`colorMode` 与 `accentId`；`colorMode` 可选 `system`、`light`、`dark`，系统模式由 `ColorModeResolver` 解析。最终颜色由 palette、解析后的模式和强调色组合得到。
 
 切换主题不会重置配色、明暗模式或强调色；切换 palette 也不会改变主题。选择器顶部通过开关切换深色和浅色，下面选择 palette 与强调色。“重置强调色”只清除 accent 选择。需要一键保存完整组合时，应在这些基础选择之上增加独立 preset，而不是把 palette 绑定回主题。
 

@@ -107,14 +107,14 @@ PanelWindow {
                 Layout.preferredWidth: 28 * Theme.controlScale
                 text: root.glyph
                 font.pixelSize: Theme.typography.headingSize
-                color: root.muted ? Theme.colors.danger : Theme.colors.accent
+                color: Theme.components.status.tone(root.muted)
             }
 
             ProgressBar {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
                 value: root.value
-                progressColor: root.muted ? Theme.colors.danger : Theme.colors.accent
+                progressColor: Theme.components.status.tone(root.muted)
             }
 
             TextLabel {
@@ -124,7 +124,7 @@ PanelWindow {
                 Layout.preferredWidth: 42 * Theme.fontScale
                 text: Math.round(root.value * 100) + "%"
                 font: Theme.typography.caption
-                color: root.muted ? Theme.colors.danger : Theme.colors.textPrimary
+                color: Theme.components.status.text(root.muted)
             }
         }
 

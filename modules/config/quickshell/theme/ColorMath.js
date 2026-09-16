@@ -7,8 +7,15 @@ function luminanceRgb(red, green, blue) {
     return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue);
 }
 
+function parseColor(color) {
+    if (typeof color === "string")
+        return Qt.color(color);
+    return color;
+}
+
 function luminance(color) {
-    return luminanceRgb(color.r, color.g, color.b);
+    const c = parseColor(color);
+    return luminanceRgb(c.r, c.g, c.b);
 }
 
 function contrast(first, second) {
@@ -22,4 +29,19 @@ function foreground(red, green, blue) {
     const lightContrast = 1.05 / (value + 0.05);
     const darkContrast = (value + 0.05) / 0.05;
     return lightContrast > darkContrast ? "#ffffff" : "#000000";
+}
+
+function alpha(color, a) {
+    const c = parseColor(color);
+    return Qt.rgba(c.r, c.g, c.b, Math.max(0, Math.min(1, a)));
+}
+
+function blend(background, overlay, a) {
+    const bg = parseColor(background);
+    const ov = parseColor(overlay);
+    const t = Math.max(0, Math.min(1, a));
+    const r = bg.r * (1 - t) + ov.r * t;
+    const g = bg.g * (1 - t) + ov.g * t;
+    const b = bg.b * (1 - t) + ov.b * t;
+    return Qt.rgba(r, g, b, 1);
 }

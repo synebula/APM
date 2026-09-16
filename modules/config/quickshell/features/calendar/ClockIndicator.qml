@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import "../../ui/controls"
 import QtQuick
 import Quickshell
@@ -42,6 +43,7 @@ BarButton {
 
     content: BarText {
         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        color: root.foreground
         text: Qt.formatDateTime(clock.date, root.showDetailedDate ? "dddd, MMMM d yyyy (HH:mm)" : "yyyy/MM/dd HH:mm")
     }
 }

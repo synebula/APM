@@ -13,8 +13,8 @@ ActionButton {
     signal middleClicked
     signal wheel(var event)
 
-    fillColor: root.active ? Theme.colors.accent : (root.urgent ? Theme.colors.danger : "transparent")
-    foreground: root.active ? Theme.colors.accentForeground : Theme.colors.textPrimary
+    fillColor: Theme.components.barButton.background(root.active, root.urgent)
+    foreground: Theme.components.barButton.foreground(root.active, root.urgent)
     implicitHeight: Theme.components.barButton.height
     implicitWidth: Math.max(implicitHeight, implicitContentWidth + leftPadding + rightPadding)
     height: implicitHeight

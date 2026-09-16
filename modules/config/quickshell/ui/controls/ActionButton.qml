@@ -10,13 +10,15 @@ T.Button {
 
     property string glyph: ""
     property string tooltipText: ""
+    property bool primary: false
+    property bool tonal: false
     property bool destructive: false
-    property color foreground: root.checked ? Theme.colors.accentForeground : (root.destructive ? Theme.colors.danger : Theme.colors.textPrimary)
-    property color fillColor: root.checked ? Theme.colors.accent : "transparent"
+    property color foreground: Theme.components.actionButton.foreground(root.enabled, root.checked, root.primary, root.tonal, root.destructive)
+    property color fillColor: Theme.components.actionButton.background(root.enabled, root.checked, root.primary, root.tonal, root.destructive)
     property real cornerRadius: Theme.shape.controlRadius
     property int glyphSize: Theme.components.iconButton.iconSize
     property int borderWidth: root.fillColor.a > 0.99 ? Theme.components.surface.borderWidth : (root.visualFocus ? Theme.shape.borderWidth : 0)
-    property color borderColor: root.fillColor.a > 0.99 ? Theme.components.surface.borderColor : (root.visualFocus ? root.foreground : "transparent")
+    property color borderColor: root.fillColor.a > 0.99 ? Theme.components.surface.borderColor : Theme.components.actionButton.borderColor(root.visualFocus, root.checked)
 
     font: Theme.typography.body
     padding: Theme.spacing.medium

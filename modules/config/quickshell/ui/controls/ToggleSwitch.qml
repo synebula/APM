@@ -15,9 +15,13 @@ T.Switch {
         implicitWidth: root.implicitWidth
         implicitHeight: root.implicitHeight
         radius: Math.min(height / 2, Theme.shape.controlRadius)
-        color: root.checked ? Theme.colors.accent : Theme.colors.surfaceVariant
+        color: Theme.components.toggleSwitch.trackColor(root.enabled, root.checked)
         border.width: root.visualFocus ? Theme.shape.borderWidth : 0
-        border.color: Theme.colors.textPrimary
+        border.color: Theme.components.toggleSwitch.borderColor(root.visualFocus)
+
+        Behavior on color {
+            ColorAnimation { duration: Theme.motion.standard.duration }
+        }
 
         Rectangle {
             x: root.checked ? parent.width - width - Theme.spacing.tiny : Theme.spacing.tiny
@@ -25,7 +29,11 @@ T.Switch {
             width: parent.height - Theme.spacing.tiny * 2
             height: width
             radius: Math.min(width / 2, Theme.shape.controlRadius)
-            color: root.checked ? Theme.colors.accentForeground : Theme.colors.textSecondary
+            color: Theme.components.toggleSwitch.knobColor(root.enabled, root.checked)
+
+            Behavior on color {
+                ColorAnimation { duration: Theme.motion.standard.duration }
+            }
 
             Behavior on x {
                 NumberAnimation {

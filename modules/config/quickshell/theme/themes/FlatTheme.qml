@@ -5,7 +5,7 @@ ThemeDefinition {
     displayName: "扁平"
     glyph: "󰉈"
     description: "清晰边界 · 简洁层次"
-    recommendedPaletteIds: ["catppuccin", "nord"]
+    suggestedPaletteIds: ["catppuccin", "nord"]
     shape: ShapeSpec {
         smallRadius: 4
         controlRadius: 8

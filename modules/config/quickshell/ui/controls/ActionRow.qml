@@ -12,7 +12,7 @@ T.ItemDelegate {
     property string trailingText: ""
     property bool selected: false
     property bool destructive: false
-    property color foreground: root.destructive ? Theme.colors.danger : Theme.colors.textPrimary
+    property color foreground: Theme.components.actionRow.foreground(root.enabled, root.selected, root.destructive)
     property int iconSize: Theme.components.iconButton.iconSize
     default property alias trailingContent: trailing.data
 
@@ -24,13 +24,17 @@ T.ItemDelegate {
     spacing: Theme.spacing.medium
     implicitHeight: Math.max(Theme.components.actionRow.height, implicitContentHeight + topPadding + bottomPadding)
     implicitWidth: implicitContentWidth + leftPadding + rightPadding
-    opacity: enabled ? 1 : 0.4
+    opacity: enabled ? 1 : 0.6
 
     background: Rectangle {
-        color: root.selected ? Theme.colors.selectedSurface : "transparent"
+        color: Theme.components.actionRow.background(root.enabled, root.selected)
         radius: Theme.shape.controlRadius
         border.width: root.selected || root.visualFocus ? Theme.shape.borderWidth : 0
-        border.color: Theme.colors.accent
+        border.color: Theme.components.actionRow.borderColor(root.visualFocus, root.selected)
+
+        Behavior on color {
+            ColorAnimation { duration: Theme.motion.standard.duration }
+        }
 
         StateLayer {
             anchors.fill: parent
@@ -51,7 +55,7 @@ T.ItemDelegate {
             visible: root.icon.name.length > 0 || root.icon.source.toString().length > 0
             source: root.icon.name || root.icon.source.toString()
             fallbackGlyph: root.glyph || "󰈙"
-            foreground: root.selected ? Theme.colors.accent : root.foreground
+            foreground: root.foreground
             Layout.preferredWidth: root.iconSize
             Layout.preferredHeight: root.iconSize
             Layout.alignment: Qt.AlignVCenter
@@ -60,7 +64,7 @@ T.ItemDelegate {
         IconGlyph {
             visible: root.glyph.length > 0 && !leadingImage.visible
             text: root.glyph
-            color: root.selected ? Theme.colors.accent : root.foreground
+            color: root.foreground
             font.pixelSize: root.iconSize
             Layout.alignment: Qt.AlignVCenter
         }

@@ -19,9 +19,17 @@ Singleton {
         return root.palettes.find(palette => palette.paletteId === paletteId) || null;
     }
 
+    function findVariant(paletteId: string, mode: string): PaletteVariant {
+        const palette = root.find(paletteId);
+        return palette ? palette.variant(mode) : null;
+    }
+
     function variant(paletteId: string, mode: string): PaletteVariant {
+        const found = root.findVariant(paletteId, mode);
+        if (found)
+            return found;
         const palette = root.find(paletteId) || root.defaultPalette;
-        return palette.variant(mode) || palette.defaultVariant;
+        return palette ? (palette.variant(mode) || palette.defaultVariant) : null;
     }
 
     function accentIds(paletteVariant: PaletteVariant): var {

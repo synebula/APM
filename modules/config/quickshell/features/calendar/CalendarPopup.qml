@@ -82,7 +82,7 @@ PopupPanel {
                 id: day
                 required property var model
                 radius: Theme.shape.controlRadius
-                color: model.today ? Theme.colors.accent : (hover.hovered ? Theme.colors.hoveredSurface : "transparent")
+                color: Theme.components.calendar.dayBackground(model.today, hover.hovered)
                 HoverHandler {
                     id: hover
                 }
@@ -91,7 +91,7 @@ PopupPanel {
                     text: day.model.day
                     font.bold: day.model.today
                     opacity: day.model.month === monthGrid.month ? 1 : 0.35
-                    color: day.model.today ? Theme.colors.accentForeground : Theme.colors.textPrimary
+                    color: Theme.components.calendar.dayForeground(day.model.today)
                 }
             }
         }

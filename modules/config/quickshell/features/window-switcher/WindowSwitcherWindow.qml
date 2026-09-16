@@ -63,7 +63,7 @@ ModalWindow {
                     required property int index
                     width: 180 * Theme.controlScale
                     height: windows.height
-                    fillColor: index === controller.selectedIndex ? Theme.colors.selectedSurface : "transparent"
+                    fillColor: Theme.components.actionRow.background(true, index === controller.selectedIndex)
                     onHoveredChanged: {
                         if (hovered)
                             controller.selectedIndex = index;

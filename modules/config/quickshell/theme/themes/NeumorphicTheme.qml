@@ -5,7 +5,7 @@ ThemeDefinition {
     displayName: "仿真"
     glyph: "󰆾"
     description: "柔和阴影 · 立体表面"
-    recommendedPaletteIds: ["pastel-relief", "catppuccin"]
+    suggestedPaletteIds: ["pastel-relief", "catppuccin"]
     shape: ShapeSpec {
         smallRadius: 4
         controlRadius: 8

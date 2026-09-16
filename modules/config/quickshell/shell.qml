@@ -6,11 +6,13 @@ import "features/notifications"
 import "features/osd"
 import "features/session"
 import "features/window-switcher"
+import "services"
 import "theme"
 import "ui/containers"
 
 ShellRoot {
     readonly property var themeController: ThemeController
+    readonly property var themeSyncService: ThemeSyncService
     readonly property var sessionActions: SessionActions
 
     Variants {

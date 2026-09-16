@@ -9,20 +9,20 @@ ActionButton {
     id: root
 
     required property ThemeDefinition definition
-    readonly property PaletteDefinition previewPalette: PaletteCatalog.find(root.definition.recommendedPaletteIds[0]) || PaletteCatalog.defaultPalette
+    readonly property PaletteDefinition previewPalette: PaletteCatalog.find(root.definition.defaultPaletteId) || PaletteCatalog.defaultPalette
     readonly property PaletteVariant previewVariant: PaletteCatalog.variant(root.previewPalette.paletteId, "light")
     readonly property color previewBorderColor: root.definition.border.colorPolicy === "transparent" ? "transparent" : root.previewVariant.outline
 
     objectName: "theme-" + root.definition.themeId
     text: root.definition.displayName
-    tooltipText: root.definition.description + " · 推荐 " + root.previewPalette.displayName
+    tooltipText: root.definition.description + " · 建议搭配 " + root.previewPalette.displayName
     padding: Theme.spacing.medium
 
     background: Rectangle {
-        color: root.checked ? Theme.colors.selectedSurface : "transparent"
+        color: Theme.components.themeCard.background(root.checked)
         radius: Theme.shape.controlRadius
         border.width: root.checked || root.visualFocus ? 2 : 1
-        border.color: root.checked || root.visualFocus ? Theme.colors.accent : Theme.colors.outline
+        border.color: Theme.components.themeCard.borderColor(root.checked, root.visualFocus)
     }
 
     contentItem: ColumnLayout {
@@ -100,7 +100,7 @@ ActionButton {
             }
             IconGlyph {
                 text: root.checked ? "󰄬" : root.definition.glyph
-                color: root.checked ? Theme.colors.accent : Theme.colors.textSecondary
+                color: Theme.components.themeCard.accentColor(root.checked)
             }
         }
 

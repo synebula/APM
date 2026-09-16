@@ -29,7 +29,7 @@ Row {
                 anchors.verticalCenter: parent.verticalCenter
                 value: SystemMetricsService.cpuPercent / 100
                 glyph: "󰍛"
-                progressColor: SystemMetricsService.cpuPercent > 80 ? Theme.colors.danger : Theme.colors.accent
+                progressColor: Theme.components.status.tone(SystemMetricsService.cpuPercent > 80)
             }
 
             BarText {
@@ -51,7 +51,7 @@ Row {
                 anchors.verticalCenter: parent.verticalCenter
                 value: Math.max(0, Math.min(1, (SystemMetricsService.temperatureCelsius - 30) / 70))
                 glyph: IconGlyphs.temperature(SystemMetricsService.temperatureCelsius)
-                progressColor: SystemMetricsService.temperatureCelsius > 80 ? Theme.colors.danger : Theme.colors.accent
+                progressColor: Theme.components.status.tone(SystemMetricsService.temperatureCelsius > 80)
             }
 
             BarText {
@@ -74,7 +74,7 @@ Row {
                 anchors.verticalCenter: parent.verticalCenter
                 value: SystemMetricsService.memoryPercent / 100
                 glyph: ""
-                progressColor: SystemMetricsService.memoryPercent > 85 ? Theme.colors.danger : Theme.colors.accent
+                progressColor: Theme.components.status.tone(SystemMetricsService.memoryPercent > 85)
             }
 
             BarText {

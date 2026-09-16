@@ -17,9 +17,9 @@ T.Switch {
         implicitWidth: root.implicitWidth
         implicitHeight: root.implicitHeight
         radius: height / 2
-        color: root.checked ? Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.2) : Theme.colors.surfaceVariant
+        color: Theme.components.colorModeToggle.trackColor(root.checked)
         border.width: root.visualFocus ? Theme.shape.borderWidth : 1
-        border.color: root.checked ? Theme.colors.accent : Theme.colors.outline
+        border.color: Theme.components.colorModeToggle.trackBorder(root.checked)
 
         Behavior on color {
             ColorAnimation { duration: Theme.motion.fastEffects.duration }
@@ -27,7 +27,7 @@ T.Switch {
 
         IconGlyph {
             text: "󰖙"
-            color: root.checked ? Theme.colors.textSecondary : Theme.colors.accent
+            color: Theme.components.colorModeToggle.iconColor(!root.checked)
             font.pixelSize: Math.round(14 * Theme.controlScale)
             opacity: root.checked ? 0.65 : 1
             x: Math.round(7 * Theme.controlScale)
@@ -40,7 +40,7 @@ T.Switch {
 
         IconGlyph {
             text: "󰖔"
-            color: root.checked ? Theme.colors.accent : Theme.colors.textSecondary
+            color: Theme.components.colorModeToggle.iconColor(root.checked)
             font.pixelSize: Math.round(14 * Theme.controlScale)
             opacity: root.checked ? 1 : 0.65
             x: parent.width - width - Math.round(7 * Theme.controlScale)
@@ -60,9 +60,9 @@ T.Switch {
             x: root.checked ? parent.width - width - Math.round(3 * Theme.controlScale) : Math.round(3 * Theme.controlScale)
             anchors.verticalCenter: parent.verticalCenter
             radius: width / 2
-            color: root.checked ? Theme.colors.accent : Theme.colors.background
+            color: Theme.components.colorModeToggle.knobColor(root.checked)
             border.width: 1
-            border.color: root.checked ? Theme.colors.accent : Theme.colors.outline
+            border.color: Theme.components.colorModeToggle.knobBorder(root.checked)
 
             Behavior on x {
                 NumberAnimation {
@@ -79,7 +79,7 @@ T.Switch {
             IconGlyph {
                 anchors.centerIn: parent
                 text: root.checked ? "󰖔" : "󰖙"
-                color: root.checked ? Theme.colors.accentForeground : Theme.colors.accent
+                color: Theme.components.colorModeToggle.knobForeground(root.checked)
                 font.pixelSize: Math.round(13 * Theme.controlScale)
             }
         }

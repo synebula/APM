@@ -47,10 +47,22 @@ BarButton {
         }
     }
 
-    content: BarText {
+    content: Row {
+        spacing: Theme.spacing.tiny
         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
-        text: NotificationService.doNotDisturb ? "󰂛" : (NotificationService.unreadCount > 0 ? ("󰂚 " + NotificationService.unreadCount) : "󰂚")
-        color: NotificationService.doNotDisturb ? Theme.colors.danger : ((NotificationService.unreadCount > 0) ? Theme.colors.accent : Theme.colors.textPrimary)
-        font.pixelSize: Theme.typography.bodySize
+
+        IconGlyph {
+            anchors.verticalCenter: parent.verticalCenter
+            text: NotificationService.doNotDisturb ? "󰂛" : "󰂚"
+            color: Theme.components.notification.indicatorTone(NotificationService.doNotDisturb, NotificationService.unreadCount > 0)
+            font.pixelSize: Theme.typography.bodySize
+        }
+
+        BarText {
+            visible: !NotificationService.doNotDisturb && NotificationService.unreadCount > 0
+            anchors.verticalCenter: parent.verticalCenter
+            text: NotificationService.unreadCount.toString()
+            color: Theme.components.notification.indicatorTone(false, true)
+        }
     }
 }

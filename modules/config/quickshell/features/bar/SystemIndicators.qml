@@ -39,6 +39,7 @@ Row {
             }
         }
 
+        active: BluetoothService.connectedDevices.length > 0
         onClicked: btBtn.toggleBluetoothMenu()
         onRightClicked: BluetoothService.toggle()
 
@@ -51,7 +52,7 @@ Row {
                 const count = BluetoothService.connectedDevices.length;
                 return count > 0 ? (" " + count) : "";
             }
-            color: BluetoothService.connectedDevices.length > 0 ? Theme.colors.accentForeground : Theme.colors.textPrimary
+            color: btBtn.foreground
         }
     }
 
@@ -69,6 +70,7 @@ Row {
     // Audio (Wireplumber / Pipewire with AudioPopup)
     BarButton {
         id: audioBtn
+        urgent: AudioService.outputMuted
 
         tooltipText: {
             const pct = Math.round(AudioService.outputVolume * 100);
@@ -101,7 +103,7 @@ Row {
                 const pct = Math.round(AudioService.outputVolume * 100);
                 return AudioService.outputMuted ? icon : (icon + " " + pct + "%");
             }
-            color: AudioService.outputMuted ? Theme.colors.danger : Theme.colors.textPrimary
+            color: audioBtn.foreground
         }
     }
 
