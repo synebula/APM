@@ -9,8 +9,8 @@ import "../../ui/controls"
 
 PopupPanel {
     id: root
-    contentWidth: 480 * Theme.controlScale
-    contentHeight: Math.min(640 * Theme.controlScale, content.implicitHeight + Theme.components.popup.padding * 2)
+    contentWidth: 560 * Theme.controlScale
+    contentHeight: Math.min(720 * Theme.controlScale, content.implicitHeight + Theme.components.popup.padding * 2)
     onIsOpenChanged: NotificationService.centerOpen = isOpen
 
     ColumnLayout {
@@ -22,8 +22,9 @@ PopupPanel {
         SectionHeader {
             Layout.fillWidth: true
             title: "通知"
-            subtitle: NotificationService.doNotDisturb ? "勿扰模式已开启" : NotificationService.records.length + " 条通知"
-            glyph: "󰂚"
+            subtitle: NotificationService.doNotDisturb ? "勿扰模式已开启" : (NotificationService.records.length > 0 ? (NotificationService.records.length + " 条通知") : "全部已读")
+            glyph: NotificationService.doNotDisturb ? "󰂛" : "󰂚"
+            tone: NotificationService.doNotDisturb ? Theme.colors.warning : Theme.colors.accent
             IconButton {
                 glyph: "󰂛"
                 checked: NotificationService.doNotDisturb
@@ -43,14 +44,42 @@ PopupPanel {
             Layout.fillWidth: true
         }
 
-        TextLabel {
+        ColumnLayout {
             visible: NotificationService.records.length === 0
-            text: "没有新通知"
-            color: Theme.colors.textSecondary
-            horizontalAlignment: Text.AlignHCenter
             Layout.fillWidth: true
-            Layout.preferredHeight: Theme.components.actionRow.height * 2
-            verticalAlignment: Text.AlignVCenter
+            Layout.preferredHeight: 180 * Theme.controlScale
+            spacing: Theme.spacing.medium
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
+            Rectangle {
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: 48 * Theme.controlScale
+                implicitHeight: implicitWidth
+                radius: implicitWidth / 2
+                color: Theme.components.notification.emptyBadgeColor(NotificationService.doNotDisturb)
+
+                IconGlyph {
+                    anchors.centerIn: parent
+                    text: NotificationService.doNotDisturb ? "󰂛" : "󰂚"
+                    color: NotificationService.doNotDisturb ? Theme.colors.warning : Theme.colors.accent
+                    font.pixelSize: 22 * Theme.fontScale
+                }
+            }
+
+            TextLabel {
+                Layout.alignment: Qt.AlignHCenter
+                text: NotificationService.doNotDisturb ? "勿扰模式开启中" : "暂无新通知"
+                font.bold: true
+                font.pixelSize: Theme.typography.bodySize
+                color: Theme.colors.textPrimary
+            }
+
+            TextLabel {
+                Layout.alignment: Qt.AlignHCenter
+                text: NotificationService.doNotDisturb ? "在此期间系统将静默收集所有消息" : "新提醒和系统消息将在这里汇聚"
+                font: Theme.typography.caption
+                color: Theme.colors.textSecondary
+            }
         }
 
         ListView {
@@ -58,7 +87,7 @@ PopupPanel {
             visible: count > 0
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: Math.min(contentHeight, 460 * Theme.controlScale)
+            Layout.preferredHeight: contentHeight
             model: NotificationService.records
             spacing: Theme.spacing.medium
             clip: true

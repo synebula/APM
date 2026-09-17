@@ -9,7 +9,7 @@ import "../../services"
 Singleton {
     id: root
 
-    signal toggleCenterRequested()
+    signal toggleCenterRequested
 
     property alias doNotDisturb: persistent.doNotDisturb
     property alias centerOpen: store.centerOpen
@@ -85,12 +85,12 @@ Singleton {
     }
 
     NotificationServer {
-        keepOnReload: true
-        actionsSupported: true
-        bodyMarkupSupported: true
-        bodySupported: true
-        imageSupported: true
-        persistenceSupported: true
+        keepOnReload: true          // 重载配置时不释放 D-Bus 服务名，防止其他应用发通知时找不到服务器
+        actionsSupported: true      // 告诉 D-Bus GetCapabilities(): 支持交互按钮 (actions)
+        bodyMarkupSupported: true   // 告诉 D-Bus GetCapabilities(): 支持 HTML/Pango 标记
+        bodySupported: true         // 支持通知正文
+        imageSupported: true        // 支持附带图片/图标
+        persistenceSupported: true  // 支持通知中心常驻/不自动丢失
         onNotification: notification => {
             if (root.restoredMetadata === null)
                 root.restoredMetadata = Object.assign({}, persistent.metadata);

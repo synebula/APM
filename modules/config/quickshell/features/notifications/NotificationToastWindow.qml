@@ -42,12 +42,23 @@ PanelWindow {
                 onActionRequested: actionId => NotificationService.invokeAction(modelData.notificationId, actionId)
             }
         }
-        TextLabel {
+        Rectangle {
             visible: NotificationService.toasts.length > ShellSettings.notificationToastLimit
-            width: parent.width
-            horizontalAlignment: Text.AlignHCenter
-            text: "+" + (NotificationService.toasts.length - ShellSettings.notificationToastLimit) + " 条通知，可在通知中心查看"
-            color: Theme.colors.textSecondary
+            anchors.horizontalCenter: parent.horizontalCenter
+            implicitWidth: overflowText.implicitWidth + Theme.spacing.large * 2
+            implicitHeight: Math.round(26 * Theme.controlScale)
+            radius: implicitHeight / 2
+            color: Theme.components.notification.cardBackground(true, false, false, 1)
+            border.width: 1
+            border.color: Theme.colors.outline
+
+            TextLabel {
+                id: overflowText
+                anchors.centerIn: parent
+                text: "+" + (NotificationService.toasts.length - ShellSettings.notificationToastLimit) + " 条通知，可在通知中心查看"
+                font: Theme.typography.caption
+                color: Theme.colors.textSecondary
+            }
         }
     }
 }

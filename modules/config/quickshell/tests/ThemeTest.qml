@@ -212,6 +212,13 @@ TestSuite {
         compare(Theme.components.notification.indicatorTone(false, false).toString(), Theme.colors.textPrimary.toString());
         compare(Theme.components.notification.urgencyColor(2).toString(), Theme.colors.danger.toString());
         compare(Theme.components.notification.urgencyColor(1).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.notification.appNameColor(2).toString(), Theme.colors.danger.toString());
+        compare(Theme.components.notification.appNameColor(1).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.notification.accentStripColor(true, 1).toString(), Theme.colors.accent.toString());
+        compare(Theme.components.notification.accentStripColor(false, 2).toString(), Theme.colors.danger.toString());
+        verify(Theme.components.notification.cardBackground(true, false, false, 1) !== undefined);
+        verify(Theme.components.notification.cardBorderColor(false, true, true, 1) !== undefined);
+        verify(Theme.components.notification.emptyBadgeColor(false) !== undefined);
 
         // PopupTokens state mapping
         compare(Theme.components.popup.swatchBorderColor(true, false).toString(), Theme.colors.textPrimary.toString());
