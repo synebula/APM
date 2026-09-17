@@ -15,8 +15,12 @@ Item {
         if (root.source.startsWith("/"))
             return "file://" + root.source;
 
-        if (root.source.startsWith("image://icon/"))
-            return Quickshell.iconPath(root.source.slice(13), true);
+        if (root.source.startsWith("image://icon/")) {
+            const sub = root.source.slice(13);
+            if (sub.startsWith("/"))
+                return "file://" + sub;
+            return Quickshell.iconPath(sub, true);
+        }
 
         if (root.source.includes("://"))
             return root.source;

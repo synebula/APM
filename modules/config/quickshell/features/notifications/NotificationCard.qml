@@ -16,6 +16,7 @@ ActionButton {
     readonly property bool isUrgent: root.notification && root.notification.urgency === 2
     readonly property bool isUnread: root.notification && root.notification.unread
     readonly property int notificationUrgency: root.notification ? root.notification.urgency : 1
+    readonly property bool hasAppIcon: !!(root.notification && root.notification.appIcon && root.notification.appIcon.length > 0)
     readonly property bool hasImage: !!(root.notification && root.notification.image && root.notification.image.length > 0)
     readonly property string resolvedImage: {
         if (!root.hasImage)
@@ -23,6 +24,12 @@ ActionButton {
         const img = root.notification.image;
         if (img.startsWith("/"))
             return "file://" + img;
+        if (img.startsWith("image://icon/")) {
+            const sub = img.slice(13);
+            if (sub.startsWith("/"))
+                return "file://" + sub;
+            return Quickshell.iconPath(sub, true) || img;
+        }
         if (img.includes("://"))
             return img;
         return Quickshell.iconPath(img, true) || img;
@@ -82,7 +89,7 @@ ActionButton {
                     anchors.centerIn: parent
                     width: Theme.components.iconButton.iconSize
                     height: Theme.components.iconButton.iconSize
-                    source: root.notification ? root.notification.appIcon : ""
+                    source: root.hasAppIcon ? root.notification.appIcon : root.resolvedImage
                     fallbackGlyph: "󰂚"
                     foreground: Theme.components.notification.iconGlyphColor(root.notificationUrgency)
                 }
@@ -158,39 +165,43 @@ ActionButton {
             Layout.topMargin: (root.notification && root.notification.summary.length > 0) ? -Theme.spacing.small : 0
         }
 
-        Rectangle {
-            id: imageContainer
-            visible: root.hasImage && previewImage.status === Image.Ready
+        Item {
+            id: imageArea
+            visible: root.hasImage && previewImage.status === Image.Ready && (root.hasAppIcon || previewImage.implicitWidth > 128)
             Layout.fillWidth: true
-            Layout.preferredHeight: {
-                if (!visible || previewImage.implicitWidth <= 0)
-                    return 0;
-                const cardWidth = width > 0 ? width : (360 * Theme.controlScale);
-                const maxHeight = (root.toastMode ? 160 : 180) * Theme.controlScale;
-                const naturalHeight = previewImage.implicitWidth > cardWidth ? previewImage.implicitHeight * (cardWidth / previewImage.implicitWidth) : Math.min(previewImage.implicitHeight, previewImage.implicitHeight * (cardWidth / previewImage.implicitWidth));
-                return Math.min(maxHeight, Math.max(48 * Theme.controlScale, naturalHeight));
-            }
-            radius: Theme.shape.controlRadius
-            color: Theme.colors.surfaceVariant
-            border.width: 1
-            border.color: Theme.colors.outline
-            clip: true
+            Layout.preferredHeight: visible ? displayHeight : 0
 
-            Image {
-                anchors.fill: parent
-                source: previewImage.source
-                fillMode: Image.PreserveAspectCrop
-                opacity: 0.18
-                asynchronous: true
+            readonly property real maxWidth: width > 0 ? width : (360 * Theme.controlScale)
+            readonly property real maxHeight: (root.toastMode ? 160 : 180) * Theme.controlScale
+
+            readonly property real scaleFactor: {
+                if (previewImage.implicitWidth <= 0 || previewImage.implicitHeight <= 0)
+                    return 1.0;
+                const sW = previewImage.implicitWidth > maxWidth ? (maxWidth / previewImage.implicitWidth) : 1.0;
+                const sH = previewImage.implicitHeight > maxHeight ? (maxHeight / previewImage.implicitHeight) : 1.0;
+                return Math.min(sW, sH);
             }
 
-            Image {
-                id: previewImage
-                anchors.fill: parent
-                source: root.resolvedImage
-                fillMode: Image.PreserveAspectFit
-                asynchronous: true
-                mipmap: true
+            readonly property real displayWidth: Math.round(previewImage.implicitWidth * scaleFactor)
+            readonly property real displayHeight: Math.round(previewImage.implicitHeight * scaleFactor)
+
+            Rectangle {
+                width: imageArea.displayWidth
+                height: imageArea.displayHeight
+                radius: Theme.shape.controlRadius
+                color: Theme.colors.surfaceVariant
+                border.width: 1
+                border.color: Theme.colors.outline
+                clip: true
+
+                Image {
+                    id: previewImage
+                    anchors.fill: parent
+                    source: root.resolvedImage
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    mipmap: true
+                }
             }
         }
 
