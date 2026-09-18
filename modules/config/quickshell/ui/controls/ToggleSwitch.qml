@@ -9,7 +9,7 @@ T.Switch {
     implicitHeight: Math.round(20 * Theme.controlScale)
     padding: 0
     hoverEnabled: true
-    opacity: enabled ? 1 : 0.4
+    opacity: enabled ? 1 : Theme.disabledOpacity
 
     indicator: Rectangle {
         implicitWidth: root.implicitWidth

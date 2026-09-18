@@ -90,7 +90,7 @@ PopupPanel {
                     anchors.centerIn: parent
                     text: day.model.day
                     font.bold: day.model.today
-                    opacity: day.model.month === monthGrid.month ? 1 : 0.35
+                    opacity: Theme.components.calendar.dayOpacity(day.model.month === monthGrid.month)
                     color: Theme.components.calendar.dayForeground(day.model.today)
                 }
             }

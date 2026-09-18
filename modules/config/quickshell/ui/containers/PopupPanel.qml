@@ -46,8 +46,9 @@ PopupWindow {
     anchor.item: root.anchorItem
     anchor.edges: root.alignRight ? (Edges.Bottom | Edges.Right) : Edges.Bottom
     anchor.gravity: root.alignRight ? (Edges.Bottom | Edges.Left) : Edges.Bottom
+    anchor.margins.top: Theme.components.popup.gap
     implicitWidth: root.contentWidth
-    implicitHeight: root.contentHeight + Theme.components.popup.gap
+    implicitHeight: root.contentHeight
     color: "transparent"
     visible: false
     grabFocus: false
@@ -70,12 +71,9 @@ PopupWindow {
         id: card
 
         anchors.fill: parent
-        anchors.topMargin: Theme.components.popup.gap
         fill: Theme.colors.surface
         radius: Theme.shape.panelRadius
         opacity: root.isOpen ? 1 : 0
-        scale: root.isOpen ? 1 : 0.96
-        transformOrigin: root.alignRight ? Item.TopRight : Item.TopLeft
 
         CompositorBlurRegion {
             targetWindow: root
@@ -92,13 +90,6 @@ PopupWindow {
         }
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.motion.fastEffects.duration
-                easing.type: Theme.motion.fastEffects.easing
-            }
-        }
-
-        Behavior on scale {
             NumberAnimation {
                 duration: Theme.motion.fastEffects.duration
                 easing.type: Theme.motion.fastEffects.easing

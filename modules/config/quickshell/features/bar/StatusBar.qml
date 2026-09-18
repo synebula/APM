@@ -106,11 +106,11 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.components.bar.padding
 
-            BarGroup {
-                Taskbar {
-                    screen: root.screen
-                }
-            }
+            // BarGroup {
+            //     Taskbar {
+            //         screen: root.screen
+            //     }
+            // }
 
             BarGroup {
                 SystemTrayView {

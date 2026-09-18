@@ -13,6 +13,7 @@ Singleton {
     readonly property PaletteDefinition palette: PaletteCatalog.find(AppearanceSettings.paletteId) || PaletteCatalog.defaultPalette
     readonly property string colorMode: ["system", "light", "dark"].includes(AppearanceSettings.colorMode) ? AppearanceSettings.colorMode : "system"
     readonly property string resolvedColorMode: root.colorMode === "system" ? ColorModeResolver.systemMode : root.colorMode
+    readonly property bool isDark: root.resolvedColorMode === "dark"
     readonly property PaletteVariant paletteVariant: PaletteCatalog.variant(root.palette.paletteId, root.resolvedColorMode)
     readonly property string displayName: root.definition.displayName
     readonly property string accentId: PaletteCatalog.accentIds(root.paletteVariant).includes(AppearanceSettings.accentId) ? AppearanceSettings.accentId : root.paletteVariant.defaultAccentId
@@ -20,6 +21,7 @@ Singleton {
     readonly property real fontScale: Math.max(0.75, Math.min(2, AppearanceSettings.fontScale))
     readonly property real spacingScale: Math.max(0.5, Math.min(2, AppearanceSettings.spacingScale))
     readonly property real controlScale: Math.max(root.fontScale, root.spacingScale)
+    readonly property real disabledOpacity: 0.45
 
     readonly property ColorTokens colors: ColorTokens {}
 
@@ -40,14 +42,23 @@ Singleton {
         readonly property int height: Math.round(20 * root.controlScale)
         readonly property int trackHeight: Math.round(6 * root.spacingScale)
         readonly property int handleSize: Math.round(14 * root.controlScale)
+
+        function handleBorderWidth(visualFocus: bool): int {
+            return visualFocus ? 3 : 2;
+        }
     }
 
     component PopupTokens: QtObject {
         readonly property int padding: root.spacing.large
         readonly property int gap: root.spacing.small
+        readonly property int tooltipMaxWidth: Math.round(480 * root.controlScale)
 
         function swatchBorderColor(selected: bool, visualFocus: bool): color {
             return (selected || visualFocus) ? root.colors.textPrimary : root.colors.outline;
+        }
+
+        function swatchBorderWidth(selected: bool, visualFocus: bool): int {
+            return (selected || visualFocus) ? 2 : 1;
         }
     }
 
@@ -95,6 +106,14 @@ Singleton {
                 return destructive ? root.colors.danger : root.colors.accent;
             return Qt.color("transparent");
         }
+
+        function borderWidth(visualFocus: bool, checked: bool, isSurface: bool): int {
+            if (isSurface)
+                return root.components.surface.borderWidth;
+            if (visualFocus || checked)
+                return root.shape.borderWidth;
+            return 0;
+        }
     }
 
     component ActionRowTokens: QtObject {
@@ -121,6 +140,10 @@ Singleton {
             if (visualFocus || selected)
                 return destructive ? root.colors.danger : (visualFocus ? root.colors.focusRing : root.colors.accent);
             return Qt.color("transparent");
+        }
+
+        function borderWidth(visualFocus: bool, selected: bool): int {
+            return (visualFocus || selected) ? root.shape.borderWidth : 0;
         }
     }
 
@@ -171,7 +194,7 @@ Singleton {
 
     component BarGroupTokens: QtObject {
         readonly property int height: Math.round(24 * root.controlScale)
-        readonly property color background: root.resolvedColorMode === "light" ? root.colors.background : root.colors.surface
+        readonly property color background: root.isDark ? root.colors.surface : root.colors.background
         readonly property int padding: Math.round(6 * root.spacingScale)
         readonly property real radius: Math.min(height / 2, 13 * root.shape.scale)
     }
@@ -200,6 +223,10 @@ Singleton {
         readonly property color highlightColor: root.highlightColor
         readonly property real gradientLighten: root.definition.surface.gradientLighten
         readonly property real gradientDarken: root.definition.surface.gradientDarken
+        readonly property int shadowMargin: shadowEnabled ? Math.round(24 * root.controlScale) : 0
+        readonly property bool isGlass: mode === "acrylic" || fillOpacity < 1.0
+        readonly property bool isGradient: mode === "gradient" && !isGlass
+        readonly property bool layerEffectsEnabled: !isGlass && (shadowEnabled || blurRadius > 0)
     }
 
     component StatusTokens: QtObject {
@@ -217,6 +244,8 @@ Singleton {
     }
 
     component CalendarTokens: QtObject {
+        readonly property real otherMonthOpacity: 0.35
+
         function dayBackground(today: bool, hovered: bool): color {
             if (today)
                 return root.colors.accent;
@@ -230,6 +259,10 @@ Singleton {
                 return root.colors.accentForeground;
             return root.colors.textPrimary;
         }
+
+        function dayOpacity(inCurrentMonth: bool): real {
+            return inCurrentMonth ? 1.0 : otherMonthOpacity;
+        }
     }
 
     component ThemeCardTokens: QtObject {
@@ -241,12 +274,18 @@ Singleton {
             return (checked || visualFocus) ? root.colors.accent : root.colors.outline;
         }
 
+        function borderWidth(checked: bool, visualFocus: bool): int {
+            return (checked || visualFocus) ? 2 : 1;
+        }
+
         function accentColor(checked: bool): color {
             return checked ? root.colors.accent : root.colors.textSecondary;
         }
     }
 
     component ColorModeToggleTokens: QtObject {
+        readonly property real inactiveIconOpacity: 0.65
+
         function trackColor(checked: bool): color {
             return checked ? Qt.rgba(root.colors.accent.r, root.colors.accent.g, root.colors.accent.b, 0.2) : root.colors.surfaceVariant;
         }
@@ -270,6 +309,34 @@ Singleton {
         function iconColor(active: bool): color {
             return active ? root.colors.accent : root.colors.textSecondary;
         }
+
+        function knobGlyph(checked: bool): string {
+            return checked ? "󰖔" : "󰖙";
+        }
+    }
+
+    component BluetoothTokens: QtObject {
+        function actionGlyph(connected: bool): string {
+            return connected ? "󰅖" : "󰄬";
+        }
+
+        function actionColor(connected: bool): color {
+            return connected ? root.colors.danger : root.colors.textSecondary;
+        }
+    }
+
+    component MenuTokens: QtObject {
+        readonly property int separatorHeight: root.spacing.medium
+
+        function checkGlyph(isRadio: bool, selected: bool): string {
+            if (isRadio)
+                return selected ? "●" : "○";
+            return selected ? "✓" : "";
+        }
+
+        function trailingGlyph(hasChildren: bool): string {
+            return hasChildren ? "›" : "";
+        }
     }
 
     component NotificationTokens: QtObject {
@@ -283,6 +350,14 @@ Singleton {
             if (dnd)
                 return root.colors.danger;
             if (unread)
+                return root.colors.accent;
+            return root.colors.textPrimary;
+        }
+
+        function centerStatusTone(dnd: bool, hasRecords: bool): color {
+            if (dnd)
+                return root.colors.warning;
+            if (hasRecords)
                 return root.colors.accent;
             return root.colors.textPrimary;
         }
@@ -322,7 +397,7 @@ Singleton {
         }
 
         function appNameColor(urgency: int): color {
-            return urgency === 2 ? root.colors.danger : root.colors.accent;
+            return urgencyColor(urgency);
         }
 
         function iconContainerColor(urgency: int): color {
@@ -330,7 +405,7 @@ Singleton {
         }
 
         function iconGlyphColor(urgency: int): color {
-            return urgency === 2 ? root.colors.danger : root.colors.accent;
+            return urgencyColor(urgency);
         }
 
         function accentStripColor(unread: bool, urgency: int): color {
@@ -345,7 +420,9 @@ Singleton {
             return ColorMath.alpha(dnd ? root.colors.warning : root.colors.accent, 0.12);
         }
 
-        readonly property color listBackground: ColorMath.alpha(root.colors.background, root.resolvedColorMode === "dark" ? 0.35 : 0.25)
+        readonly property color listBackground: ColorMath.alpha(root.colors.background, root.isDark ? 0.35 : 0.25)
+        readonly property int cardWidth: Math.round(420 * root.controlScale)
+        readonly property int overflowBadgeHeight: Math.round(26 * root.controlScale)
     }
 
     component ComponentTokens: QtObject {
@@ -364,6 +441,8 @@ Singleton {
         readonly property ThemeCardTokens themeCard: ThemeCardTokens {}
         readonly property ColorModeToggleTokens colorModeToggle: ColorModeToggleTokens {}
         readonly property NotificationTokens notification: NotificationTokens {}
+        readonly property BluetoothTokens bluetooth: BluetoothTokens {}
+        readonly property MenuTokens menu: MenuTokens {}
     }
 
     component ShapeTokens: QtObject {
@@ -373,6 +452,7 @@ Singleton {
         readonly property real panelRadius: root.definition.shape.panelRadius * scale
         readonly property real roundRadius: root.definition.shape.roundRadius * scale
         readonly property int borderWidth: 1
+        readonly property int focusBorderWidth: 2
     }
 
     component SpacingTokens: QtObject {
@@ -435,7 +515,7 @@ Singleton {
         readonly property color selectedSurface: ColorMath.blend(surface, accent, 0.16)
         readonly property color accentContainer: ColorMath.alpha(accent, 0.15)
         readonly property color dangerContainer: ColorMath.alpha(danger, 0.15)
-        readonly property color scrim: Qt.rgba(0, 0, 0, root.resolvedColorMode === "dark" ? 0.45 : 0.25)
+        readonly property color scrim: Qt.rgba(0, 0, 0, root.isDark ? 0.45 : 0.25)
     }
 
     readonly property color borderColor: {
@@ -446,11 +526,20 @@ Singleton {
         return Qt.rgba(source.r, source.g, source.b, root.definition.border.opacity);
     }
 
-    readonly property color shadowColor: {
-        const policy = root.definition.elevation.shadowColorPolicy;
-        const source = policy === "foreground" ? root.colors.textPrimary : Qt.rgba(0, 0, 0, 1);
-        return Qt.rgba(source.r, source.g, source.b, root.definition.elevation.shadowOpacity);
+    component ActiveElevationTokens: QtObject {
+        readonly property ElevationSpec _spec: root.definition.elevation
+        readonly property string shadowColorPolicy: root.isDark ? _spec.darkShadowColorPolicy : _spec.shadowColorPolicy
+        readonly property real shadowOpacity: root.isDark ? _spec.darkShadowOpacity : _spec.shadowOpacity
+        readonly property real highlightOpacity: root.isDark ? _spec.darkHighlightOpacity : _spec.highlightOpacity
     }
 
-    readonly property color highlightColor: Qt.rgba(1, 1, 1, root.definition.elevation.highlightOpacity)
+    readonly property ActiveElevationTokens activeElevation: ActiveElevationTokens {}
+
+    readonly property color shadowColor: {
+        const policy = root.activeElevation.shadowColorPolicy;
+        const source = policy === "foreground" ? root.colors.textPrimary : Qt.rgba(0, 0, 0, 1);
+        return Qt.rgba(source.r, source.g, source.b, root.activeElevation.shadowOpacity);
+    }
+
+    readonly property color highlightColor: Qt.rgba(1, 1, 1, root.activeElevation.highlightOpacity)
 }

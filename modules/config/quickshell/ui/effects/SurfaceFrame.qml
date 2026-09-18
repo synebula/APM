@@ -9,19 +9,23 @@ Rectangle {
     property int borderWidth: Theme.components.surface.borderWidth
     property color borderColor: Theme.components.surface.borderColor
     property real blurRadius: Theme.components.surface.blurRadius
-    readonly property bool chrome: root.fill.a > 0.99
+    property bool shadowEnabled: Theme.components.surface.shadowEnabled
+    property bool highlightEnabled: Theme.components.surface.highlightEnabled
+    readonly property bool isTranslucent: Theme.components.surface.isGlass || root.fill.a < 1.0
 
-    color: root.fill
+    color: Qt.rgba(root.fill.r, root.fill.g, root.fill.b, root.fill.a * Theme.components.surface.fillOpacity)
     radius: Theme.shape.panelRadius
     border.width: root.borderWidth
     border.color: root.borderColor
-    opacity: Theme.components.surface.fillOpacity
-    gradient: root.chrome && Theme.components.surface.mode === "gradient" ? plateGradient : null
-    layer.enabled: root.chrome && (Theme.components.surface.shadowEnabled || root.blurRadius > 0)
+    antialiasing: true
+    smooth: true
+    gradient: !root.isTranslucent && Theme.components.surface.isGradient ? plateGradient : null
+    layer.enabled: !root.isTranslucent && Theme.components.surface.layerEffectsEnabled && (root.shadowEnabled || root.blurRadius > 0)
+    layer.smooth: true
     layer.effect: MultiEffect {
         blurEnabled: root.blurRadius > 0
         blur: root.blurRadius
-        shadowEnabled: true
+        shadowEnabled: root.shadowEnabled
         shadowColor: Theme.components.surface.shadowColor
         shadowBlur: Theme.components.surface.shadowBlur
         shadowHorizontalOffset: Theme.components.surface.shadowHorizontalOffset
@@ -43,19 +47,39 @@ Rectangle {
     }
 
     Rectangle {
+        id: highlightLine
+
         anchors {
             left: parent.left
             right: parent.right
             top: parent.top
-            leftMargin: 2
-            rightMargin: 2
+            leftMargin: Math.max(root.radius, 2)
+            rightMargin: Math.max(root.radius, 2)
             topMargin: 1
         }
         height: 1
-        radius: 1
+        radius: 0.5
         enabled: false
-        color: Theme.components.surface.highlightColor
-        visible: root.chrome && Theme.components.surface.highlightEnabled
+        visible: root.highlightEnabled && root.fill.a > 0.05 && (parent.width > root.radius * 2 + 4) && (root.radius < parent.height / 2 - 1)
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop {
+                position: 0.0
+                color: "transparent"
+            }
+            GradientStop {
+                position: 0.2
+                color: Theme.components.surface.highlightColor
+            }
+            GradientStop {
+                position: 0.8
+                color: Theme.components.surface.highlightColor
+            }
+            GradientStop {
+                position: 1.0
+                color: "transparent"
+            }
+        }
     }
 
     Behavior on color {

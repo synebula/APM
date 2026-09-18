@@ -24,7 +24,7 @@ PopupPanel {
             title: "通知"
             subtitle: NotificationService.doNotDisturb ? "勿扰模式已开启" : (NotificationService.records.length > 0 ? (NotificationService.records.length + " 条通知") : "全部已读")
             glyph: NotificationService.doNotDisturb ? "󰂛" : "󰂚"
-            tone: NotificationService.doNotDisturb ? Theme.colors.warning : Theme.colors.accent
+            tone: Theme.components.notification.centerStatusTone(NotificationService.doNotDisturb, NotificationService.records.length > 0)
             IconButton {
                 glyph: "󰂛"
                 checked: NotificationService.doNotDisturb
@@ -61,7 +61,7 @@ PopupPanel {
                 IconGlyph {
                     anchors.centerIn: parent
                     text: NotificationService.doNotDisturb ? "󰂛" : "󰂚"
-                    color: NotificationService.doNotDisturb ? Theme.colors.warning : Theme.colors.accent
+                    color: Theme.components.notification.centerStatusTone(NotificationService.doNotDisturb, false)
                     font.pixelSize: 22 * Theme.fontScale
                 }
             }
@@ -76,7 +76,7 @@ PopupPanel {
 
             TextLabel {
                 Layout.alignment: Qt.AlignHCenter
-                text: NotificationService.doNotDisturb ? "在此期间系统将静默收集所有消息" : "新提醒和系统消息将在这里汇聚"
+                text: ""
                 font: Theme.typography.caption
                 color: Theme.colors.textSecondary
             }

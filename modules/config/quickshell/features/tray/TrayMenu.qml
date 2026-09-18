@@ -81,7 +81,7 @@ PopupPanel {
                 id: entry
                 required property QsMenuEntry modelData
                 Layout.fillWidth: true
-                implicitHeight: modelData.isSeparator ? Theme.spacing.medium : action.implicitHeight
+                implicitHeight: modelData.isSeparator ? Theme.components.menu.separatorHeight : action.implicitHeight
                 Divider {
                     visible: entry.modelData.isSeparator
                     width: parent.width
@@ -95,8 +95,8 @@ PopupPanel {
                     text: entry.modelData.text.replace(/&/g, "")
                     icon.source: entry.modelData.icon
                     selected: entry.modelData.checkState === Qt.Checked
-                    glyph: entry.modelData.buttonType === QsMenuButtonType.RadioButton ? (selected ? "●" : "○") : (selected ? "✓" : "")
-                    trailingText: entry.modelData.hasChildren ? "›" : ""
+                    glyph: Theme.components.menu.checkGlyph(entry.modelData.buttonType === QsMenuButtonType.RadioButton, selected)
+                    trailingText: Theme.components.menu.trailingGlyph(entry.modelData.hasChildren)
                     onClicked: {
                         if (entry.modelData.hasChildren)
                             stack.push(pageFactory, {

@@ -14,7 +14,7 @@ T.Slider {
     implicitHeight: Theme.components.slider.height
     hoverEnabled: true
     padding: 0
-    opacity: enabled ? 1 : 0.4
+    opacity: enabled ? 1 : Theme.disabledOpacity
 
     handle: Rectangle {
         implicitWidth: Theme.components.slider.handleSize
@@ -24,7 +24,7 @@ T.Slider {
         radius: Math.min(width / 2, Theme.shape.controlRadius)
         color: Theme.colors.surface
         border.color: root.progressColor
-        border.width: root.visualFocus ? 3 : 2
+        border.width: Theme.components.slider.handleBorderWidth(root.visualFocus)
     }
 
     background: Rectangle {

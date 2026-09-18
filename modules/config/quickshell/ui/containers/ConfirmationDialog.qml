@@ -16,16 +16,28 @@ ModalWindow {
     WlrLayershell.namespace: "quickshell-confirm"
 
     SurfaceFrame {
+        id: card
+
         anchors.centerIn: parent
         width: Math.min(parent.width - Theme.spacing.section * 2, 360 * Theme.controlScale)
         height: content.implicitHeight + Theme.spacing.section * 2
         radius: Theme.shape.panelRadius
         fill: Theme.colors.surface
 
+        CompositorBlurRegion {
+            targetWindow: root
+            backgroundItem: card
+            radius: card.radius
+        }
+
         // Consume clicks in the card while allowing child controls to handle their own events.
         MouseArea {
             anchors.fill: parent
         }
+    }
+
+    Item {
+        anchors.fill: card
 
         ColumnLayout {
             id: content

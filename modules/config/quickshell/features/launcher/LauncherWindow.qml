@@ -32,9 +32,20 @@ ModalWindow {
         height: Math.min(parent.height - Theme.spacing.section * 2, content.implicitHeight + Theme.spacing.large * 2)
         fill: Theme.colors.surface
         radius: Theme.shape.panelRadius
+
+        CompositorBlurRegion {
+            targetWindow: root
+            backgroundItem: card
+            radius: card.radius
+        }
+
         MouseArea {
             anchors.fill: parent
         }
+    }
+
+    Item {
+        anchors.fill: card
 
         ColumnLayout {
             id: content

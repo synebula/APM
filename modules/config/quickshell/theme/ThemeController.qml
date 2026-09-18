@@ -45,8 +45,8 @@ Singleton {
         return true;
     }
 
-    function toggleColorMode() {
-        return root.setColorMode(Theme.resolvedColorMode === "dark" ? "light" : "dark");
+    function toggleColorMode(): bool {
+        return root.setColorMode(Theme.isDark ? "light" : "dark");
     }
 
     function setAccent(accentId: string): bool {

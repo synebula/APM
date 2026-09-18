@@ -7,6 +7,7 @@ import "../../config"
 import "../../services"
 import "../../theme"
 import "../../ui/controls"
+import "../../ui/effects"
 
 PanelWindow {
     id: root
@@ -20,11 +21,17 @@ PanelWindow {
     }
     margins.top: Theme.components.bar.height + Theme.spacing.medium
     margins.right: Theme.spacing.medium
-    implicitWidth: 420 * Theme.controlScale
+    implicitWidth: Theme.components.notification.cardWidth
     implicitHeight: notifications.implicitHeight
-    readonly property bool isTargetScreen: !ShellSettings.toastsOnFocusedScreenOnly || !WindowManagerService.focusedScreen || !root.screen || root.screen === WindowManagerService.focusedScreen || root.screen.name === WindowManagerService.focusedScreen.name
+    readonly property bool isTargetScreen: !ShellSettings.toastsOnFocusedScreenOnly || !WindowManagerService.focusedWorkspace || !root.screen || root.screen.name === WindowManagerService.focusedWorkspace.outputName
     visible: NotificationService.toasts.length > 0 && isTargetScreen
     color: "transparent"
+
+    CompositorBlurRegion {
+        targetWindow: root
+        backgroundItem: notifications
+        radius: Theme.shape.controlRadius
+    }
 
     Column {
         id: notifications
@@ -37,6 +44,7 @@ PanelWindow {
                 width: notifications.width
                 notification: modelData
                 toastMode: true
+                toastWindow: root
                 onClicked: NotificationService.activate(modelData.notificationId)
                 onDismissRequested: modelData.toast.hide()
                 onActionRequested: actionId => NotificationService.invokeAction(modelData.notificationId, actionId)
@@ -46,7 +54,7 @@ PanelWindow {
             visible: NotificationService.toasts.length > ShellSettings.notificationToastLimit
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: overflowText.implicitWidth + Theme.spacing.large * 2
-            implicitHeight: Math.round(26 * Theme.controlScale)
+            implicitHeight: Theme.components.notification.overflowBadgeHeight
             radius: implicitHeight / 2
             color: Theme.components.notification.cardBackground(true, false, false, 1)
             border.width: 1

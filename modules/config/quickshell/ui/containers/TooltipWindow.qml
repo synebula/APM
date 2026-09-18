@@ -8,20 +8,35 @@ import Quickshell
 PopupWindow {
     id: root
 
+    readonly property int shadowMargin: Theme.components.surface.shadowMargin
+
     anchor.item: TooltipController.activeItem
     anchor.window: TooltipController.activeItem ? TooltipController.activeItem.QsWindow.window : null
     anchor.edges: Edges.Bottom
     anchor.gravity: Edges.Bottom
-    anchor.margins.top: Theme.spacing.small
+    anchor.margins.top: Theme.spacing.small - root.shadowMargin
     visible: TooltipController.visible && anchor.item !== null && anchor.window !== null
     color: "transparent"
-    implicitWidth: Math.min(480 * Theme.controlScale, text.implicitWidth + Theme.spacing.large * 2)
-    implicitHeight: text.implicitHeight + Theme.spacing.medium * 2
+    implicitWidth: Math.min(Theme.components.popup.tooltipMaxWidth, text.implicitWidth + Theme.spacing.large * 2) + root.shadowMargin * 2
+    implicitHeight: text.implicitHeight + Theme.spacing.medium * 2 + root.shadowMargin * 2
 
     SurfaceFrame {
+        id: card
+
         anchors.fill: parent
+        anchors.margins: root.shadowMargin
         fill: Theme.colors.surface
         radius: Theme.shape.controlRadius
+
+        CompositorBlurRegion {
+            targetWindow: root
+            backgroundItem: card
+            radius: card.radius
+        }
+    }
+
+    Item {
+        anchors.fill: card
 
         TextLabel {
             id: text

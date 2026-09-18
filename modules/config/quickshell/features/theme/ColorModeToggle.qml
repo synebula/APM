@@ -29,7 +29,7 @@ T.Switch {
             text: "󰖙"
             color: Theme.components.colorModeToggle.iconColor(!root.checked)
             font.pixelSize: Math.round(14 * Theme.controlScale)
-            opacity: root.checked ? 0.65 : 1
+            opacity: root.checked ? Theme.components.colorModeToggle.inactiveIconOpacity : 1
             x: Math.round(7 * Theme.controlScale)
             anchors.verticalCenter: parent.verticalCenter
 
@@ -42,7 +42,7 @@ T.Switch {
             text: "󰖔"
             color: Theme.components.colorModeToggle.iconColor(root.checked)
             font.pixelSize: Math.round(14 * Theme.controlScale)
-            opacity: root.checked ? 1 : 0.65
+            opacity: root.checked ? 1 : Theme.components.colorModeToggle.inactiveIconOpacity
             x: parent.width - width - Math.round(7 * Theme.controlScale)
             anchors.verticalCenter: parent.verticalCenter
 
@@ -78,7 +78,7 @@ T.Switch {
 
             IconGlyph {
                 anchors.centerIn: parent
-                text: root.checked ? "󰖔" : "󰖙"
+                text: Theme.components.colorModeToggle.knobGlyph(root.checked)
                 color: Theme.components.colorModeToggle.knobForeground(root.checked)
                 font.pixelSize: Math.round(13 * Theme.controlScale)
             }

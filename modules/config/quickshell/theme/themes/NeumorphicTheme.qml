@@ -2,7 +2,7 @@ import ".."
 
 ThemeDefinition {
     themeId: "neumorphic"
-    displayName: "仿真"
+    displayName: "新拟物"
     glyph: "󰆾"
     description: "柔和阴影 · 立体表面"
     suggestedPaletteIds: ["pastel-relief", "catppuccin"]
@@ -24,6 +24,7 @@ ThemeDefinition {
         shadowVerticalOffset: 3
         shadowOpacity: 0.20
         shadowColorPolicy: "foreground"
+        darkShadowColorPolicy: "black"
         highlightStyle: "top"
         highlightOpacity: 0.20
     }

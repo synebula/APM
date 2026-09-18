@@ -108,5 +108,5 @@ sync_hyprland() {
 }
 
 sync_gtk
-sync_kitty
+# sync_kitty
 sync_hyprland

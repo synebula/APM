@@ -62,16 +62,17 @@ tests/                  QuickShell 行为测试与主题断言
   - 复合字体对象：`body`, `caption`, `title`
 - **间距 (`Theme.spacing.*`)**：
   - `tiny`(2), `small`(4), `medium`(8), `large`(12), `extraLarge`(16), `section`(20)（均受主题 `density` 与 `spacingScale` 缩放）
-- **形状 (`Theme.shape.*`)**：
-  - `smallRadius`(4), `controlRadius`(8), `panelRadius`(12), `roundRadius`(26)（均乘 `Theme.shape.scale`），`borderWidth`
+- **形状与透明度 (`Theme.shape.*` / `Theme.disabledOpacity`)**：
+  - `smallRadius`(4), `controlRadius`(8), `panelRadius`(12), `roundRadius`(26)（均乘 `Theme.shape.scale`），`borderWidth`，`focusBorderWidth`
+  - 全局禁用态不透明度：`Theme.disabledOpacity`(0.45)
 - **动效 (`Theme.motion.*`)**：
   - `fastEffects`, `standard`, `slowEffects`, `spatial`, `scroll`（均含 `duration`、`easing` 与 `curve` 贝塞尔曲线参数）
 - **组件专用令牌 (`Theme.components.*`)**：
-  - `surface`, `bar`, `barGroup`, `barButton`, `actionButton`, `actionRow`, `toggleSwitch`, `iconButton`, `popup`, `slider`, `status`, `calendar`, `themeCard`, `colorModeToggle`, `notification`
+  - `surface`, `bar`, `barGroup`, `barButton`, `actionButton`, `actionRow`, `toggleSwitch`, `iconButton`, `popup`, `slider`, `status`, `calendar`, `themeCard`, `colorModeToggle`, `notification`, `bluetooth`, `menu`
 
 ## 主题与配色机制
 
-- **主题 (`ThemeDefinition`)**：组合形状、边框、层级、表面、间距、字体和动效规范。已注册主题：`neumorphic`（默认，柔和阴影立面）、`flat`（清晰边框扁平）。
+- **主题 (`ThemeDefinition`)**：组合形状、边框、层级、表面、间距、字体和动效规范。已注册主题：`neumorphic`（默认，柔和阴影立面）、`flat`（清晰边框扁平）、`liquid-glass`（液态玻璃，流体透光立面、镜面微边、柔光悬浮与灵动大圆角）。
 - **配色家族 (`PaletteDefinition`)**：表示色彩家族。已注册配色：`pastel-relief`（默认）、`catppuccin`、`nord`、`everforest`、`tokyo-night`。
 - **色彩变体 (`PaletteVariant`)**：每个调色板提供成对的 `light` 与 `dark` 语义颜色及多个候选强调色（Accents）。
 - **独立正交原则**：
@@ -84,7 +85,7 @@ tests/                  QuickShell 行为测试与主题断言
 
 | 目标 (`target`) | 方法 (`method`) | 参数说明 |
 | :--- | :--- | :--- |
-| `theme` | `setTheme` | `<id>`: `flat` / `neumorphic` |
+| `theme` | `setTheme` | `<id>`: `flat` / `neumorphic` / `liquid-glass` |
 | `theme` | `setPalette` | `<id>`: `pastel-relief` / `catppuccin` / `nord` / `everforest` / `tokyo-night` |
 | `theme` | `setColorMode` | `<mode>`: `system` / `light` / `dark` |
 | `theme` | `toggleColorMode` | 快速在深色与浅色之间切换 |

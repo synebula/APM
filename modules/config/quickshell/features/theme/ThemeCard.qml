@@ -21,7 +21,7 @@ ActionButton {
     background: Rectangle {
         color: Theme.components.themeCard.background(root.checked)
         radius: Theme.shape.controlRadius
-        border.width: root.checked || root.visualFocus ? 2 : 1
+        border.width: Theme.components.themeCard.borderWidth(root.checked, root.visualFocus)
         border.color: Theme.components.themeCard.borderColor(root.checked, root.visualFocus)
     }
 
@@ -40,8 +40,7 @@ ActionButton {
                 width: parent.width - Theme.spacing.large * 2
                 height: Math.round(32 * Theme.controlScale)
                 radius: Theme.shape.controlRadius
-                color: root.previewVariant.surface
-                opacity: root.definition.surface.fillOpacity
+                color: Qt.rgba(root.previewVariant.surface.r, root.previewVariant.surface.g, root.previewVariant.surface.b, root.previewVariant.surface.a * root.definition.surface.fillOpacity)
                 border.width: root.definition.border.width
                 border.color: root.previewBorderColor
                 gradient: root.definition.surface.mode === "gradient" ? sampleGradient : null

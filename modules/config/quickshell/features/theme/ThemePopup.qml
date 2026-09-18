@@ -33,12 +33,12 @@ PopupPanel {
                 width: parent.width
                 title: "主题"
                 subtitle: Theme.displayName + " · " + Theme.palette.displayName
-                    + " · " + (Theme.resolvedColorMode === "dark" ? "深色" : "浅色")
+                    + " · " + (Theme.isDark ? "深色" : "浅色")
                 glyph: Theme.definition.glyph
 
                 ColorModeToggle {
                     objectName: "colorModeToggle"
-                    checked: Theme.resolvedColorMode === "dark"
+                    checked: Theme.isDark
                     onToggled: ThemeController.setColorMode(checked ? "dark" : "light")
                 }
             }
@@ -161,7 +161,7 @@ PopupPanel {
                             foreground: ColorMath.foreground(accentColor.r, accentColor.g, accentColor.b)
                             glyph: Theme.accentId === modelData.accentId ? "󰄬" : ""
                             tooltipText: modelData.accentId
-                            borderWidth: Theme.accentId === modelData.accentId || visualFocus ? 2 : 1
+                            borderWidth: Theme.components.popup.swatchBorderWidth(Theme.accentId === modelData.accentId, visualFocus)
                             borderColor: Theme.components.popup.swatchBorderColor(Theme.accentId === modelData.accentId, visualFocus)
                             onClicked: ThemeController.setAccent(modelData.accentId)
 

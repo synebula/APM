@@ -1,4 +1,5 @@
 import "../../theme"
+import "../../theme/ColorMath.js" as ColorMath
 import QtQuick
 import QtQuick.Layouts
 
@@ -18,7 +19,7 @@ RowLayout {
         implicitWidth: Theme.components.actionRow.height
         implicitHeight: implicitWidth
         radius: Theme.shape.controlRadius
-        color: Qt.rgba(root.tone.r, root.tone.g, root.tone.b, 0.15)
+        color: ColorMath.alpha(root.tone, 0.15)
 
         IconGlyph {
             anchors.centerIn: parent

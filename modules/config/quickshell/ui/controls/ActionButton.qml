@@ -17,7 +17,7 @@ T.Button {
     property color fillColor: Theme.components.actionButton.background(root.enabled, root.checked, root.primary, root.tonal, root.destructive)
     property real cornerRadius: Theme.shape.controlRadius
     property int glyphSize: Theme.components.iconButton.iconSize
-    property int borderWidth: root.fillColor.a > 0.99 ? Theme.components.surface.borderWidth : (root.visualFocus ? Theme.shape.borderWidth : 0)
+    property int borderWidth: Theme.components.actionButton.borderWidth(root.visualFocus, root.checked, root.fillColor.a > 0.99)
     property color borderColor: root.fillColor.a > 0.99 ? Theme.components.surface.borderColor : Theme.components.actionButton.borderColor(root.visualFocus, root.checked, root.destructive)
 
     font: Theme.typography.body
@@ -26,7 +26,7 @@ T.Button {
     hoverEnabled: true
     implicitWidth: implicitContentWidth + leftPadding + rightPadding
     implicitHeight: Math.max(Theme.components.actionRow.height, implicitContentHeight + topPadding + bottomPadding)
-    opacity: enabled ? 1 : 0.4
+    opacity: enabled ? 1 : Theme.disabledOpacity
     onHoveredChanged: {
         if (root.hovered && root.tooltipText)
             TooltipController.show(root, root.tooltipText);

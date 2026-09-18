@@ -5,11 +5,13 @@ import Quickshell
 
 import "../../theme"
 import "../../ui/controls"
+import "../../ui/effects"
 
 ActionButton {
     id: root
     required property NotificationRecord notification
     property bool toastMode: false
+    property var toastWindow: null
     signal dismissRequested
     signal actionRequested(string actionId)
 
@@ -37,15 +39,42 @@ ActionButton {
 
     topPadding: Theme.spacing.large
     bottomPadding: Theme.spacing.large
-    leftPadding: Theme.spacing.large + 6
+    leftPadding: Theme.spacing.large + Math.round(6 * Theme.controlScale)
     rightPadding: Theme.spacing.large
 
     fillColor: Theme.components.notification.cardBackground(root.toastMode, root.isUnread, root.hovered, root.notificationUrgency)
-    borderWidth: 1
+    borderWidth: Theme.components.surface.borderWidth
     borderColor: Theme.components.notification.cardBorderColor(root.toastMode, root.isUnread, root.hovered, root.notificationUrgency)
     foreground: Theme.components.notification.appNameColor(root.notificationUrgency)
     cornerRadius: Theme.shape.controlRadius
     implicitHeight: implicitContentHeight + topPadding + bottomPadding
+
+    background: SurfaceFrame {
+        fill: root.fillColor
+        radius: root.cornerRadius
+        borderWidth: root.borderWidth
+        borderColor: root.borderColor
+        shadowEnabled: false
+        highlightEnabled: false
+
+        StateLayer {
+            anchors.fill: parent
+            layerRadius: root.cornerRadius
+            color: root.foreground
+            hovered: root.hovered
+            focused: root.visualFocus
+            pressed: root.down
+        }
+
+        Loader {
+            active: root.toastMode && Theme.components.surface.isGlass
+            sourceComponent: CompositorBlurRegion {
+                targetWindow: root.toastWindow || (root.QsWindow ? root.QsWindow.window : null)
+                backgroundItem: parent
+                radius: root.cornerRadius
+            }
+        }
+    }
 
     HoverHandler {
         onHoveredChanged: {
@@ -56,20 +85,6 @@ ActionButton {
     Component.onDestruction: {
         if (root.notification)
             root.notification.toast.setPaused(root, false);
-    }
-
-    Rectangle {
-        anchors {
-            left: parent.left
-            top: parent.top
-            bottom: parent.bottom
-            leftMargin: 4
-            topMargin: 8
-            bottomMargin: 8
-        }
-        width: 3
-        radius: 1.5
-        color: Theme.components.notification.accentStripColor(root.isUnread, root.notificationUrgency)
     }
 
     contentItem: ColumnLayout {
@@ -113,9 +128,9 @@ ActionButton {
 
                     Rectangle {
                         visible: root.isUnread
-                        implicitWidth: 6
-                        implicitHeight: 6
-                        radius: 3
+                        implicitWidth: Math.round(6 * Theme.controlScale)
+                        implicitHeight: implicitWidth
+                        radius: implicitWidth / 2
                         color: Theme.colors.accent
                     }
 

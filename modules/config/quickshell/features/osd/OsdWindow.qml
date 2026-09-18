@@ -36,7 +36,7 @@ PanelWindow {
     implicitWidth: 260 * Theme.controlScale
     implicitHeight: 52 * Theme.controlScale
     color: "transparent"
-    visible: root.isOpen || card.opacity > 0
+    visible: root.isOpen || container.opacity > 0
 
     Timer {
         interval: 1200
@@ -86,17 +86,35 @@ PanelWindow {
         target: "osd"
     }
 
-    SurfaceFrame {
-        id: card
+    Item {
+        id: container
 
         anchors.fill: parent
-        fill: Theme.colors.surface
-        radius: Theme.shape.roundRadius
         opacity: root.isOpen ? 1 : 0
-        scale: root.isOpen ? 1 : 0.94
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.fastEffects.duration
+            }
+        }
+
+        SurfaceFrame {
+            id: card
+
+            anchors.fill: parent
+            fill: Theme.colors.surface
+            radius: Theme.shape.roundRadius
+            shadowEnabled: false
+
+            CompositorBlurRegion {
+                targetWindow: root
+                backgroundItem: card
+                radius: card.radius
+            }
+        }
 
         RowLayout {
-            anchors.fill: parent
+            anchors.fill: card
             anchors.leftMargin: Theme.spacing.extraLarge
             anchors.rightMargin: Theme.spacing.extraLarge
             spacing: Theme.spacing.large
@@ -125,19 +143,6 @@ PanelWindow {
                 text: Math.round(root.value * 100) + "%"
                 font: Theme.typography.caption
                 color: Theme.components.status.text(root.muted)
-            }
-        }
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.motion.fastEffects.duration
-            }
-        }
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: Theme.motion.standard.duration
-                easing.type: Theme.motion.standard.easing
             }
         }
     }

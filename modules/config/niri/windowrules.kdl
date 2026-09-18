@@ -12,13 +12,6 @@ window-rule {
     open-focused true
 }
 
-// 弹出菜单与气泡窗口圆角裁剪
-window-rule {
-    popups {
-        geometry-corner-radius 8
-    }
-}
-
 // ----------------------------------------------------------------------------
 // 终端与开发应用：背景高斯模糊
 // ----------------------------------------------------------------------------
@@ -44,23 +37,3 @@ window-rule {
     match app-id=r#"^wechat$"# title=r#"^(预览|图片和视频)$"#
     open-floating true
 }
-
-// 混音器与蓝牙管理器：浮动显示、90% 不透明度与毛玻璃背景
-window-rule {
-    match app-id=r#"^(pavucontrol|org\.pulseaudio\.pavucontrol)$"#
-    open-floating true
-    opacity 0.90
-    background-effect {
-        blur true
-    }
-}
-
-window-rule {
-    match app-id=r#"^blueman-manager$"#
-    open-floating true
-    opacity 0.90
-    background-effect {
-        blur true
-    }
-}
-

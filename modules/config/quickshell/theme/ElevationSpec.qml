@@ -8,6 +8,9 @@ QtObject {
     property real shadowVerticalOffset: 0
     property real shadowOpacity: 0
     property string shadowColorPolicy: "black"
+    property string darkShadowColorPolicy: "black"
+    property real darkShadowOpacity: shadowOpacity
     property string highlightStyle: "none"
     property real highlightOpacity: 0
+    property real darkHighlightOpacity: highlightOpacity
 }

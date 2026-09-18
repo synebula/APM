@@ -40,9 +40,20 @@ ModalWindow {
             height: 154 * Theme.controlScale
             fill: Theme.colors.surface
             radius: Theme.shape.panelRadius
+
+            CompositorBlurRegion {
+                targetWindow: root
+                backgroundItem: panel
+                radius: panel.radius
+            }
+
             MouseArea {
                 anchors.fill: parent
             }
+        }
+
+        Item {
+            anchors.fill: panel
 
             ListView {
                 id: windows

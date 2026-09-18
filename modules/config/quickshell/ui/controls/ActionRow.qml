@@ -24,12 +24,12 @@ T.ItemDelegate {
     spacing: Theme.spacing.medium
     implicitHeight: Math.max(Theme.components.actionRow.height, implicitContentHeight + topPadding + bottomPadding)
     implicitWidth: implicitContentWidth + leftPadding + rightPadding
-    opacity: enabled ? 1 : 0.6
+    opacity: enabled ? 1 : Theme.disabledOpacity
 
     background: Rectangle {
         color: Theme.components.actionRow.background(root.enabled, root.selected, root.destructive)
         radius: Theme.shape.controlRadius
-        border.width: root.selected || root.visualFocus ? Theme.shape.borderWidth : 0
+        border.width: Theme.components.actionRow.borderWidth(root.visualFocus, root.selected)
         border.color: Theme.components.actionRow.borderColor(root.visualFocus, root.selected, root.destructive)
 
         Behavior on color {
