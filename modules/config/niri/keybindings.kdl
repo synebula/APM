@@ -1,46 +1,146 @@
 // ============================================================================
-// 快捷键绑定 (Keybindings)
+// Niri 快捷键体系设计定理 (Keybinding Axioms)
+// 1. 【Base 流】   Mod         : 纯视线漫游与基础启闭（方向键看焦点、数字键切工作区、Tab总览、基础应用启闭）
+// 2. 【Shift 位】  Mod + Shift : 物理空间位移与搬迁（方向键挪动、数字键投送工作区、M甩显示器、[]吞吐窗口）
+// 3. 【Alt 改】    Mod + Alt   : 修改尺寸比例与排版形态（W宽/H高预设、R重置、方向键拉伸、F填满、S堆叠、Space浮动）
+// 4. 【Control 控】Mod + Ctrl  : 系统底层与全局中枢（Q/Del退出、R重载、P息屏、方向键/Tab切物理显示器）
+// 规则约定：字母键全语义助记；全局双修饰键封顶，零4键冗余。
 // ============================================================================
 
 binds {
     // ------------------------------------------------------------------------
-    // 主要窗口/会话操作
+    // 1. 【Base / View (流)】主要窗口与会话基础操作
     // ------------------------------------------------------------------------
-    Ctrl+Alt+Delete    { quit; }
-    Mod+Ctrl+Delete    { quit; }                        // 退出桌面会话
-    Mod+C repeat=false { close-window; }                // 关闭当前聚焦窗口
-    Mod+Return         { fullscreen-window; }           // 切换窗口全屏
-    Mod+S              { toggle-column-tabbed-display; }// 切换单列多窗口为垂直标签页视图
-    Mod+W              { switch-preset-column-width; }  // 循环切换预设列宽比例
-    Mod+Shift+W        { switch-preset-column-width-back; } // 反向循环预设列宽
-    Mod+T              { switch-preset-window-height; } // 循环切换预设窗口高度
-    Mod+F              { maximize-column; } // 扩展当前列填满剩余空间
-    Mod+Shift+F        { maximize-window-to-edges; }    // 贴边最大化（不保留边距）
-    Mod+Alt+F          { toggle-window-floating; }      // 切换窗口浮动/平铺状态
-    Mod+Shift+T        { reset-window-height; }       // 恢复窗口高度
-    Mod+Shift+C        { center-column; }               // 将当前列滚到屏幕中间
-    Mod+Shift+V        { switch-focus-between-floating-and-tiling; }   // 在浮动层与平铺层之间切换焦点
-    Mod+Tab repeat=false              { toggle-overview; }             // 工作区总览视图
-    Mod+Shift+Tab repeat=false        { focus-workspace-previous; }    // 回到刚才那个工作区
-    Mod+Alt+Tab repeat=false          { focus-monitor-previous; }      // 循环两块屏（比记 up/down 更快）    
-    Mod+Shift+Slash                   { show-hotkey-overlay; }         // 显示快捷键帮助
-    Mod+Shift+R                       { spawn "niri" "msg" "action" "load-config-file"; } // 重新加载配置
-    Mod+Shift+P                       { power-off-monitors; }
-    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
-    
-    // ------------------------------------------------------------------------
-    // 应用快捷启动
-    // ------------------------------------------------------------------------
-    Mod+grave          { spawn "kitty"; }               // 终端 (~)
-    Mod+E              { spawn "nautilus"; }            // 文件管理器
-    Mod+V              { spawn "antigravity-ide"; }     // 代码编辑器
-    Mod+N              { spawn "obsidian"; }            // 笔记应用
-    Mod+Space          { spawn "qs" "ipc" "call" "launcher" "toggle"; }    // 切换应用启动器面板
-    Mod+R              { spawn "qs" "ipc" "call" "launcher" "toggleRun"; } // 切换命令运行面板
-    Alt+Tab            { spawn "qs" "ipc" "call" "switcher" "next"; }      // 可视化窗口切换 (Window Switcher)
+    Mod+Q repeat=false { close-window; }                // [Q]: 关闭当前聚焦窗口
+    Mod+Return         { fullscreen-window; }           // [回车]: 切换当前窗口独占全屏
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; } // [Esc]: 切换快捷键拦截
 
     // ------------------------------------------------------------------------
-    // 音量与媒体控制
+    // 基础视线漫游 (Focus Navigation) —— 纯看，不动窗口
+    // ------------------------------------------------------------------------
+    Mod+Left            { focus-column-left; }          // [←]: 焦点向左移动一列
+    Mod+Right           { focus-column-right; }         // [→]: 焦点向右移动一列
+    Mod+Up              { focus-window-up; }            // [↑]: 同列焦点向上移动一个窗口
+    Mod+Down            { focus-window-down; }          // [↓]: 同列焦点向下移动一个窗口
+    Mod+Home            { focus-column-first; }         // [Home]: 焦点跳到第一列
+    Mod+End             { focus-column-last; }          // [End]: 焦点跳到最后一列
+
+    // 工作区视线切换
+    Mod+1 { focus-workspace "1"; }                      // [1]: 切换到工作区 1
+    Mod+2 { focus-workspace "2"; }                      // [2]: 切换到工作区 2
+    Mod+3 { focus-workspace "3"; }                      // [3]: 切换到工作区 3
+    Mod+4 { focus-workspace "4"; }                      // [4]: 切换到工作区 4
+    Mod+5 { focus-workspace "5"; }                      // [5]: 切换到工作区 5
+    Mod+6 { focus-workspace "6"; }                      // [6]: 切换到工作区 6
+    Mod+7 { focus-workspace "7"; }                      // [7]: 切换到工作区 7
+    Mod+8 { focus-workspace "8"; }                      // [8]: 切换到工作区 8
+    Mod+9 { focus-workspace "9"; }                      // [9]: 切换到工作区 9
+    Mod+0 { focus-workspace "10"; }                     // [0]: 切换到工作区 10
+    Mod+Tab repeat=false       { toggle-overview; }          // [Tab]: 工作区总览视图
+    Mod+Page_Up                { focus-workspace-up; }       // [PgUp]: 视线向上一个工作区
+    Mod+Page_Down              { focus-workspace-down; }     // [PgDn]: 视线向下一个工作区
+
+    // ------------------------------------------------------------------------
+    // 应用快捷启动 
+    // ------------------------------------------------------------------------
+    Mod+grave          { spawn "kitty"; }               // [~ 反引号]: 终端 Kitty
+    Mod+E              { spawn "nautilus"; }            // [E]: 文件管理器
+    Mod+V              { spawn "antigravity-ide"; }     // [V]: 代码编辑器
+    Mod+N              { spawn "obsidian"; }            // [N]: 笔记应用
+    Mod+Space          { spawn "qs" "ipc" "call" "launcher" "toggle"; }    // [空格]: 切换应用启动器面板
+    Mod+R              { spawn "qs" "ipc" "call" "launcher" "toggleRun"; } // [R]: 切换命令运行面板
+    Alt+Tab            { spawn "qs" "ipc" "call" "switcher" "nextCurrentWorkspace"; } // [Alt+Tab]: 可视化窗口切换 (仅当前工作区)
+    Mod+Alt+Tab        { spawn "qs" "ipc" "call" "switcher" "next"; }      // [Mod+Alt+Tab]: 可视化窗口切换 (全局所有窗口)
+
+    // ------------------------------------------------------------------------
+    // 2. 【Shift (位)】物理空间位移与搬运 (Move & Relocate)
+    // ------------------------------------------------------------------------
+    // 屏内位移
+    Mod+Shift+Left      { move-column-left; }            // [←]: 向左移动当前列
+    Mod+Shift+Right     { move-column-right; }           // [→]: 向右移动当前列
+    Mod+Shift+Up        { move-window-up; }              // [↑]: 向上移动当前窗口
+    Mod+Shift+Down      { move-window-down; }            // [↓]: 向下移动当前窗口
+    Mod+Shift+Home      { move-column-to-first; }        // [Home]: 把当前列移到最左侧
+    Mod+Shift+End       { move-column-to-last; }         // [End]: 把当前列移到最右侧
+
+    // 跨工作区搬运 (整列投送)
+    Mod+Shift+1 { move-column-to-workspace "1"; }       // [1]: 移动当前列到工作区 1
+    Mod+Shift+2 { move-column-to-workspace "2"; }       // [2]: 移动当前列到工作区 2
+    Mod+Shift+3 { move-column-to-workspace "3"; }       // [3]: 移动当前列到工作区 3
+    Mod+Shift+4 { move-column-to-workspace "4"; }       // [4]: 移动当前列到工作区 4
+    Mod+Shift+5 { move-column-to-workspace "5"; }       // [5]: 移动当前列到工作区 5
+    Mod+Shift+6 { move-column-to-workspace "6"; }       // [6]: 移动当前列到工作区 6
+    Mod+Shift+7 { move-column-to-workspace "7"; }       // [7]: 移动当前列到工作区 7
+    Mod+Shift+8 { move-column-to-workspace "8"; }       // [8]: 移动当前列到工作区 8
+    Mod+Shift+9 { move-column-to-workspace "9"; }       // [9]: 移动当前列到工作区 9
+    Mod+Shift+0 { move-column-to-workspace "10"; }      // [0]: 移动当前列到工作区 10
+    Mod+Shift+Page_Up   { move-column-to-workspace-up; }   // [PgUp]: 移动当前列到上方工作区
+    Mod+Shift+Page_Down { move-column-to-workspace-down; } // [PgDn]: 移动当前列到下方工作区
+    Mod+Shift+Tab repeat=false { focus-workspace-previous; } // [Tab]: 回到刚才那个工作区
+
+    // 跨显示器搬运 (Monitor)
+    Mod+Shift+M          { move-column-to-monitor-next; }  // [M]: 将当前列直接抛到下一台显示器
+
+    // 列间吞吐 (跨列物理位移)
+    Mod+Shift+Comma        { consume-or-expel-window-left; }  // [ < 逗号 ]: 向左吞入/吐出当前窗口
+    Mod+Shift+Period       { consume-or-expel-window-right; } // [ > 句号 ]: 向右吞入/吐出当前窗口
+    Mod+Shift+BracketLeft  { consume-window-into-column; }    // [ { 左中括号 ]: 把右侧窗口吞进当前列底部
+    Mod+Shift+BracketRight { expel-window-from-column; }      // [ } 右中括号 ]: 把列底窗口吐到右侧
+
+    // ------------------------------------------------------------------------
+    // 3. 【Alter (改)】修改尺寸比例与形态 (Alter Size, Borders & Modes)
+    // ------------------------------------------------------------------------
+    // 尺寸比例跳变 (W = Width, H = Height, R = Reset)
+    Mod+Alt+W              { switch-preset-column-width; }      // [W]: Alter Width 循环切换列宽预设比例
+    Mod+Alt+H              { switch-preset-window-height; }     // [H]: Alter Height 循环切换窗高预设比例
+    Mod+Alt+R              { reset-window-height; }             // [R]: Alter Reset 恢复窗口默认高度
+    Mod+Alt+F              { maximize-column; }                 // [F]: Alter Fill 扩展当前列填满屏幕剩余空间
+    Mod+Alt+C              { center-column; }                   // [C]: Alter Center 将当前列居中视口
+
+    // 边框连续拉伸微调 (Alter Borders)
+    Mod+Alt+Left           { set-column-width "-10%"; }         // [←]: 连续减小当前列宽
+    Mod+Alt+Right          { set-column-width "+10%"; }         // [→]: 连续增大当前列宽
+    Mod+Alt+Up             { set-window-height "-10%"; }        // [↑]: 连续减小当前窗口高度
+    Mod+Alt+Down           { set-window-height "+10%"; }        // [↓]: 连续增大当前窗口高度
+
+    // 排版形态与浮动模式切换 (Alter Modes)
+    Mod+Alt+S              { toggle-column-tabbed-display; }    // [S]: Alter Stacked 切换多窗口为垂直标签页堆叠
+    Mod+Alt+Space          { toggle-window-floating; }          // [空格]: Alter Floating 切换窗口浮动/平铺状态
+    Mod+Alt+V              { switch-focus-between-floating-and-tiling; } // [V]: 在浮动层与平铺层之间切换焦点
+
+    // 单窗精准提取变体 (只移动单窗，不移动整列)
+    Mod+Alt+1 { move-window-to-workspace "1" focus=false; }    // [1]: 仅移动当前单个窗口到工作区 1
+    Mod+Alt+2 { move-window-to-workspace "2" focus=false; }    // [2]: 仅移动当前单个窗口到工作区 2
+    Mod+Alt+3 { move-window-to-workspace "3" focus=false; }    // [3]: 仅移动当前单个窗口到工作区 3
+    Mod+Alt+4 { move-window-to-workspace "4" focus=false; }    // [4]: 仅移动当前单个窗口到工作区 4
+    Mod+Alt+5 { move-window-to-workspace "5" focus=false; }    // [5]: 仅移动当前单个窗口到工作区 5
+    Mod+Alt+6 { move-window-to-workspace "6" focus=false; }    // [6]: 仅移动当前单个窗口到工作区 6
+    Mod+Alt+7 { move-window-to-workspace "7" focus=false; }    // [7]: 仅移动当前单个窗口到工作区 7
+    Mod+Alt+8 { move-window-to-workspace "8" focus=false; }    // [8]: 仅移动当前单个窗口到工作区 8
+    Mod+Alt+9 { move-window-to-workspace "9" focus=false; }    // [9]: 仅移动当前单个窗口到工作区 9
+    Mod+Alt+0 { move-window-to-workspace "10" focus=false; }   // [0]: 仅移动当前单个窗口到工作区 10
+
+    // ------------------------------------------------------------------------
+    // 4. 【Control (控)】系统底层与全局中枢 (Master Control)
+    // ------------------------------------------------------------------------
+    // 会话与配置控制
+    Ctrl+Alt+Delete        { quit; }                            // [Del]: 退出桌面会话
+    Mod+Ctrl+Delete        { quit; }                            // [Del]: Control 退出桌面会话
+    Mod+Ctrl+Q             { quit; }                            // [Q]: Control 退出桌面会话
+    Mod+Ctrl+R             { spawn "niri" "msg" "action" "load-config-file"; } // [R]: Control 重新加载配置
+    Mod+Ctrl+P             { power-off-monitors; }              // [P]: Control 关闭显示器电源 (息屏)
+    Mod+Ctrl+Slash         { show-hotkey-overlay; }             // [/ 斜杠]: Control 显示快捷键帮助
+
+    // 物理显示器硬件焦点控制
+    Mod+Ctrl+M             { focus-monitor-next; }              // [M]: 视线跳到下一台显示器
+    Mod+Ctrl+Tab           { focus-monitor-previous; }          // [Tab]: 在两块显示器间循环视线
+    Mod+Ctrl+Left          { focus-monitor-left; }              // [←]: 切换到左侧显示器
+    Mod+Ctrl+Right         { focus-monitor-right; }             // [→]: 切换到右侧显示器
+    Mod+Ctrl+Up            { focus-monitor-up; }                // [↑]: 切换到上方显示器
+    Mod+Ctrl+Down          { focus-monitor-down; }              // [↓]: 切换到下方显示器
+
+    // ------------------------------------------------------------------------
+    // 音量与媒体控制 (保留硬件直觉)
     // ------------------------------------------------------------------------
     XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
     XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
@@ -59,123 +159,24 @@ binds {
     // ------------------------------------------------------------------------
     // 截图与取色工具
     // ------------------------------------------------------------------------
-    Print               { screenshot-window; }           // 截取当前窗口
-    Alt+Print           { screenshot; }                  // 框选区域截图
-    Alt+A               { screenshot; }                  // 框选区域截图
-    Ctrl+Print          { screenshot-screen; }           // 全屏截图
+    Print               { screenshot-window; }           // [PrtScn]: 截取当前窗口
+    Alt+Print           { screenshot; }                  // [Alt+PrtScn]: 框选区域截图
+    Alt+A               { screenshot; }                  // [Alt+A]: 框选区域截图
+    Ctrl+Print          { screenshot-screen; }           // [Ctrl+PrtScn]: 全屏截图
+    Mod+Ctrl+S          { screenshot; }                  // [S]: Control 截图快捷键
 
     // ------------------------------------------------------------------------
-    // 窗口焦点移动 (Move Focus)
+    // 鼠标滚轮高级导航
     // ------------------------------------------------------------------------
-    Mod+Left            { focus-column-left; }           // 焦点向左移动一列
-    Mod+H               { focus-column-left; }
-    Mod+Right           { focus-column-right; }          // 焦点向右移动一列
-    Mod+L               { focus-column-right; }
-    Mod+Up              { focus-window-up; }             // 同列焦点向上移动一个窗口
-    Mod+K               { focus-window-up; }
-    Mod+Down            { focus-window-down; }           // 同列焦点向下移动一个窗口
-    Mod+J               { focus-window-down; }
-    Mod+Home            { focus-column-first; }          // 焦点跳到第一列
-    Mod+End             { focus-column-last; }           // 焦点跳到最后一列
+    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }          // [滚轮向下]: 视线向下一个工作区
+    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }            // [滚轮向上]: 视线向上一个工作区
+    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; } // [Ctrl+滚轮下]: 移动当前列到下方工作区
+    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }   // [Ctrl+滚轮上]: 移动当前列到上方工作区
 
-    // ------------------------------------------------------------------------
-    // 列内堆叠 (Consume / Expel)
-    // ------------------------------------------------------------------------
-    Mod+BracketLeft     { consume-or-expel-window-left; }  // [ 键 (左中括号)：向左吞入/吐出当前窗口
-    Mod+BracketRight    { consume-or-expel-window-right; } // ] 键 (右中括号)：向右吞入/吐出当前窗口
-    Mod+Comma           { consume-window-into-column; }    // , 键 (逗号)：把右侧窗口吞进当前列底部
-    Mod+Period          { expel-window-from-column; }      // . 键 (句号)：把列底窗口吐到右侧
-
-    // ------------------------------------------------------------------------
-    // 移动窗口/列 (Move Window / Column)
-    // ------------------------------------------------------------------------
-    Mod+Shift+Left      { move-column-left; }            // 向左移动当前列
-    Mod+Shift+H         { move-column-left; }
-    Mod+Shift+Right     { move-column-right; }           // 向右移动当前列
-    Mod+Shift+L         { move-column-right; }
-    Mod+Shift+Up        { move-window-up; }              // 向上移动当前窗口
-    Mod+Shift+K         { move-window-up; }
-    Mod+Shift+Down      { move-window-down; }            // 向下移动当前窗口
-    Mod+Shift+J         { move-window-down; }
-    Mod+Ctrl+Home       { move-column-to-first; }        // 把当前列移到最左侧
-    Mod+Ctrl+End        { move-column-to-last; }         // 把当前列移到最右侧
-
-    // ------------------------------------------------------------------------
-    // 调整尺寸 (Resize)
-    // ------------------------------------------------------------------------
-    Mod+Ctrl+Right      { set-column-width "+10%"; }      // 增大当前列宽 (50px)
-    Mod+Ctrl+L          { set-column-width "+10%"; }
-    Mod+Ctrl+Left       { set-column-width "-10%"; }      // 减小当前列宽 (50px)
-    Mod+Ctrl+H          { set-column-width "-10%"; }
-    Mod+Ctrl+Up         { set-window-height "-10%"; }     // 减小当前窗口高度 (50px)
-    Mod+Ctrl+K          { set-window-height "-10%"; }
-    Mod+Ctrl+Down       { set-window-height "+10%"; }     // 增大当前窗口高度 (50px)
-    Mod+Ctrl+J          { set-window-height "+10%"; }
-
-    // ------------------------------------------------------------------------
-    // 显示器间移动焦点与列
-    // ------------------------------------------------------------------------
-    Mod+Alt+Up           { focus-monitor-up; }             // 切换到上方显示器
-    Mod+Alt+Down         { focus-monitor-down; }           // 切换到下方显示器
-    Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }  // 移动当前列到左侧显示器
-    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; } // 移动当前列到右侧显示器
-    Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }    // 移动当前列到上方显示器
-    Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }  // 移动当前列到下方显示器
-
-    // ------------------------------------------------------------------------
-    // 工作区操作 (Workspaces)
-    // ------------------------------------------------------------------------
-    // 切换工作区
-    Mod+1 { focus-workspace "1"; }
-    Mod+2 { focus-workspace "2"; }
-    Mod+3 { focus-workspace "3"; }
-    Mod+4 { focus-workspace "4"; }
-    Mod+5 { focus-workspace "5"; }
-    Mod+6 { focus-workspace "6"; }
-    Mod+7 { focus-workspace "7"; }
-    Mod+8 { focus-workspace "8"; }
-    Mod+9 { focus-workspace "9"; }
-    Mod+0 { focus-workspace "10"; }
-
-    // 移动当前列到指定工作区
-    Mod+Shift+1 { move-column-to-workspace "1"; }
-    Mod+Shift+2 { move-column-to-workspace "2"; }
-    Mod+Shift+3 { move-column-to-workspace "3"; }
-    Mod+Shift+4 { move-column-to-workspace "4"; }
-    Mod+Shift+5 { move-column-to-workspace "5"; }
-    Mod+Shift+6 { move-column-to-workspace "6"; }
-    Mod+Shift+7 { move-column-to-workspace "7"; }
-    Mod+Shift+8 { move-column-to-workspace "8"; }
-    Mod+Shift+9 { move-column-to-workspace "9"; }
-    Mod+Shift+0 { move-column-to-workspace "10"; }
-
-    // 仅移动当前单个窗口到指定工作区
-    Mod+Alt+1 { move-window-to-workspace "1" focus=false;  }
-    Mod+Alt+2 { move-window-to-workspace "2" focus=false;  }
-    Mod+Alt+3 { move-window-to-workspace "3" focus=false;  }
-    Mod+Alt+4 { move-window-to-workspace "4" focus=false;  }
-    Mod+Alt+5 { move-window-to-workspace "5" focus=false;  }
-    Mod+Alt+6 { move-window-to-workspace "6" focus=false;  }
-    Mod+Alt+7 { move-window-to-workspace "7" focus=false;  }
-    Mod+Alt+8 { move-window-to-workspace "8" focus=false;  }
-    Mod+Alt+9 { move-window-to-workspace "9" focus=false;  }
-    Mod+Alt+0 { move-window-to-workspace "10" focus=false;  }
-
-    // 垂直工作区上下切换与滚轮导航
-    Mod+Page_Up             { focus-workspace-up; }
-    Mod+Page_Down           { focus-workspace-down; }
-    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
-    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
-    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
-    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
-
-    // 横向滚轮切列（无左右滚轮的鼠标可用 Shift+上下模拟）
-    Mod+WheelScrollRight           { focus-column-right; }
-    Mod+WheelScrollLeft            { focus-column-left; }
-    Mod+Ctrl+WheelScrollRight      { move-column-right; }
-    Mod+Ctrl+WheelScrollLeft       { move-column-left; }
-    Mod+Shift+WheelScrollDown      { focus-column-right; }
-    Mod+Shift+WheelScrollUp        { focus-column-left; }
-    Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
-    Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
+    Mod+WheelScrollRight           { focus-column-right; }                      // [滚轮向右]: 焦点向右移动一列
+    Mod+WheelScrollLeft            { focus-column-left; }                       // [滚轮向左]: 焦点向左移动一列
+    Mod+Ctrl+WheelScrollRight      { move-column-right; }                       // [Ctrl+滚轮右]: 向右移动当前列
+    Mod+Ctrl+WheelScrollLeft       { move-column-left; }                        // [Ctrl+滚轮左]: 向左移动当前列
+    Mod+Shift+WheelScrollDown      { focus-column-right; }                      // [Shift+滚轮下]: 模拟横向焦点向右
+    Mod+Shift+WheelScrollUp        { focus-column-left; }                       // [Shift+滚轮上]: 模拟横向焦点向左
 }

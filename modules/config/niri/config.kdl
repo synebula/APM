@@ -94,6 +94,18 @@ layout {
 screenshot-path "~/tmp/screenshot/Screenshot_%Y%m%d_%H%M%S.png"
 
 // ----------------------------------------------------------------------------
+// 渲染设备 (Debug)：强制使用 AMD 核显
+// 混合显卡下 niri 会把 NVIDIA 卡（PCI 01:00.0，接 HDMI-A-1）选为 primary
+// render node，此时 xray false 的毛玻璃模糊会整体失效，玻璃只剩透明底色。
+// 指回核显（PCI 0c:00.0，接 HDMI-A-2）即可恢复，原因见 niri issue #4083。
+// ----------------------------------------------------------------------------
+debug {
+    render-drm-device "/dev/dri/by-path/pci-0000:0c:00.0-render"
+    // 允许响应携带无效/缺失 Serial 的 XDG 激活请求，实现点击链接与外部打开时自动聚焦跳转
+    honor-xdg-activation-with-invalid-serial
+}
+
+// ----------------------------------------------------------------------------
 // 模块化子配置引入 (Includes)
 // ----------------------------------------------------------------------------
 include "monitors.kdl"
