@@ -343,6 +343,16 @@ TestSuite {
         ThemeController.setScale("fontScale", 1);
     }
 
+    function test_motionScaleUpdatesDuration() {
+        verify(ThemeController.setMotionScale(1.5));
+        compare(AppearanceSettings.motionScale, 1.5);
+        compare(Theme.motion.scale, 1.5);
+        const expectedDuration = Math.round(Theme.definition.motion.duration * 1.5 * 1.5);
+        compare(Theme.motion.slowEffects.duration, expectedDuration);
+        ThemeController.setMotionScale(1);
+        compare(AppearanceSettings.motionScale, 1);
+    }
+
     function test_settingsRemainWritableAfterSave() {
         ThemeController.setScale("radiusScale", 0.6);
         tryVerify(() => root.persistedAppearance.radiusScale === 0.6);

@@ -1,4 +1,5 @@
 pragma ComponentBehavior: Bound
+import "../../config"
 import "../../theme"
 import "../../theme/ColorMath.js" as ColorMath
 import "../../ui/containers"
@@ -65,6 +66,43 @@ PopupPanel {
                             }
                         }
                     }
+                }
+            }
+
+            Divider { width: parent.width }
+
+            Column {
+                width: parent.width
+                spacing: Theme.spacing.small
+
+                RowLayout {
+                    width: parent.width
+
+                    TextLabel {
+                        text: "动画速度"
+                        font: Theme.typography.caption
+                        color: Theme.colors.textSecondary
+                        Layout.fillWidth: true
+                    }
+
+                    TextLabel {
+                        text: AppearanceSettings.motionScale <= 0
+                            ? "无动效 (0ms)"
+                            : AppearanceSettings.motionScale.toFixed(1) + "x · " + Theme.motion.slowEffects.duration + "ms"
+                        font: Theme.typography.caption
+                        color: Theme.colors.accent
+                    }
+                }
+
+                ValueSlider {
+                    id: motionSlider
+                    objectName: "motionScaleSlider"
+                    width: parent.width
+                    from: 0
+                    to: 3
+                    stepSize: 0.1
+                    value: AppearanceSettings.motionScale
+                    onMoved: ThemeController.setMotionScale(value)
                 }
             }
 

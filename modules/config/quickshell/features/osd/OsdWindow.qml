@@ -1,6 +1,8 @@
+import "../../config"
 import "../../services"
 import "../../theme"
 import "../../ui/IconGlyphs.js" as IconGlyphs
+import "../../ui/containers"
 import "../../ui/controls"
 import "../../ui/effects"
 import "../audio/AudioPresentation.js" as AudioPresentation
@@ -33,8 +35,8 @@ PanelWindow {
     exclusiveZone: 0
     anchors.bottom: true
     margins.bottom: 64 * Theme.spacingScale
-    implicitWidth: 260 * Theme.controlScale
-    implicitHeight: 52 * Theme.controlScale
+    implicitWidth: 320 * Theme.controlScale
+    implicitHeight: 64 * Theme.controlScale
     color: "transparent"
     visible: root.isOpen || container.opacity > 0
 
@@ -47,7 +49,7 @@ PanelWindow {
     Timer {
         id: hideTimer
 
-        interval: 1800
+        interval: ShellSettings.osdTimeoutMs
         onTriggered: root.isOpen = false
     }
 
@@ -98,51 +100,79 @@ PanelWindow {
             }
         }
 
-        SurfaceFrame {
-            id: card
+        MorphPill {
+            id: morphPill
 
-            anchors.fill: parent
-            fill: Theme.components.surface.fill
-            radius: Math.min(height / 2, Theme.shape.roundRadius)
+            anchors.centerIn: parent
+            baseWidth: 260 * Theme.controlScale
+            baseHeight: 52 * Theme.controlScale
+            surfaceColor: Theme.components.surface.fill
+            expanded: root.muted
+            satelliteClickable: true
+            onSatelliteClicked: {
+                if (root.kind === "volume")
+                    AudioService.toggleOutputMute();
+            }
 
-            CompositorBlurRegion {
-                targetWindow: root
-                backgroundItem: card
-                radius: card.radius
+            satelliteContent: Component {
+                Item {
+                    anchors.fill: parent
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.72
+                        height: width
+                        radius: width * 0.5
+                        color: Theme.colors.danger
+
+                        IconGlyph {
+                            anchors.centerIn: parent
+                            text: "󰝟"
+                            font.pixelSize: Theme.typography.captionSize
+                            color: Theme.colors.dangerForeground
+                        }
+                    }
+                }
+            }
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: Theme.spacing.large
+                anchors.rightMargin: Theme.spacing.large
+                spacing: Theme.spacing.medium
+
+                IconGlyph {
+                    Layout.alignment: Qt.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    Layout.preferredWidth: 26 * Theme.controlScale
+                    text: root.glyph
+                    font.pixelSize: Theme.typography.headingSize
+                    color: Theme.components.status.tone(root.muted)
+                }
+
+                ProgressBar {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    value: root.value
+                    progressColor: Theme.components.status.tone(root.muted)
+                }
+
+                TextLabel {
+                    Layout.alignment: Qt.AlignVCenter
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignRight
+                    Layout.preferredWidth: 38 * Theme.fontScale
+                    text: Math.round(root.value * 100) + "%"
+                    font: Theme.typography.caption
+                    color: Theme.components.status.text(root.muted)
+                }
             }
         }
 
-        RowLayout {
-            anchors.fill: card
-            anchors.leftMargin: Theme.spacing.extraLarge
-            anchors.rightMargin: Theme.spacing.extraLarge
-            spacing: Theme.spacing.large
-
-            IconGlyph {
-                Layout.alignment: Qt.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                Layout.preferredWidth: 28 * Theme.controlScale
-                text: root.glyph
-                font.pixelSize: Theme.typography.headingSize
-                color: Theme.components.status.tone(root.muted)
-            }
-
-            ProgressBar {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                value: root.value
-                progressColor: Theme.components.status.tone(root.muted)
-            }
-
-            TextLabel {
-                Layout.alignment: Qt.AlignVCenter
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignRight
-                Layout.preferredWidth: 42 * Theme.fontScale
-                text: Math.round(root.value * 100) + "%"
-                font: Theme.typography.caption
-                color: Theme.components.status.text(root.muted)
-            }
+        CompositorBlurRegion {
+            targetWindow: root
+            backgroundItem: morphPill
+            radius: 26 * Theme.controlScale
         }
     }
 }

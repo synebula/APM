@@ -1,6 +1,6 @@
 # QuickShell 桌面壳
 
-本目录是 APM 的 QuickShell 配置，基于 QuickShell 0.3.1 和 Qt/QML，提供桌面状态栏、启动器、通知中心、OSD、窗口切换器及统一主题外观系统。
+本目录是 APM 的 QuickShell 配置，基于 QuickShell 0.3.1 和 Qt/QML，提供桌面状态栏、启动器、通知中心、OSD、窗口切换器、Polkit 原生身份认证模态框及统一主题外观系统。
 
 ## 入口
 
@@ -10,7 +10,8 @@
 ## 目录结构
 
 ```text
-config/                 持久化外观设置 (AppearanceSettings) 和桌面布局设置 (ShellSettings)
+config/                 统一配置服务 (ConfigService)、外观设置 (AppearanceSettings)、桌面外壳设置 (ShellSettings)、壁纸设置 (WallpaperSettings)
+config.default.jsonc    开箱即用的用户统一配置模板 (可复制为 config.jsonc 或 config.json 进行自定义)
 features/<domain>/      按用户功能组织的视图、控制器、Provider 和 Store
 services/               系统服务门面（音频、蓝牙、媒体、亮度、指标、桌面主题同步等）
 services/windowmanager/ 窗口管理后端契约、Niri/Hyprland 实现和领域对象
@@ -48,6 +49,7 @@ tests/                  QuickShell 行为测试与主题断言
 2. **状态变异网关 (Mutator)**：`theme/ThemeController.qml` 是唯一的状态修改网关，集中校验并处理主题、调色板、深浅模式、强调色和缩放因子的修改。
 3. **设计令牌门面 (Runtime Tokens)**：`theme/Theme.qml` 是唯一的消费入口。功能模块和基础 UI 统一且仅能通过 `Theme` 获取颜色、排版、间距、形状、动效与组件 tokens。
 4. **外部环境同步 (Desktop Sync)**：`services/ThemeSyncService.qml` 监听 `Theme` 变动，通过 `scripts/sync-desktop-theme.sh` 联动同步 GTK、Kitty 终端配色和 Hyprland 边框颜色。
+5. **用户声明式配置 (User Config)**：`config/ConfigService.qml` 统一监听并解析当前模块根目录下的 `config.jsonc` 或 `config.json`（基于模板 `config.default.jsonc`），提供工作区自适应划分、壁纸目录探测、终端与锁屏命令、通知参数的热重载支持；各领域设置（`ShellSettings`, `WallpaperSettings`）作为领域门面对外提供安全降级与统一消费。
 
 ## 设计令牌体系 (Design Tokens)
 
@@ -98,6 +100,8 @@ tests/                  QuickShell 行为测试与主题断言
 | `theme` | `setSpacingScale`| `<value>`: 0.5 ~ 2.0 |
 | `theme` | `setMotionScale` | `<value>`: 0.0 ~ 4.0 |
 | `theme-sync` | `sync` | 立即触发一次外部桌面主题同步 |
+| `polkit` | `test` | `[message] [actionId]`: 调起测试认证模态框以预览毛玻璃 UI |
+| `polkit` | `cancel` | 关闭/取消当前认证模态框 |
 
 ## 编码规范与陷阱约束
 

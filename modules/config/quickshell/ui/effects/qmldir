@@ -1,3 +1,5 @@
 CompositorBlurRegion 1.0 CompositorBlurRegion.qml
+PillMorphSurface 1.0 PillMorphSurface.qml
 StateLayer 1.0 StateLayer.qml
 SurfaceFrame 1.0 SurfaceFrame.qml
+

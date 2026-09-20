@@ -1,3 +1,4 @@
+import "../../config"
 import "../../theme"
 import "../../ui/containers"
 import "../../ui/controllers"
@@ -51,6 +52,11 @@ PanelWindow {
         }
 
         Region {
+            item: taskbarGroup.visible ? taskbarGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
+
+        Region {
             item: trayGroup.visible ? trayGroup.glassSurface : null
             radius: Theme.components.barGroup.radius
         }
@@ -96,6 +102,7 @@ PanelWindow {
 
             BarGroup {
                 id: workspaceGroup
+                visible: ShellSettings.barShowWorkspaces
 
                 WorkspaceSwitcher {
                     screen: root.screen
@@ -104,6 +111,7 @@ PanelWindow {
 
             BarGroup {
                 id: titleGroup
+                visible: ShellSettings.barShowWindowTitle
 
                 ActiveWindowTitle {
                     screen: root.screen
@@ -118,6 +126,7 @@ PanelWindow {
 
             BarGroup {
                 id: mediaGroup
+                visible: ShellSettings.barShowMedia
 
                 MediaIndicator {
                     barWindow: root
@@ -127,16 +136,19 @@ PanelWindow {
 
             BarGroup {
                 id: clockGroup
+                visible: ShellSettings.barShowClock || ShellSettings.barShowNotifications
 
                 Row {
                     spacing: Theme.spacing.small
 
                     ClockIndicator {
+                        visible: ShellSettings.barShowClock
                         barWindow: root
                         anchorItem: clockGroup
                     }
 
                     NotificationIndicator {
+                        visible: ShellSettings.barShowNotifications
                         barWindow: root
                         anchorItem: clockGroup
                     }
@@ -151,14 +163,18 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.components.bar.padding
 
-            // BarGroup {
-            //     Taskbar {
-            //         screen: root.screen
-            //     }
-            // }
+            BarGroup {
+                id: taskbarGroup
+                visible: ShellSettings.barShowTaskbar
+
+                Taskbar {
+                    screen: root.screen
+                }
+            }
 
             BarGroup {
                 id: trayGroup
+                visible: ShellSettings.barShowTray
 
                 SystemTrayView {
                     barWindow: root
@@ -167,12 +183,14 @@ PanelWindow {
 
             BarGroup {
                 id: metricsGroup
+                visible: ShellSettings.barShowMetrics
 
                 SystemMetricsIndicator {}
             }
 
             BarGroup {
                 id: indicatorsGroup
+                visible: ShellSettings.barShowIndicators
 
                 SystemIndicators {
                     barWindow: root

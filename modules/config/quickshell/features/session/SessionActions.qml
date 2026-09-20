@@ -1,4 +1,5 @@
 pragma Singleton
+import "../../config"
 import "../../services"
 import "../../ui/controllers"
 import Quickshell
@@ -73,7 +74,8 @@ Singleton {
 
     function execute(actionId) {
         if (actionId === "lock") {
-            Quickshell.execDetached(["hyprlock"]);
+            const lockCmd = ShellSettings.lockCommand || "hyprlock";
+            Quickshell.execDetached(lockCmd.indexOf(" ") !== -1 ? ["sh", "-c", lockCmd] : [lockCmd]);
         } else if (actionId === "logout") {
             if (!WindowManagerService.exitSession())
                 Quickshell.execDetached(["loginctl", "terminate-session", "self"]);

@@ -4,6 +4,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import Quickshell
 
+import "../../config"
 import "../../theme"
 import "../../ui/containers"
 import "../../ui/controls"
@@ -59,7 +60,7 @@ PopupPanel {
         }
         Controls.DayOfWeekRow {
             Layout.fillWidth: true
-            locale: Qt.locale("zh_CN")
+            locale: Qt.locale(ShellSettings.clockLocale || "zh_CN")
             spacing: Theme.spacing.small
             delegate: TextLabel {
                 required property string shortName
@@ -74,7 +75,7 @@ PopupPanel {
             id: monthGrid
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.components.actionRow.height * 6
-            locale: Qt.locale("zh_CN")
+            locale: Qt.locale(ShellSettings.clockLocale || "zh_CN")
             month: root.displayedMonth.getMonth()
             year: root.displayedMonth.getFullYear()
             spacing: Theme.spacing.small

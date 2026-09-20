@@ -70,7 +70,9 @@ PopupWindow {
     SurfaceFrame {
         id: card
 
-        anchors.fill: parent
+        width: parent.width
+        height: parent.height
+        y: root.isOpen ? 0 : -Math.round(8 * Theme.controlScale)
         fill: Theme.components.surface.fill
         radius: Theme.shape.panelRadius
         opacity: root.isOpen ? 1 : 0
@@ -90,6 +92,13 @@ PopupWindow {
         }
 
         Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motion.fastEffects.duration
+                easing.type: Theme.motion.fastEffects.easing
+            }
+        }
+
+        Behavior on y {
             NumberAnimation {
                 duration: Theme.motion.fastEffects.duration
                 easing.type: Theme.motion.fastEffects.easing

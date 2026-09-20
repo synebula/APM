@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../config"
 
 Singleton {
     id: root
@@ -108,7 +109,7 @@ Singleton {
     }
 
     Timer {
-        interval: 5000
+        interval: ShellSettings.metricsCpuInterval
         running: true
         repeat: true
         onTriggered: {
@@ -125,7 +126,7 @@ Singleton {
     }
 
     Timer {
-        interval: 30000
+        interval: ShellSettings.metricsMemoryInterval
         running: true
         repeat: true
         triggeredOnStart: true

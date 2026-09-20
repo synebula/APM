@@ -1,2 +1,5 @@
 singleton AppearanceSettings 1.0 AppearanceSettings.qml
+singleton ConfigService 1.0 ConfigService.qml
 singleton ShellSettings 1.0 ShellSettings.qml
+singleton WallpaperSettings 1.0 WallpaperSettings.qml
+

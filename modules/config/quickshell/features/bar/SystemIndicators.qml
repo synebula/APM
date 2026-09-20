@@ -1,3 +1,4 @@
+import "../../config"
 import "../../services"
 import "../../theme"
 import "../../ui/IconGlyphs.js" as IconGlyphs
@@ -91,9 +92,9 @@ Row {
         onRightClicked: AudioService.toggleOutputMute()
         onWheel: wheel => {
             if (wheel.angleDelta.y > 0)
-                AudioService.adjustOutputVolume(0.02);
+                AudioService.adjustOutputVolume(ShellSettings.volumeStep);
             else if (wheel.angleDelta.y < 0)
-                AudioService.adjustOutputVolume(-0.02);
+                AudioService.adjustOutputVolume(-ShellSettings.volumeStep);
         }
 
         content: BarText {

@@ -39,6 +39,7 @@ input {
 // 核心布局与外观 (Layout)
 // ----------------------------------------------------------------------------
 layout {
+    background-color "transparent"
     gaps 4
     center-focused-column "never"
 

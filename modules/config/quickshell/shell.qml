@@ -4,7 +4,9 @@ import "features/bar"
 import "features/launcher"
 import "features/notifications"
 import "features/osd"
+import "features/polkit"
 import "features/session"
+import "features/wallpaper"
 import "features/window-switcher"
 import "services"
 import "theme"
@@ -14,6 +16,7 @@ ShellRoot {
     readonly property var themeController: ThemeController
     readonly property var themeSyncService: ThemeSyncService
     readonly property var sessionActions: SessionActions
+    readonly property var polkitService: PolkitService
 
     Variants {
         model: Quickshell.screens
@@ -23,9 +26,18 @@ ShellRoot {
 
             required property var modelData
 
+            DesktopWallpaper {
+                screen: desktop.modelData
+            }
+
+            OverviewWallpaper {
+                screen: desktop.modelData
+            }
+
             StatusBar {
                 screen: desktop.modelData
             }
+
 
             PopupBackdrop {
                 screen: desktop.modelData
@@ -44,6 +56,8 @@ ShellRoot {
     WindowSwitcherWindow {}
 
     ConfirmationDialog {}
+
+    PolkitDialog {}
 
     TooltipWindow {}
 }

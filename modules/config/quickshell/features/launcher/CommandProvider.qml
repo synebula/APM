@@ -1,4 +1,5 @@
 import "./LauncherSearch.js" as LauncherSearch
+import "../../config"
 import Quickshell
 import Quickshell.Io
 
@@ -40,7 +41,16 @@ Scope {
 
     function launch(result, inTerminal) {
         const command = ["sh", "-c", result.key];
-        Quickshell.execDetached(inTerminal ? ["kitty", "-e"].concat(command) : command);
+        const term = ShellSettings.terminalCommand || "kitty";
+        if (inTerminal) {
+            if (term.indexOf(" ") !== -1) {
+                Quickshell.execDetached(["sh", "-c", `${term} -e sh -c "$1"`, "_", result.key]);
+            } else {
+                Quickshell.execDetached([term, "-e"].concat(command));
+            }
+        } else {
+            Quickshell.execDetached(command);
+        }
     }
 
     Process {

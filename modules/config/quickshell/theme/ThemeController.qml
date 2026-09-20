@@ -87,6 +87,22 @@ Singleton {
         return true;
     }
 
+    function setFontScale(value: real): bool {
+        return root.setScale("fontScale", value);
+    }
+
+    function setRadiusScale(value: real): bool {
+        return root.setScale("radiusScale", value);
+    }
+
+    function setSpacingScale(value: real): bool {
+        return root.setScale("spacingScale", value);
+    }
+
+    function setMotionScale(value: real): bool {
+        return root.setScale("motionScale", value);
+    }
+
     IpcHandler {
         function setPalette(paletteId: string): bool {
             return root.setPalette(paletteId);
@@ -121,19 +137,19 @@ Singleton {
         }
 
         function setFontScale(value: real): bool {
-            return root.setScale("fontScale", value);
+            return root.setFontScale(value);
         }
 
         function setRadiusScale(value: real): bool {
-            return root.setScale("radiusScale", value);
+            return root.setRadiusScale(value);
         }
 
         function setSpacingScale(value: real): bool {
-            return root.setScale("spacingScale", value);
+            return root.setSpacingScale(value);
         }
 
         function setMotionScale(value: real): bool {
-            return root.setScale("motionScale", value);
+            return root.setMotionScale(value);
         }
 
         target: "theme"
