@@ -17,9 +17,18 @@ ModalWindow {
     exclusiveZone: -1
     WlrLayershell.namespace: "quickshell-launcher"
 
+    property bool mouseTrackingActive: false
+    property point lastMousePos: Qt.point(-1, -1)
+
+    function resetMouseTracking() {
+        root.mouseTrackingActive = false;
+        root.lastMousePos = Qt.point(-1, -1);
+    }
+
     LauncherController {
         id: controller
         onOpened: {
+            root.resetMouseTracking();
             searchInput.text = "";
             searchInput.forceActiveFocus();
         }
@@ -30,7 +39,7 @@ ModalWindow {
         anchors.centerIn: parent
         width: Math.min(parent.width - Theme.spacing.section * 2, 640 * Theme.controlScale)
         height: Math.min(parent.height - Theme.spacing.section * 2, content.implicitHeight + Theme.spacing.large * 2)
-        fill: Theme.colors.surface
+        fill: Theme.components.surface.fill
         radius: Theme.shape.panelRadius
 
         CompositorBlurRegion {
@@ -75,16 +84,29 @@ ModalWindow {
                     verticalAlignment: TextInput.AlignVCenter
                     selectByMouse: true
                     clip: true
-                    onTextChanged: controller.query = text
-                    Keys.onDownPressed: controller.selectNext(1)
-                    Keys.onUpPressed: controller.selectNext(-1)
+                    onTextChanged: {
+                        root.resetMouseTracking();
+                        controller.query = text;
+                    }
+                    Keys.onDownPressed: {
+                        root.resetMouseTracking();
+                        controller.selectNext(1);
+                    }
+                    Keys.onUpPressed: {
+                        root.resetMouseTracking();
+                        controller.selectNext(-1);
+                    }
                     Keys.onTabPressed: event => {
+                        root.resetMouseTracking();
                         if (event.modifiers & Qt.ControlModifier)
                             controller.open(controller.mode === "applications" ? "commands" : "applications");
                         else
                             controller.selectNext(1);
                     }
-                    Keys.onBacktabPressed: controller.selectNext(-1)
+                    Keys.onBacktabPressed: {
+                        root.resetMouseTracking();
+                        controller.selectNext(-1);
+                    }
                     Keys.onReturnPressed: event => controller.launch(!!(event.modifiers & Qt.ShiftModifier))
                     Keys.onEnterPressed: event => controller.launch(!!(event.modifiers & Qt.ShiftModifier))
                 }
@@ -115,6 +137,28 @@ ModalWindow {
                     flickable: results
                 }
 
+                HoverHandler {
+                    id: mouseTracker
+                    onPointChanged: {
+                        const px = point.position.x;
+                        const py = point.position.y;
+                        if (!root.mouseTrackingActive) {
+                            root.lastMousePos = Qt.point(px, py);
+                            root.mouseTrackingActive = true;
+                            return;
+                        }
+                        const dx = px - root.lastMousePos.x;
+                        const dy = py - root.lastMousePos.y;
+                        if (dx * dx + dy * dy > 9) {
+                            root.lastMousePos = Qt.point(px, py);
+                            const idx = results.indexAt(px, py + results.contentY);
+                            if (idx >= 0 && idx < results.count) {
+                                controller.selectedIndex = idx;
+                            }
+                        }
+                    }
+                }
+
                 delegate: ActionRow {
                     id: resultRow
                     required property var modelData
@@ -130,10 +174,7 @@ ModalWindow {
                     glyph: controller.provider.glyph
                     icon.name: modelData.icon
                     selected: index === controller.selectedIndex
-                    onHoveredChanged: {
-                        if (hovered)
-                            controller.selectedIndex = index;
-                    }
+                    hoverEnabled: false
                     onClicked: {
                         controller.selectedIndex = index;
                         controller.launch(false);

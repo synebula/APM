@@ -72,9 +72,9 @@ tests/                  QuickShell 行为测试与主题断言
 
 ## 主题与配色机制
 
-- **主题 (`ThemeDefinition`)**：组合形状、边框、层级、表面、间距、字体和动效规范。已注册主题：`neumorphic`（默认，柔和阴影立面）、`flat`（清晰边框扁平）、`liquid-glass`（液态玻璃，流体透光立面、镜面微边、柔光悬浮与灵动大圆角）。
+- **主题 (`ThemeDefinition`)**：组合形状、边框、层级、表面、间距、字体和动效规范。已注册主题：`neumorphic`（默认，柔和阴影立面）、`flat`（清晰边框扁平）、`frosted-glass`（磨砂玻璃，透光朦胧、镜面微边与亚克力磨砂质感）、`liquid-glass`（液态玻璃，高通透清澈水体、360° 全周菲涅尔内光晕、天光透镜弧面反光与灵动大圆角）。
 - **配色家族 (`PaletteDefinition`)**：表示色彩家族。已注册配色：`pastel-relief`（默认）、`catppuccin`、`nord`、`everforest`、`tokyo-night`。
-- **色彩变体 (`PaletteVariant`)**：每个调色板提供成对的 `light` 与 `dark` 语义颜色及多个候选强调色（Accents）。
+- **色彩变体 (`PaletteVariant`)**：每个调色板提供成对的 `light` 与 `dark`语义颜色及多个候选强调色（Accents）。
 - **独立正交原则**：
   - 切换主题不会重置配色家族、明暗模式或强调色；切换配色家族亦不改变主题。
   - `colorMode` 支持 `system`（由 `ColorModeResolver` 动态解析）、`light`、`dark`。
@@ -85,7 +85,7 @@ tests/                  QuickShell 行为测试与主题断言
 
 | 目标 (`target`) | 方法 (`method`) | 参数说明 |
 | :--- | :--- | :--- |
-| `theme` | `setTheme` | `<id>`: `flat` / `neumorphic` / `liquid-glass` |
+| `theme` | `setTheme` | `<id>`: `flat` / `neumorphic` / `frosted-glass` / `liquid-glass` |
 | `theme` | `setPalette` | `<id>`: `pastel-relief` / `catppuccin` / `nord` / `everforest` / `tokyo-night` |
 | `theme` | `setColorMode` | `<mode>`: `system` / `light` / `dark` |
 | `theme` | `toggleColorMode` | 快速在深色与浅色之间切换 |

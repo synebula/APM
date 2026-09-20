@@ -12,7 +12,11 @@ Item {
     visible: row.implicitWidth > 0
     implicitWidth: visible ? Math.max(height, row.implicitWidth + Theme.components.barGroup.padding * 2) : 0
 
+    readonly property alias glassSurface: glass
+
     SurfaceFrame {
+        id: glass
+
         anchors.fill: parent
         fill: Theme.components.barGroup.background
         radius: Theme.components.barGroup.radius

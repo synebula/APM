@@ -22,7 +22,7 @@ ModalWindow {
         width: Math.min(parent.width - Theme.spacing.section * 2, 360 * Theme.controlScale)
         height: content.implicitHeight + Theme.spacing.section * 2
         radius: Theme.shape.panelRadius
-        fill: Theme.colors.surface
+        fill: Theme.components.surface.fill
 
         CompositorBlurRegion {
             targetWindow: root

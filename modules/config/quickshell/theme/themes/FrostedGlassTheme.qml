@@ -2,50 +2,47 @@ import ".."
 import QtQuick
 
 ThemeDefinition {
-    themeId: "liquid-glass"
-    displayName: "液态玻璃"
+    themeId: "frosted-glass"
+    displayName: "磨砂玻璃"
     glyph: "󰤄"
-    description: "清澈流体 · 菲涅尔曲光 · 灵动立面"
+    description: "透光朦胧 · 镜面微边 · 磨砂质感"
     suggestedPaletteIds: ["pastel-relief", "catppuccin", "nord"]
 
     shape: ShapeSpec {
-        smallRadius: 8
-        controlRadius: 16
-        panelRadius: 24
-        roundRadius: 32
+        smallRadius: 6
+        controlRadius: 14
+        panelRadius: 20
+        roundRadius: 26
     }
 
     border: BorderSpec {
         width: 1
-        opacity: 0.90
+        opacity: 0.85
         colorPolicy: "outline"
     }
 
     elevation: ElevationSpec {
         level: "elevated"
         shadowStyle: "soft"
-        shadowBlur: 0.90
+        shadowBlur: 0.82
         shadowHorizontalOffset: 0
-        shadowVerticalOffset: 8
-        shadowOpacity: 0.22
+        shadowVerticalOffset: 6
+        shadowOpacity: 0.18
         shadowColorPolicy: "black"
         highlightStyle: "top"
-        highlightOpacity: 0.65
+        highlightOpacity: 0.45
     }
 
     surface: SurfaceSpec {
-        mode: "liquid"
-        fillOpacity: 0.10
+        mode: "acrylic"
+        fillOpacity: 0.42
         blurRadius: 0
-        gradientLighten: 1.06
-        gradientDarken: 0.94
-        fresnelStrength: 0.85
-        specularOpacity: 0.60
-        textHaloOpacity: 0.20
+        gradientLighten: 1.02
+        gradientDarken: 1.01
     }
 
     spacing: SpacingSpec {
-        density: 1.06
+        density: 1.08
     }
 
     typography: TypographySpec {
@@ -55,6 +52,6 @@ ThemeDefinition {
     }
 
     motion: MotionSpec {
-        duration: 360
+        duration: 320
     }
 }

@@ -50,8 +50,10 @@ Scope {
         record.receivedAt = Date.now();
         record.unread = !root.centerOpen;
         if (!root.doNotDisturb && !root.centerOpen) {
-            const seconds = record.source.expireTimeout;
-            const duration = seconds === 0 || record.urgency === 2 ? 0 : (seconds > 0 ? Math.round(seconds * 1000) : ShellSettings.notificationTimeout);
+            // Quickshell 0.3.1 未按文档换算单位，expireTimeout 实为 DBus 透传的毫秒值；
+            // 升级 Quickshell 后若 toast 计时异常需回查此处。
+            const expireTimeout = record.source.expireTimeout;
+            const duration = expireTimeout === 0 || record.urgency === 2 ? 0 : (expireTimeout > 0 ? Math.round(expireTimeout) : ShellSettings.notificationTimeout);
             record.toast.show(duration);
         }
         root.changed();

@@ -49,6 +49,7 @@ Singleton {
     }
 
     component PopupTokens: QtObject {
+        readonly property color background: root.components.surface.fill
         readonly property int padding: root.spacing.large
         readonly property int gap: root.spacing.small
         readonly property int tooltipMaxWidth: Math.round(480 * root.controlScale)
@@ -194,7 +195,7 @@ Singleton {
 
     component BarGroupTokens: QtObject {
         readonly property int height: Math.round(24 * root.controlScale)
-        readonly property color background: root.isDark ? root.colors.surface : root.colors.background
+        readonly property color background: root.components.surface.fill
         readonly property int padding: Math.round(6 * root.spacingScale)
         readonly property real radius: Math.min(height / 2, 13 * root.shape.scale)
     }
@@ -208,7 +209,7 @@ Singleton {
     }
 
     component SurfaceTokens: QtObject {
-        readonly property color fill: root.colors.surface
+        readonly property color fill: root.isDark ? root.colors.surface : root.colors.background
         readonly property real fillOpacity: root.definition.surface.fillOpacity
         readonly property string mode: root.definition.surface.mode
         readonly property real blurRadius: root.definition.surface.blurRadius
@@ -223,8 +224,14 @@ Singleton {
         readonly property color highlightColor: root.highlightColor
         readonly property real gradientLighten: root.definition.surface.gradientLighten
         readonly property real gradientDarken: root.definition.surface.gradientDarken
+        readonly property real fresnelStrength: root.definition.surface.fresnelStrength
+        readonly property real specularOpacity: root.definition.surface.specularOpacity
+        // 玻璃面没有实体底衬，文字需要反向描边才能在任何底色上保持边界对比
+        readonly property real textHaloOpacity: isGlass ? root.definition.surface.textHaloOpacity : 0
+        readonly property color textHaloColor: Qt.rgba(root.isDark ? 0 : 1, root.isDark ? 0 : 1, root.isDark ? 0 : 1, textHaloOpacity)
         readonly property int shadowMargin: shadowEnabled ? Math.round(24 * root.controlScale) : 0
-        readonly property bool isGlass: mode === "acrylic" || fillOpacity < 1.0
+        readonly property bool isLiquid: mode === "liquid"
+        readonly property bool isGlass: mode === "acrylic" || isLiquid || fillOpacity < 1.0
         readonly property bool isGradient: mode === "gradient" && !isGlass
         readonly property bool layerEffectsEnabled: !isGlass && (shadowEnabled || blurRadius > 0)
     }
@@ -369,7 +376,9 @@ Singleton {
         function cardBackground(toastMode: bool, unread: bool, hovered: bool, urgency: int): color {
             let baseColor;
             if (toastMode) {
-                baseColor = ColorMath.blend(root.colors.surface, root.colors.surfaceVariant, 0.45);
+                baseColor = root.components.surface.isGlass
+                    ? root.components.surface.fill
+                    : ColorMath.blend(root.colors.surface, root.colors.surfaceVariant, 0.45);
             } else {
                 if (urgency === 2) {
                     baseColor = ColorMath.blend(root.colors.surface, root.colors.danger, 0.12);

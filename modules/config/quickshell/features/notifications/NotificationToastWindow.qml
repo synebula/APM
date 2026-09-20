@@ -27,10 +27,36 @@ PanelWindow {
     visible: NotificationService.toasts.length > 0 && isTargetScreen
     color: "transparent"
 
+    // 卡片注册表：委托按序登记，供模糊区域槽位引用；
+    // Repeater 对 JS 数组模型是整体重建，itemAt/children 均无可依赖的变更通知。
+    property var toastCards: []
+
+    function registerToastCard(card) {
+        const next = root.toastCards.slice();
+        next.push(card);
+        root.toastCards = next;
+    }
+
+    function unregisterToastCard(card) {
+        const idx = root.toastCards.indexOf(card);
+        if (idx === -1)
+            return;
+        const next = root.toastCards.slice();
+        next.splice(idx, 1);
+        root.toastCards = next;
+    }
+
+    // 逐卡片并集模糊：槽位数须与 ShellSettings.notificationToastLimit 一致，
+    // 缺失/隐藏槽位以 null item 退出并集，卡片间隙不再被误模糊。
     CompositorBlurRegion {
         targetWindow: root
-        backgroundItem: notifications
         radius: Theme.shape.controlRadius
+
+        Region { item: root.toastCards.length > 0 ? root.toastCards[0] : null; radius: Theme.shape.controlRadius }
+        Region { item: root.toastCards.length > 1 ? root.toastCards[1] : null; radius: Theme.shape.controlRadius }
+        Region { item: root.toastCards.length > 2 ? root.toastCards[2] : null; radius: Theme.shape.controlRadius }
+        Region { item: root.toastCards.length > 3 ? root.toastCards[3] : null; radius: Theme.shape.controlRadius }
+        Region { item: overflowBadge.visible ? overflowBadge : null; radius: Theme.shape.controlRadius }
     }
 
     Column {
@@ -51,6 +77,8 @@ PanelWindow {
             }
         }
         Rectangle {
+            id: overflowBadge
+
             visible: NotificationService.toasts.length > ShellSettings.notificationToastLimit
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: overflowText.implicitWidth + Theme.spacing.large * 2

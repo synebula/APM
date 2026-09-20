@@ -71,7 +71,7 @@ PopupWindow {
         id: card
 
         anchors.fill: parent
-        fill: Theme.colors.surface
+        fill: Theme.components.surface.fill
         radius: Theme.shape.panelRadius
         opacity: root.isOpen ? 1 : 0
 

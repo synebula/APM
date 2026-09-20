@@ -1,6 +1,7 @@
 import "../../theme"
 import "../../ui/containers"
 import "../../ui/controllers"
+import "../../ui/effects"
 import "../calendar"
 import "../media"
 import "../metrics"
@@ -23,6 +24,46 @@ PanelWindow {
         top: true
         left: true
         right: true
+    }
+
+    // 药丸并集模糊区域：隐藏的组以 null item 退出并集
+    CompositorBlurRegion {
+        targetWindow: root
+
+        Region {
+            item: workspaceGroup.visible ? workspaceGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
+
+        Region {
+            item: titleGroup.visible ? titleGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
+
+        Region {
+            item: mediaGroup.visible ? mediaGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
+
+        Region {
+            item: clockGroup.visible ? clockGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
+
+        Region {
+            item: trayGroup.visible ? trayGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
+
+        Region {
+            item: metricsGroup.visible ? metricsGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
+
+        Region {
+            item: indicatorsGroup.visible ? indicatorsGroup.glassSurface : null
+            radius: Theme.components.barGroup.radius
+        }
     }
 
     Rectangle {
@@ -54,12 +95,16 @@ PanelWindow {
             spacing: Theme.components.bar.padding
 
             BarGroup {
+                id: workspaceGroup
+
                 WorkspaceSwitcher {
                     screen: root.screen
                 }
             }
 
             BarGroup {
+                id: titleGroup
+
                 ActiveWindowTitle {
                     screen: root.screen
                 }
@@ -113,16 +158,22 @@ PanelWindow {
             // }
 
             BarGroup {
+                id: trayGroup
+
                 SystemTrayView {
                     barWindow: root
                 }
             }
 
             BarGroup {
+                id: metricsGroup
+
                 SystemMetricsIndicator {}
             }
 
             BarGroup {
+                id: indicatorsGroup
+
                 SystemIndicators {
                     barWindow: root
                 }

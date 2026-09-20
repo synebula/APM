@@ -43,9 +43,12 @@ PopupPanel {
                 }
             }
 
-            RowLayout {
+            GridLayout {
+                id: themeGrid
                 width: parent.width
-                spacing: Theme.spacing.medium
+                columns: 2
+                columnSpacing: Theme.spacing.medium
+                rowSpacing: Theme.spacing.medium
 
                 Repeater {
                     model: ThemeCatalog.themes

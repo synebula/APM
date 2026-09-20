@@ -165,6 +165,40 @@ TestSuite {
         compare(resolved.workspaceId, "12");
     }
 
+    function test_windowsAreSortedByGeometricScrollingLayout() {
+        const rawState = {
+            "workspaces": [
+                { "id": 1, "idx": 1, "name": "1", "output": "HDMI-A-1", "is_active": true }
+            ],
+            "windows": [
+                { "id": 103, "app_id": "c", "title": "col3", "workspace_id": 1, "layout": { "pos_in_scrolling_layout": [3, 1] } },
+                { "id": 101, "app_id": "a", "title": "col1", "workspace_id": 1, "layout": { "pos_in_scrolling_layout": [1, 1] } },
+                { "id": 104, "app_id": "floating", "title": "float", "workspace_id": 1, "is_floating": true },
+                { "id": 102, "app_id": "b", "title": "col2-row2", "workspace_id": 1, "layout": { "pos_in_scrolling_layout": [2, 2] } },
+                { "id": 105, "app_id": "b1", "title": "col2-row1", "workspace_id": 1, "layout": { "pos_in_scrolling_layout": [2, 1] } }
+            ]
+        };
+        const snap = NiriState.snapshot(rawState);
+        compare(snap.windows.length, 5);
+        compare(snap.windows[0].windowId, "101");
+        compare(snap.windows[1].windowId, "105");
+        compare(snap.windows[2].windowId, "102");
+        compare(snap.windows[3].windowId, "103");
+        compare(snap.windows[4].windowId, "104");
+
+        const updated = NiriState.apply(rawState, {
+            "WindowLayoutsChanged": {
+                "changes": [
+                    [103, { "pos_in_scrolling_layout": [1, 1] }],
+                    [101, { "pos_in_scrolling_layout": [3, 1] }]
+                ]
+            }
+        });
+        const nextSnap = NiriState.snapshot(updated);
+        compare(nextSnap.windows[0].windowId, "103");
+        compare(nextSnap.windows[3].windowId, "101");
+    }
+
     name: "WindowState"
 
     WindowManagerBackend {

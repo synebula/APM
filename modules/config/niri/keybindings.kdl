@@ -6,16 +6,15 @@ binds {
     // ------------------------------------------------------------------------
     // 主要窗口/会话操作
     // ------------------------------------------------------------------------
-    Mod+C repeat=false { close-window; }                // 关闭当前聚焦窗口
-    Mod+Ctrl+Delete    { quit; }                        // 退出桌面会话
     Ctrl+Alt+Delete    { quit; }
+    Mod+Ctrl+Delete    { quit; }                        // 退出桌面会话
+    Mod+C repeat=false { close-window; }                // 关闭当前聚焦窗口
     Mod+Return         { fullscreen-window; }           // 切换窗口全屏
-    Mod+M              { maximize-column; }             // 最大化当前列（保留边距）
     Mod+S              { toggle-column-tabbed-display; }// 切换单列多窗口为垂直标签页视图
     Mod+W              { switch-preset-column-width; }  // 循环切换预设列宽比例
     Mod+Shift+W        { switch-preset-column-width-back; } // 反向循环预设列宽
     Mod+T              { switch-preset-window-height; } // 循环切换预设窗口高度
-    Mod+F              { expand-column-to-available-width; } // 扩展当前列填满剩余空间
+    Mod+F              { maximize-column; } // 扩展当前列填满剩余空间
     Mod+Shift+F        { maximize-window-to-edges; }    // 贴边最大化（不保留边距）
     Mod+Alt+F          { toggle-window-floating; }      // 切换窗口浮动/平铺状态
     Mod+Shift+T        { reset-window-height; }       // 恢复窗口高度
@@ -64,7 +63,6 @@ binds {
     Alt+Print           { screenshot; }                  // 框选区域截图
     Alt+A               { screenshot; }                  // 框选区域截图
     Ctrl+Print          { screenshot-screen; }           // 全屏截图
-    Mod+Alt+P           { spawn "hyprpicker"; }          // 屏幕取色器
 
     // ------------------------------------------------------------------------
     // 窗口焦点移动 (Move Focus)
@@ -83,10 +81,10 @@ binds {
     // ------------------------------------------------------------------------
     // 列内堆叠 (Consume / Expel)
     // ------------------------------------------------------------------------
-    Mod+BracketLeft     { consume-or-expel-window-left; }  // 向左吞入/吐出当前窗口
-    Mod+BracketRight    { consume-or-expel-window-right; } // 向右吞入/吐出当前窗口
-    Mod+Comma           { consume-window-into-column; }    // 把右侧窗口吞进当前列底部
-    Mod+Period          { expel-window-from-column; }      // 把列底窗口吐到右侧
+    Mod+BracketLeft     { consume-or-expel-window-left; }  // [ 键 (左中括号)：向左吞入/吐出当前窗口
+    Mod+BracketRight    { consume-or-expel-window-right; } // ] 键 (右中括号)：向右吞入/吐出当前窗口
+    Mod+Comma           { consume-window-into-column; }    // , 键 (逗号)：把右侧窗口吞进当前列底部
+    Mod+Period          { expel-window-from-column; }      // . 键 (句号)：把列底窗口吐到右侧
 
     // ------------------------------------------------------------------------
     // 移动窗口/列 (Move Window / Column)

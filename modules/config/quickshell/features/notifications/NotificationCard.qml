@@ -11,6 +11,7 @@ ActionButton {
     id: root
     required property NotificationRecord notification
     property bool toastMode: false
+    // toast 模式下向宿主窗口登记自身，供其模糊区域槽位引用
     property var toastWindow: null
     signal dismissRequested
     signal actionRequested(string actionId)
@@ -54,8 +55,6 @@ ActionButton {
         radius: root.cornerRadius
         borderWidth: root.borderWidth
         borderColor: root.borderColor
-        shadowEnabled: false
-        highlightEnabled: false
 
         StateLayer {
             anchors.fill: parent
@@ -65,15 +64,6 @@ ActionButton {
             focused: root.visualFocus
             pressed: root.down
         }
-
-        Loader {
-            active: root.toastMode && Theme.components.surface.isGlass
-            sourceComponent: CompositorBlurRegion {
-                targetWindow: root.toastWindow || (root.QsWindow ? root.QsWindow.window : null)
-                backgroundItem: parent
-                radius: root.cornerRadius
-            }
-        }
     }
 
     HoverHandler {
@@ -82,9 +72,15 @@ ActionButton {
                 root.notification.toast.setPaused(root, hovered);
         }
     }
+    Component.onCompleted: {
+        if (root.toastMode && root.toastWindow)
+            root.toastWindow.registerToastCard(root);
+    }
     Component.onDestruction: {
         if (root.notification)
             root.notification.toast.setPaused(root, false);
+        if (root.toastMode && root.toastWindow)
+            root.toastWindow.unregisterToastCard(root);
     }
 
     contentItem: ColumnLayout {

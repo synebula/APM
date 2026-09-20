@@ -17,7 +17,7 @@ PanelWindow {
     color: "transparent"
     exclusiveZone: -1
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.namespace: root.dim ? "quickshell-power-backdrop" : "qs-popup-backdrop"
+    WlrLayershell.namespace: root.dim ? "quickshell-power-backdrop" : "quickshell-popup-backdrop"
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     anchors {

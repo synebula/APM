@@ -38,7 +38,7 @@ ModalWindow {
             anchors.centerIn: parent
             width: Math.min(parent.width - Theme.spacing.section * 2, Math.max(340 * Theme.controlScale, windows.contentWidth + Theme.spacing.extraLarge * 2))
             height: 154 * Theme.controlScale
-            fill: Theme.colors.surface
+            fill: Theme.components.surface.fill
             radius: Theme.shape.panelRadius
 
             CompositorBlurRegion {

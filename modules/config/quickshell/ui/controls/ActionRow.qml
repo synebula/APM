@@ -32,10 +32,6 @@ T.ItemDelegate {
         border.width: Theme.components.actionRow.borderWidth(root.visualFocus, root.selected)
         border.color: Theme.components.actionRow.borderColor(root.visualFocus, root.selected, root.destructive)
 
-        Behavior on color {
-            ColorAnimation { duration: Theme.motion.standard.duration }
-        }
-
         StateLayer {
             anchors.fill: parent
             layerRadius: Theme.shape.controlRadius

@@ -42,7 +42,38 @@ function apply(state, event) {
         return { windows: state.windows.map(window => window.id === change.id
             ? Object.assign({}, window, { is_urgent: change.urgent }) : window), workspaces: state.workspaces };
     }
+    if (event.WindowLayoutsChanged && Array.isArray(event.WindowLayoutsChanged.changes)) {
+        const changeMap = {};
+        for (const entry of event.WindowLayoutsChanged.changes) {
+            if (Array.isArray(entry) && entry.length >= 2)
+                changeMap[entry[0]] = entry[1];
+        }
+        return {
+            windows: state.windows.map(window => {
+                const updatedLayout = changeMap[window.id];
+                return updatedLayout ? Object.assign({}, window, { layout: updatedLayout }) : window;
+            }),
+            workspaces: state.workspaces
+        };
+    }
     return state;
+}
+
+function compareWindowLayout(a, b, workspaceOrder) {
+    const wsA = workspaceOrder[String(a.workspace_id)] ?? Number.MAX_SAFE_INTEGER;
+    const wsB = workspaceOrder[String(b.workspace_id)] ?? Number.MAX_SAFE_INTEGER;
+    if (wsA !== wsB)
+        return wsA - wsB;
+
+    const posA = a.layout && a.layout.pos_in_scrolling_layout;
+    const posB = b.layout && b.layout.pos_in_scrolling_layout;
+    if (posA && !posB) return -1;
+    if (!posA && posB) return 1;
+    if (posA && posB) {
+        if (posA[0] !== posB[0]) return posA[0] - posB[0];
+        if (posA[1] !== posB[1]) return posA[1] - posB[1];
+    }
+    return (a.id || 0) - (b.id || 0);
 }
 
 function snapshot(state) {
@@ -56,7 +87,15 @@ function snapshot(state) {
         focused: !!workspace.is_focused,
         urgent: !!workspace.is_urgent
     }));
-    const windows = state.windows.map(window => {
+
+    const workspaceOrder = {};
+    workspaces.forEach((ws, idx) => {
+        workspaceOrder[ws.workspaceId] = idx;
+    });
+
+    const sortedWindows = state.windows.slice().sort((a, b) => compareWindowLayout(a, b, workspaceOrder));
+
+    const windows = sortedWindows.map(window => {
         const workspace = workspaces.find(item => item.workspaceId === String(window.workspace_id));
         return {
             windowId: String(window.id),

@@ -115,7 +115,7 @@ TestSuite {
             property string image: ""
             property bool resident: false
             property int urgency: 1
-            property real expireTimeout: 0.15
+            property real expireTimeout: 150
             property var actions: []
 
             signal closed

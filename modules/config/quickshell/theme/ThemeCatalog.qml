@@ -9,7 +9,8 @@ Singleton {
     readonly property list<ThemeDefinition> themes: [
         FlatTheme {},
         NeumorphicTheme {},
-        LiquidGlassTheme {}
+        LiquidGlassTheme {},
+        FrostedGlassTheme {}
     ]
     readonly property ThemeDefinition defaultTheme: root.find("neumorphic")
 

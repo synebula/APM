@@ -73,7 +73,7 @@ TestSuite {
             verify(["black", "foreground"].includes(theme.elevation.darkShadowColorPolicy));
 
             verify(theme.surface !== null);
-            verify(["solid", "gradient", "acrylic"].includes(theme.surface.mode));
+            verify(["solid", "gradient", "acrylic", "liquid"].includes(theme.surface.mode));
             verify(theme.surface.fillOpacity >= 0 && theme.surface.fillOpacity <= 1);
             verify(theme.surface.blurRadius >= 0);
 
@@ -92,6 +92,7 @@ TestSuite {
         verify(ThemeCatalog.find("flat") !== null);
         verify(ThemeCatalog.find("neumorphic") !== null);
         verify(ThemeCatalog.find("liquid-glass") !== null);
+        verify(ThemeCatalog.find("frosted-glass") !== null);
         verify(ThemeCatalog.find("ios-glass") === null);
         verify(ThemeCatalog.find("ios-liquid-glass") === null);
         verify(ThemeCatalog.find("missing") === null);
@@ -385,14 +386,27 @@ TestSuite {
         verify(!Theme.components.surface.isGlass);
         verify(Theme.components.surface.isGradient);
         verify(Theme.components.surface.layerEffectsEnabled);
-        verify(ThemeController.setTheme("liquid-glass"));
-        compare(Theme.definition.themeId, "liquid-glass");
+        verify(ThemeController.setTheme("frosted-glass"));
+        compare(Theme.definition.themeId, "frosted-glass");
         compare(Theme.components.surface.borderWidth, 1);
         compare(Theme.components.surface.mode, "acrylic");
-        compare(Theme.components.surface.fillOpacity, 0.50);
+        compare(Theme.components.surface.fillOpacity, 0.42);
         verify(Theme.components.surface.shadowEnabled);
         verify(Theme.components.surface.highlightEnabled);
         verify(Theme.components.surface.isGlass);
+        verify(!Theme.components.surface.isLiquid);
+        verify(!Theme.components.surface.isGradient);
+        verify(!Theme.components.surface.layerEffectsEnabled);
+
+        verify(ThemeController.setTheme("liquid-glass"));
+        compare(Theme.definition.themeId, "liquid-glass");
+        compare(Theme.components.surface.borderWidth, 1);
+        compare(Theme.components.surface.mode, "liquid");
+        compare(Theme.components.surface.fillOpacity, 0.10);
+        verify(Theme.components.surface.shadowEnabled);
+        verify(Theme.components.surface.highlightEnabled);
+        verify(Theme.components.surface.isGlass);
+        verify(Theme.components.surface.isLiquid);
         verify(!Theme.components.surface.isGradient);
         verify(!Theme.components.surface.layerEffectsEnabled);
         verify(!ThemeController.setTheme("ios-glass"));

@@ -102,9 +102,8 @@ PanelWindow {
             id: card
 
             anchors.fill: parent
-            fill: Theme.colors.surface
-            radius: Theme.shape.roundRadius
-            shadowEnabled: false
+            fill: Theme.components.surface.fill
+            radius: Math.min(height / 2, Theme.shape.roundRadius)
 
             CompositorBlurRegion {
                 targetWindow: root

@@ -7,12 +7,20 @@ Item {
     id: root
 
     required property var targetWindow
-    required property Item backgroundItem
+    property Item backgroundItem: null
     property real radius: 0
     property bool enabled: Theme.components.surface.isGlass
     property bool surfaceReady: false
     property bool destroying: false
-    readonly property bool active: root.enabled && root.surfaceReady && root.targetWindow && root.targetWindow.visible && root.backgroundItem && root.backgroundItem.visible && root.backgroundItem.width > 0 && root.backgroundItem.height > 0
+    // 声明式子 Region（默认属性）与 backgroundItem 区域取并集，
+    // 用于同一窗口内的多个玻璃块（如状态栏药丸）；item 为 null 的子区域不参与。
+    default property alias regions: region.regions
+    readonly property bool ownRegionActive: root.backgroundItem
+        && root.backgroundItem.visible
+        && root.backgroundItem.width > 0
+        && root.backgroundItem.height > 0
+    readonly property bool active: root.enabled && root.surfaceReady && root.targetWindow
+        && root.targetWindow.visible && (root.ownRegionActive || root.regions.length > 0)
 
     function commit() {
         if (!root.targetWindow || root.destroying)
