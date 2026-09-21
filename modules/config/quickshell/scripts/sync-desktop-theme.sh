@@ -103,10 +103,11 @@ sync_hyprland() {
     if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && command -v hyprctl >/dev/null 2>&1; then
         local clean_accent="${ACCENT_HEX#"#"}"
         local clean_outline="${OUTLINE_HEX#"#"}"
-        hyprctl keyword general:col.active_border "rgba(${clean_accent}ff) rgba(${clean_outline}ff) 45deg" 2>/dev/null || true
+        [[ ${#clean_accent} -eq 6 ]] && clean_accent="${clean_accent}ff"
+        [[ ${#clean_outline} -eq 6 ]] && clean_outline="${clean_outline}ff"
+        hyprctl keyword general:col.active_border "rgba(${clean_accent}) rgba(${clean_outline}) 45deg" 2>/dev/null || true
     fi
 }
 
 sync_gtk
-# sync_kitty
 sync_hyprland

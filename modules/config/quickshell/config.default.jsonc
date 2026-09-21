@@ -20,7 +20,7 @@
   "bar": {
     "showWorkspaces": true, // 工作区切换器
     "showWindowTitle": true, // 当前聚焦窗口标题
-    "showMedia": false, // 媒体播放控制器
+    "showMedia": true, // 媒体播放控制器
     "showClock": true, // 时钟组件
     "showNotifications": true, // 通知中心入口图标
     "showTray": true, // 系统托盘图标区域

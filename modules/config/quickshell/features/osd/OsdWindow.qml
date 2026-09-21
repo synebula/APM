@@ -34,9 +34,9 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     exclusiveZone: 0
     anchors.bottom: true
-    margins.bottom: 64 * Theme.spacingScale
-    implicitWidth: 320 * Theme.controlScale
-    implicitHeight: 64 * Theme.controlScale
+    margins.bottom: 44 * Theme.spacingScale
+    implicitWidth: 440 * Theme.controlScale
+    implicitHeight: 104 * Theme.controlScale
     color: "transparent"
     visible: root.isOpen || container.opacity > 0
 
@@ -170,9 +170,26 @@ PanelWindow {
         }
 
         CompositorBlurRegion {
+            id: blurRegion
             targetWindow: root
-            backgroundItem: morphPill
-            radius: 26 * Theme.controlScale
+
+            Region {
+                item: morphPill.mainBodyItem
+                radius: morphPill.mainRadius
+            }
+
+            Region {
+                item: morphPill.satelliteItem.visible ? morphPill.satelliteItem : null
+                radius: morphPill.satelliteRadius
+            }
+        }
+
+        Connections {
+            function onPillProgressChanged() {
+                blurRegion.publish();
+            }
+
+            target: morphPill
         }
     }
 }

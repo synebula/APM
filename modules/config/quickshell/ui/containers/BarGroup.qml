@@ -7,9 +7,11 @@ Item {
 
     default property alias content: row.data
 
+    property bool groupVisible: true
+
     implicitHeight: Theme.components.barGroup.height
     height: implicitHeight
-    visible: row.implicitWidth > 0
+    visible: root.groupVisible && row.implicitWidth > 0
     implicitWidth: visible ? Math.max(height, row.implicitWidth + Theme.components.barGroup.padding * 2) : 0
 
     readonly property alias glassSurface: glass

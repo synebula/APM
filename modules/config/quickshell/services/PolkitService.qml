@@ -181,11 +181,11 @@ Singleton {
             f.selectedIdentity = identity;
         }
     }
-
     function simulateRequest(options) {
+        const currentUser = Quickshell.env("USER") || "current-user";
         const idList = options.identities || [{
-            "displayName": options.user || "Current User",
-            "string": "unix-user:" + (options.user || "alex"),
+            "displayName": options.user || currentUser,
+            "string": "unix-user:" + (options.user || currentUser),
             "isGroup": false
         }];
 

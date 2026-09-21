@@ -17,7 +17,7 @@ PopupWindow {
     anchor.window: TooltipController.activeItem ? TooltipController.activeItem.QsWindow.window : null
     anchor.edges: Edges.Bottom
     anchor.gravity: Edges.Bottom
-    anchor.margins.top: Theme.spacing.small - root.edgeInset
+    anchor.margins.bottom: -(Theme.spacing.small - root.edgeInset)
     visible: TooltipController.visible && anchor.item !== null && anchor.window !== null
     color: "transparent"
     implicitWidth: Math.min(Theme.components.popup.tooltipMaxWidth, text.implicitWidth + Theme.spacing.large * 2) + root.edgeInset * 2

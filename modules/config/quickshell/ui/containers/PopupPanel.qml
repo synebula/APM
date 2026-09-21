@@ -42,11 +42,23 @@ PopupWindow {
         hideTimer.restart();
     }
 
+    readonly property int _bottomOffset: {
+        let extra = 0;
+        if (root.anchorItem && root.barWindow && root.barWindow.contentItem) {
+            try {
+                const mapped = root.anchorItem.mapToItem(root.barWindow.contentItem, 0, root.anchorItem.height);
+                if (mapped && typeof mapped.y === "number")
+                    extra = Math.max(0, root.barWindow.height - mapped.y);
+            } catch (e) {}
+        }
+        return extra + Theme.components.popup.gap;
+    }
+
     anchor.window: root.barWindow
     anchor.item: root.anchorItem
     anchor.edges: root.alignRight ? (Edges.Bottom | Edges.Right) : Edges.Bottom
     anchor.gravity: root.alignRight ? (Edges.Bottom | Edges.Left) : Edges.Bottom
-    anchor.margins.top: Theme.components.popup.gap
+    anchor.margins.bottom: -root._bottomOffset
     implicitWidth: root.contentWidth
     implicitHeight: root.contentHeight
     color: "transparent"

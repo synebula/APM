@@ -17,7 +17,6 @@ PanelWindow {
     exclusiveZone: 0
     anchors {
         top: true
-        // right: true
     }
     margins.top: Theme.components.bar.height + Theme.spacing.medium
     margins.right: Theme.spacing.medium
@@ -52,11 +51,26 @@ PanelWindow {
         targetWindow: root
         radius: Theme.shape.controlRadius
 
-        Region { item: root.toastCards.length > 0 ? root.toastCards[0] : null; radius: Theme.shape.controlRadius }
-        Region { item: root.toastCards.length > 1 ? root.toastCards[1] : null; radius: Theme.shape.controlRadius }
-        Region { item: root.toastCards.length > 2 ? root.toastCards[2] : null; radius: Theme.shape.controlRadius }
-        Region { item: root.toastCards.length > 3 ? root.toastCards[3] : null; radius: Theme.shape.controlRadius }
-        Region { item: overflowBadge.visible ? overflowBadge : null; radius: Theme.shape.controlRadius }
+        Region {
+            item: root.toastCards.length > 0 ? root.toastCards[0] : null
+            radius: Theme.shape.controlRadius
+        }
+        Region {
+            item: root.toastCards.length > 1 ? root.toastCards[1] : null
+            radius: Theme.shape.controlRadius
+        }
+        Region {
+            item: root.toastCards.length > 2 ? root.toastCards[2] : null
+            radius: Theme.shape.controlRadius
+        }
+        Region {
+            item: root.toastCards.length > 3 ? root.toastCards[3] : null
+            radius: Theme.shape.controlRadius
+        }
+        Region {
+            item: overflowBadge.visible ? overflowBadge : null
+            radius: Theme.shape.controlRadius
+        }
     }
 
     Column {

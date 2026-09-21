@@ -2,7 +2,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "."
 import "./PathUtil.js" as PathUtil
 
 Singleton {
@@ -156,6 +155,17 @@ Singleton {
         root.ready = true;
     }
 
+    Timer {
+        id: reloadDebounce
+        interval: 20
+        repeat: false
+        onTriggered: root.reloadConfig()
+    }
+
+    function requestReload() {
+        reloadDebounce.restart();
+    }
+
     FileView {
         id: defaultJsoncFile
         path: Quickshell.shellPath("config.default.jsonc")
@@ -163,8 +173,8 @@ Singleton {
         printErrors: false
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.reloadConfig()
-        onLoadFailed: error => root.reloadConfig()
+        onLoaded: root.requestReload()
+        onLoadFailed: error => root.requestReload()
     }
 
     FileView {
@@ -174,8 +184,8 @@ Singleton {
         printErrors: false
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.reloadConfig()
-        onLoadFailed: error => root.reloadConfig()
+        onLoaded: root.requestReload()
+        onLoadFailed: error => root.requestReload()
     }
 
     FileView {
@@ -185,8 +195,8 @@ Singleton {
         printErrors: false
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.reloadConfig()
-        onLoadFailed: error => root.reloadConfig()
+        onLoaded: root.requestReload()
+        onLoadFailed: error => root.requestReload()
     }
 
     Component.onCompleted: {

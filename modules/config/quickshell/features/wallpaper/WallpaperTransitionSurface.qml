@@ -143,8 +143,10 @@ Item {
             cache: true
             smooth: true
             onStatusChanged: {
-                if ((status === Image.Ready || status === Image.Error) && !root.isFrontA && root.initialized)
+                if (status === Image.Ready && !root.isFrontA && root.initialized)
                     root.startFadeToA();
+                else if (status === Image.Error)
+                    console.warn("WallpaperTransitionSurface: failed to load image A:", source);
             }
         }
     }
@@ -169,8 +171,10 @@ Item {
             cache: true
             smooth: true
             onStatusChanged: {
-                if ((status === Image.Ready || status === Image.Error) && root.isFrontA && root.initialized)
+                if (status === Image.Ready && root.isFrontA && root.initialized)
                     root.startFadeToB();
+                else if (status === Image.Error)
+                    console.warn("WallpaperTransitionSurface: failed to load image B:", source);
             }
         }
     }

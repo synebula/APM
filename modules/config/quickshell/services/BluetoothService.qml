@@ -11,7 +11,25 @@ Singleton {
     readonly property bool enabled: available && adapter.enabled
     readonly property bool discovering: adapter ? adapter.discovering : false
     readonly property var rawDevices: Bluetooth.devices ? Bluetooth.devices.values : []
+    property int _deviceStateRevision: 0
+
+    Instantiator {
+        model: root.rawDevices
+        delegate: QtObject {
+            required property var modelData
+            readonly property bool connected: modelData ? modelData.connected : false
+            readonly property bool paired: modelData ? modelData.paired : false
+            readonly property bool bonded: modelData ? modelData.bonded : false
+            readonly property bool trusted: modelData ? modelData.trusted : false
+            onConnectedChanged: root._deviceStateRevision++
+            onPairedChanged: root._deviceStateRevision++
+            onBondedChanged: root._deviceStateRevision++
+            onTrustedChanged: root._deviceStateRevision++
+        }
+    }
+
     readonly property var devices: {
+        const _ = root._deviceStateRevision;
         const list = [];
         for (let i = 0; i < root.rawDevices.length; i++) {
             const d = root.rawDevices[i];
@@ -61,11 +79,6 @@ Singleton {
     function disconnectDevice(dev) {
         if (dev && dev.connected)
             dev.disconnect();
-    }
-
-    function forgetDevice(dev) {
-        if (dev)
-            dev.forget();
     }
 
     function deviceIcon(dev) {

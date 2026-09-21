@@ -13,10 +13,11 @@ import "theme"
 import "ui/containers"
 
 ShellRoot {
-    readonly property var themeController: ThemeController
-    readonly property var themeSyncService: ThemeSyncService
-    readonly property var sessionActions: SessionActions
-    readonly property var polkitService: PolkitService
+    // 预热/常驻单例服务，确保 IPC 处理、主题桌面同步与提权代理在启动时立即就绪
+    readonly property var _themeController: ThemeController
+    readonly property var _themeSyncService: ThemeSyncService
+    readonly property var _sessionActions: SessionActions
+    readonly property var _polkitService: PolkitService
 
     Variants {
         model: Quickshell.screens

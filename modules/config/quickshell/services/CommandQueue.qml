@@ -34,7 +34,14 @@ Scope {
         onTriggered: {
             if (process.running) {
                 console.warn("CommandQueue: process timed out after " + root.timeoutMs + "ms: " + JSON.stringify(process.command));
+                const timedOutCmd = process.command;
                 process.running = false;
+                Qt.callLater(() => {
+                    if (!process.running && root.pendingCommands.length > 0) {
+                        root.commandFinished(timedOutCmd, -1);
+                        root.runNext();
+                    }
+                });
             }
         }
     }

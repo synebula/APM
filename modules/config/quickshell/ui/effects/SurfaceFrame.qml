@@ -26,7 +26,9 @@ Rectangle {
     color: Qt.rgba(root.fill.r, root.fill.g, root.fill.b, root.fill.a * Theme.components.surface.fillOpacity)
     radius: Theme.shape.panelRadius
     border.width: root.borderWidth
-    border.color: root.isLiquid ? root.liquidBorderColor : root.borderColor
+    border.color: (root.borderWidth > 0 && root.borderColor !== Theme.components.surface.borderColor && root.borderColor.a > 0)
+        ? root.borderColor
+        : (root.isLiquid ? root.liquidBorderColor : root.borderColor)
     antialiasing: true
     smooth: true
     gradient: !root.isTranslucent && Theme.components.surface.isGradient ? plateGradient

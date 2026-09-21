@@ -102,7 +102,7 @@ PanelWindow {
 
             BarGroup {
                 id: workspaceGroup
-                visible: ShellSettings.barShowWorkspaces
+                groupVisible: ShellSettings.barShowWorkspaces
 
                 WorkspaceSwitcher {
                     screen: root.screen
@@ -111,7 +111,7 @@ PanelWindow {
 
             BarGroup {
                 id: titleGroup
-                visible: ShellSettings.barShowWindowTitle
+                groupVisible: ShellSettings.barShowWindowTitle
 
                 ActiveWindowTitle {
                     screen: root.screen
@@ -126,7 +126,7 @@ PanelWindow {
 
             BarGroup {
                 id: mediaGroup
-                visible: ShellSettings.barShowMedia
+                groupVisible: ShellSettings.barShowMedia
 
                 MediaIndicator {
                     barWindow: root
@@ -136,7 +136,7 @@ PanelWindow {
 
             BarGroup {
                 id: clockGroup
-                visible: ShellSettings.barShowClock || ShellSettings.barShowNotifications
+                groupVisible: ShellSettings.barShowClock || ShellSettings.barShowNotifications
 
                 Row {
                     spacing: Theme.spacing.small
@@ -165,7 +165,7 @@ PanelWindow {
 
             BarGroup {
                 id: taskbarGroup
-                visible: ShellSettings.barShowTaskbar
+                groupVisible: ShellSettings.barShowTaskbar
 
                 Taskbar {
                     screen: root.screen
@@ -174,7 +174,7 @@ PanelWindow {
 
             BarGroup {
                 id: trayGroup
-                visible: ShellSettings.barShowTray
+                groupVisible: ShellSettings.barShowTray
 
                 SystemTrayView {
                     barWindow: root
@@ -183,14 +183,14 @@ PanelWindow {
 
             BarGroup {
                 id: metricsGroup
-                visible: ShellSettings.barShowMetrics
+                groupVisible: ShellSettings.barShowMetrics
 
                 SystemMetricsIndicator {}
             }
 
             BarGroup {
                 id: indicatorsGroup
-                visible: ShellSettings.barShowIndicators
+                groupVisible: ShellSettings.barShowIndicators
 
                 SystemIndicators {
                     barWindow: root

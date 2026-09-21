@@ -7,8 +7,8 @@ Singleton {
 
     readonly property var players: Mpris.players.values
     readonly property var activePlayer: root.players.find(player => {
-        return player.isPlaying;
+        return player && player.isPlaying;
     }) || root.players.find(player => {
-        return player.trackTitle.length > 0;
+        return player && player.trackTitle && player.trackTitle.length > 0;
     }) || root.players[0] || null
 }

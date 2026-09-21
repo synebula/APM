@@ -10,7 +10,7 @@ PanelWindow {
     id: root
 
     readonly property var activePopup: PopupCoordinator.activePopup
-    readonly property bool shouldShow: activePopup !== null && (activePopup.isOpen ?? true)
+    readonly property bool shouldShow: activePopup !== null && (activePopup.isOpen ?? true) && (activePopup.enableBackdrop ?? true)
     readonly property bool dim: activePopup ? (activePopup.dimBackdrop ?? false) : false
 
     visible: root.shouldShow || backdropRect.opacity > 0
@@ -27,7 +27,6 @@ PanelWindow {
         right: true
     }
 
-    margins.top: root.dim ? 0 : Theme.components.bar.height
     WlrLayershell.margins.top: root.dim ? 0 : Theme.components.bar.height
 
     Rectangle {
@@ -49,7 +48,6 @@ PanelWindow {
         anchors.fill: parent
         enabled: root.shouldShow
         acceptedButtons: Qt.AllButtons
-        onPressed: PopupCoordinator.closeActive()
         onClicked: PopupCoordinator.closeActive()
     }
 }

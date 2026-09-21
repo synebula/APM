@@ -18,7 +18,6 @@ Singleton {
     readonly property var inputDevices: root.sortedNodes(root.audioNodes.filter(node => {
         return !node.isStream && !node.isSink;
     }))
-    readonly property var playbackStreams: root.playbackNodes(playbackTracker.linkGroups)
     readonly property real outputVolume: root.nodeVolume(root.defaultOutput)
     readonly property bool outputMuted: root.nodeMuted(root.defaultOutput)
     readonly property string outputName: root.nodeDisplayName(root.defaultOutput)
@@ -30,24 +29,6 @@ Singleton {
         return nodes.slice().sort((a, b) => {
             return root.nodeDisplayName(a).localeCompare(root.nodeDisplayName(b));
         });
-    }
-
-    function playbackNodes(groups) {
-        const streams = [];
-        const seen = {};
-        for (let i = 0; i < groups.length; i++) {
-            const node = groups[i] ? groups[i].source : null;
-            if (!node || !node.audio || !node.isStream)
-                continue;
-
-            const id = String(node.id);
-            if (seen[id])
-                continue;
-
-            seen[id] = true;
-            streams.push(node);
-        }
-        return root.sortedNodes(streams);
     }
 
     function nodeProperties(node) {
@@ -116,11 +97,5 @@ Singleton {
 
     PwObjectTracker {
         objects: root.audioNodes
-    }
-
-    PwNodeLinkTracker {
-        id: playbackTracker
-
-        node: root.defaultOutput
     }
 }

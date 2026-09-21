@@ -9,6 +9,7 @@ WindowManagerBackend {
                 return ({
                         "workspaceId": String(workspace.id),
                         "name": workspace.name || String(workspace.id),
+                        "isNamed": isNaN(Number(workspace.name || String(workspace.id))),
                         "index": workspace.id,
                         "outputName": workspace.monitor ? workspace.monitor.name : "",
                         "active": workspace.active,
@@ -17,9 +18,11 @@ WindowManagerBackend {
                     });
             }),
             "windows": Hyprland.toplevels.values.map(window => {
+                const ipc = window.lastIpcObject;
+                const ipcClass = ipc ? (ipc.class || ipc.initialClass) : "";
                 return ({
                         "windowId": window.address,
-                        "appId": window.lastIpcObject.class || window.lastIpcObject.initialClass || (window.wayland ? window.wayland.appId : ""),
+                        "appId": ipcClass || (window.wayland ? window.wayland.appId : ""),
                         "title": window.title,
                         "workspaceId": window.workspace ? String(window.workspace.id) : "",
                         "outputName": window.monitor ? window.monitor.name : "",

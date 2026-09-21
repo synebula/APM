@@ -17,7 +17,7 @@ ThemeDefinition {
 
     border: BorderSpec {
         width: 1
-        opacity: 0.85
+        opacity: 0.45
         colorPolicy: "outline"
     }
 

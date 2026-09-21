@@ -18,6 +18,10 @@ Item {
     // 默认子组件放入主药丸容器
     default property alias contentData: mainContentContainer.data
     property Component satelliteContent: null
+    readonly property alias mainBodyItem: mainContentContainer
+    readonly property alias satelliteItem: satelliteItem
+    readonly property real mainRadius: currentMainHeight * 0.5
+    readonly property real satelliteRadius: satelliteDiameter * 0.5
 
     signal satelliteClicked
 

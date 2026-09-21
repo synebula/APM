@@ -49,7 +49,14 @@ function match(windows, trayItem) {
             bestScore = score;
             tied = false;
         } else if (score === bestScore) {
-            tied = true;
+            if (window.focused && (!bestWindow || !bestWindow.focused)) {
+                bestWindow = window;
+                tied = false;
+            } else if (!tied && bestWindow && bestWindow.focused) {
+                // 保持已激活的焦点窗口胜出
+            } else {
+                tied = true;
+            }
         }
     }
 

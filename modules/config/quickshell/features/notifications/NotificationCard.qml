@@ -5,7 +5,6 @@ import Quickshell
 
 import "../../theme"
 import "../../ui/controls"
-import "../../ui/effects"
 
 ActionButton {
     id: root
@@ -50,21 +49,6 @@ ActionButton {
     cornerRadius: Theme.shape.controlRadius
     implicitHeight: implicitContentHeight + topPadding + bottomPadding
 
-    background: SurfaceFrame {
-        fill: root.fillColor
-        radius: root.cornerRadius
-        borderWidth: root.borderWidth
-        borderColor: root.borderColor
-
-        StateLayer {
-            anchors.fill: parent
-            layerRadius: root.cornerRadius
-            color: root.foreground
-            hovered: root.hovered
-            focused: root.visualFocus
-            pressed: root.down
-        }
-    }
 
     HoverHandler {
         onHoveredChanged: {

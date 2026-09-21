@@ -9,7 +9,11 @@ Singleton {
     id: root
 
     property bool enabled: true
-    readonly property string scriptPath: Qt.resolvedUrl("../scripts/sync-desktop-theme.sh").toString().replace(/^file:\/\//, "")
+    readonly property string scriptPath: decodeURIComponent(Qt.resolvedUrl("../scripts/sync-desktop-theme.sh").toString().replace(/^file:\/\//, ""))
+
+    Component.onCompleted: {
+        debounceTimer.restart();
+    }
 
     function syncNow() {
         if (!root.enabled)
