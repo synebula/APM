@@ -22,7 +22,12 @@ PanelWindow {
     margins.right: Theme.spacing.medium
     implicitWidth: Theme.components.notification.cardWidth
     implicitHeight: notifications.implicitHeight
-    readonly property bool isTargetScreen: !ShellSettings.toastsOnFocusedScreenOnly || !WindowManagerService.focusedWorkspace || !root.screen || root.screen.name === WindowManagerService.focusedWorkspace.outputName
+    readonly property string screenName: root.screen ? String(root.screen.name || "") : ""
+    readonly property string focusedOutputName: WindowManagerService.focusedWorkspace
+        ? String(WindowManagerService.focusedWorkspace.outputName || "") : ""
+    readonly property bool isTargetScreen: !ShellSettings.toastsOnFocusedScreenOnly
+        || root.focusedOutputName === "" || root.screenName === ""
+        || root.screenName === root.focusedOutputName
     visible: NotificationService.toasts.length > 0 && isTargetScreen
     color: "transparent"
 

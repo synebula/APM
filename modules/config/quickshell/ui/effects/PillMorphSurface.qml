@@ -14,9 +14,14 @@ Item {
     required property real satelliteRadius
     required property real blendRadius
 
-    property color surfaceColor: Theme.components.surface.fill
+    property color surfaceColor: Qt.rgba(
+        Theme.components.surface.fill.r,
+        Theme.components.surface.fill.g,
+        Theme.components.surface.fill.b,
+        Theme.components.surface.fill.a * Theme.components.surface.fillOpacity
+    )
     property real edgeSoftness: 0.8
-    property bool shadowEnabled: Theme.components.surface.shadowEnabled
+    property bool shadowEnabled: Theme.components.surface.shadowEnabled && !Theme.components.surface.isGlass
 
     Item {
         id: surfaceContainer

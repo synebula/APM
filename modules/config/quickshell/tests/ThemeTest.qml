@@ -510,6 +510,7 @@ TestSuite {
     function test_themeSyncService() {
         verify(ThemeSyncService !== null);
         verify(ThemeSyncService.enabled);
+        verify(ThemeSyncService.testMode);
         verify(ThemeSyncService.scriptPath.endsWith("sync-desktop-theme.sh"));
         ThemeSyncService.syncNow();
     }

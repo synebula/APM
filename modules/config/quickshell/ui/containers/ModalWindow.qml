@@ -9,6 +9,7 @@ PanelWindow {
     id: root
 
     property bool isOpen: false
+    readonly property bool enableBackdrop: false
     default property alias content: focusScope.data
 
     signal closeRequested
@@ -35,6 +36,10 @@ PanelWindow {
             PopupCoordinator.release(root);
         }
     }
+    onScreenChanged: {
+        if (root.isOpen)
+            PopupCoordinator.activate(root);
+    }
     Component.onDestruction: PopupCoordinator.release(root)
 
     anchors {
@@ -58,7 +63,9 @@ PanelWindow {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Theme.motion.fastEffects.duration
+                duration: root.isOpen ? Theme.motion.fastEffects.duration : Theme.motion.accelerate.duration
+                easing.type: root.isOpen ? Theme.motion.fastEffects.easing : Theme.motion.accelerate.easing
+                easing.bezierCurve: root.isOpen ? Theme.motion.fastEffects.curve : Theme.motion.accelerate.curve
             }
         }
     }

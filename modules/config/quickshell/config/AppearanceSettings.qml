@@ -31,40 +31,53 @@ Singleton {
         saveTimer.restart();
     }
 
-    function finishLoading() {
-        root.ready = true;
+    function migrateStoredState() {
+        const storedVersion = Number(appearanceData.version);
+        if (!Number.isFinite(storedVersion) || storedVersion < 0) {
+            console.warn("AppearanceSettings: invalid state version, resetting to " + 1);
+            appearanceData.version = 1;
+            return true;
+        }
+        if (storedVersion > 1) {
+            console.warn("AppearanceSettings: unsupported future state version: " + storedVersion);
+            return false;
+        }
+
+        let changed = storedVersion !== 1;
+        const legacySchemes = {
+            "catppuccin-latte": { "paletteId": "catppuccin", "colorMode": "light" },
+            "catppuccin-mocha": { "paletteId": "catppuccin", "colorMode": "dark" },
+            "tokyo-night": { "paletteId": "tokyo-night", "colorMode": "dark" },
+            "everforest-dark": { "paletteId": "everforest", "colorMode": "dark" },
+            "everforest-light": { "paletteId": "everforest", "colorMode": "light" },
+            "nord-dark": { "paletteId": "nord", "colorMode": "dark" },
+            "nord-light": { "paletteId": "nord", "colorMode": "light" }
+        };
+
         if (appearanceData.schemeId && appearanceData.schemeId.length > 0) {
             const scheme = appearanceData.schemeId;
-            let targetPalette = "catppuccin";
-            let targetMode = "dark";
-            if (scheme === "catppuccin-latte") {
-                targetPalette = "catppuccin";
-                targetMode = "light";
-            } else if (scheme === "catppuccin-mocha") {
-                targetPalette = "catppuccin";
-                targetMode = "dark";
-            } else if (scheme === "tokyo-night") {
-                targetPalette = "tokyo-night";
-                targetMode = "dark";
-            } else if (scheme === "everforest-dark") {
-                targetPalette = "everforest";
-                targetMode = "dark";
-            } else if (scheme === "everforest-light") {
-                targetPalette = "everforest";
-                targetMode = "light";
-            } else if (scheme === "nord-dark") {
-                targetPalette = "nord";
-                targetMode = "dark";
-            } else if (scheme === "nord-light") {
-                targetPalette = "nord";
-                targetMode = "light";
+            const migration = legacySchemes[scheme];
+            if (migration) {
+                appearanceData.paletteId = migration.paletteId;
+                appearanceData.colorMode = migration.colorMode;
+            } else {
+                console.warn("AppearanceSettings: ignoring unknown legacy scheme: " + scheme);
             }
-            appearanceData.paletteId = targetPalette;
-            appearanceData.colorMode = targetMode;
+            // This is a one-shot compatibility field. Never let it override
+            // modern fields on the next startup.
             appearanceData.schemeId = "";
-            appearanceData.version = 1;
-            saveTimer.restart();
+            changed = true;
         }
+
+        if (changed)
+            appearanceData.version = 1;
+        return changed;
+    }
+
+    function finishLoading() {
+        root.ready = true;
+        if (root.migrateStoredState())
+            saveTimer.restart();
         if (Object.keys(root.pendingChanges).length > 0) {
             const changes = root.pendingChanges;
             root.pendingChanges = {};

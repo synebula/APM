@@ -1,3 +1,4 @@
+import "../theme"
 import "../ui/containers"
 import "../ui/effects"
 import QtQuick
@@ -10,6 +11,11 @@ TestSuite {
     function test_pillMorphSurfaceDefaults() {
         verify(surface !== null);
         compare(surface.edgeSoftness, 0.8);
+    }
+
+    function test_surfaceColorMatchesThemeOpacity() {
+        compare(Math.round(pill.surfaceColor.a * 100), Math.round(Theme.components.surface.fillOpacity * 100));
+        compare(Math.round(surface.surfaceColor.a * 100), Math.round(Theme.components.surface.fillOpacity * 100));
     }
 
     function test_morphPillExpandsAndCollapses() {

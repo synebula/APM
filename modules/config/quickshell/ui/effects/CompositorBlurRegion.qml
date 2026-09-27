@@ -9,7 +9,9 @@ Item {
     required property var targetWindow
     property Item backgroundItem: null
     property real radius: 0
-    property bool enabled: Theme.components.surface.isGlass
+    // Do not shadow QQuickItem.enabled. This flag controls the compositor effect,
+    // not the QML item's input/scene-graph enabled state.
+    property bool effectEnabled: Theme.components.surface.isGlass
     property bool surfaceReady: false
     property bool destroying: false
     // 声明式子 Region（默认属性）与 backgroundItem 区域取并集，
@@ -19,7 +21,7 @@ Item {
         && root.backgroundItem.visible
         && root.backgroundItem.width > 0
         && root.backgroundItem.height > 0
-    readonly property bool active: root.enabled && root.surfaceReady && root.targetWindow
+    readonly property bool active: root.effectEnabled && root.surfaceReady && root.targetWindow
         && root.targetWindow.visible && (root.ownRegionActive || root.regions.length > 0)
 
     function commit() {
@@ -37,6 +39,18 @@ Item {
         if (root.destroying)
             return;
 
+        // A disabled/hidden region must be removed synchronously. Keeping the
+        // delayed commit timers alive here can publish a stale region again
+        // during the exit animation, which is perceived as blur trailing the
+        // card by one or more frames.
+        if (!root.active) {
+            commitTimer.stop();
+            settleTimer.stop();
+            animationEndTimer.stop();
+            root.clear();
+            return;
+        }
+
         commitTimer.restart();
         settleTimer.restart();
         animationEndTimer.restart();
@@ -49,7 +63,7 @@ Item {
 
     visible: false
     onActiveChanged: root.publish()
-    onEnabledChanged: root.publish()
+    onEffectEnabledChanged: root.publish()
     onTargetWindowChanged: {
         root.surfaceReady = root.targetWindow ? root.targetWindow.visible : false;
         root.publish();
@@ -128,4 +142,3 @@ Item {
         target: root.targetWindow
     }
 }
-

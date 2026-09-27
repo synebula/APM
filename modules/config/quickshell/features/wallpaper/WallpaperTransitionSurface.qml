@@ -1,5 +1,5 @@
 import QtQuick
-import "./WallpaperSource.js" as WallpaperSource
+import "../../shared/lib/wallpaper/WallpaperSource.js" as WallpaperSource
 
 Item {
     id: root
@@ -7,6 +7,7 @@ Item {
     property string sourcePath: ""
     property int transitionDurationMs: 800
     property int fillMode: Image.PreserveAspectCrop
+    property bool paused: false
 
     readonly property bool isColor: WallpaperSource.isSolid(sourcePath)
     property bool isFrontA: true
@@ -59,16 +60,30 @@ Item {
         fadeAnimation.stop();
         fadeAnimation.targetAOpacity = 0.0;
         fadeAnimation.targetBOpacity = 1.0;
-        fadeAnimation.start();
         root.isFrontA = false;
+        if (root.transitionDurationMs <= 0) {
+            slotA.opacity = 0.0;
+            slotB.opacity = 1.0;
+            imageA.source = "";
+            rectA.color = "transparent";
+            return;
+        }
+        fadeAnimation.start();
     }
 
     function startFadeToA() {
         fadeAnimation.stop();
         fadeAnimation.targetAOpacity = 1.0;
         fadeAnimation.targetBOpacity = 0.0;
-        fadeAnimation.start();
         root.isFrontA = true;
+        if (root.transitionDurationMs <= 0) {
+            slotA.opacity = 1.0;
+            slotB.opacity = 0.0;
+            imageB.source = "";
+            rectB.color = "transparent";
+            return;
+        }
+        fadeAnimation.start();
     }
 
     onSourcePathChanged: {
@@ -135,13 +150,14 @@ Item {
             color: "transparent"
         }
 
-        Image {
+        AnimatedImage {
             id: imageA
             anchors.fill: parent
             fillMode: root.fillMode
             asynchronous: true
             cache: true
             smooth: true
+            paused: root.paused
             onStatusChanged: {
                 if (status === Image.Ready && !root.isFrontA && root.initialized)
                     root.startFadeToA();
@@ -163,13 +179,14 @@ Item {
             color: "transparent"
         }
 
-        Image {
+        AnimatedImage {
             id: imageB
             anchors.fill: parent
             fillMode: root.fillMode
             asynchronous: true
             cache: true
             smooth: true
+            paused: root.paused
             onStatusChanged: {
                 if (status === Image.Ready && root.isFrontA && root.initialized)
                     root.startFadeToB();

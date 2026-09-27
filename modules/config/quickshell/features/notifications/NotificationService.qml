@@ -10,6 +10,7 @@ Singleton {
     id: root
 
     signal toggleCenterRequested
+    readonly property bool testMode: Quickshell.env("APM_QUICKSHELL_TEST_MODE") === "1"
 
     property alias doNotDisturb: persistent.doNotDisturb
     property alias centerOpen: store.centerOpen
@@ -84,18 +85,27 @@ Singleton {
         }
     }
 
-    NotificationServer {
-        keepOnReload: true          // 重载配置时不释放 D-Bus 服务名，防止其他应用发通知时找不到服务器
-        actionsSupported: true      // 告诉 D-Bus GetCapabilities(): 支持交互按钮 (actions)
-        bodyMarkupSupported: true   // 告诉 D-Bus GetCapabilities(): 支持 HTML/Pango 标记
-        bodySupported: true         // 支持通知正文
-        imageSupported: true        // 支持附带图片/图标
-        persistenceSupported: true  // 支持通知中心常驻/不自动丢失
-        onNotification: notification => {
-            if (root.restoredMetadata === null)
-                root.restoredMetadata = Object.assign({}, persistent.metadata);
-            notification.tracked = true;
-            store.receive(notification.id, notification, notification.lastGeneration ? root.restoredMetadata[notification.id] : null, notification.lastGeneration);
+    Loader {
+        active: !root.testMode
+        sourceComponent: notificationServer
+    }
+
+    Component {
+        id: notificationServer
+
+        NotificationServer {
+            keepOnReload: true          // 重载配置时不释放 D-Bus 服务名，防止其他应用发通知时找不到服务器
+            actionsSupported: true      // 告诉 D-Bus GetCapabilities(): 支持交互按钮 (actions)
+            bodyMarkupSupported: true   // 告诉 D-Bus GetCapabilities(): 支持 HTML/Pango 标记
+            bodySupported: true        // 告诉 D-Bus GetCapabilities(): 支持通知正文
+            imageSupported: true        // 告诉 D-Bus GetCapabilities(): 支持附带图片/图标
+            persistenceSupported: true  // 告诉 D-Bus GetCapabilities(): 支持通知中心常驻/不自动丢失
+            onNotification: notification => {
+                if (root.restoredMetadata === null)
+                    root.restoredMetadata = Object.assign({}, persistent.metadata);
+                notification.tracked = true;
+                store.receive(notification.id, notification, notification.lastGeneration ? root.restoredMetadata[notification.id] : null, notification.lastGeneration);
+            }
         }
     }
 }

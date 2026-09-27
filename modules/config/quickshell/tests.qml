@@ -15,6 +15,8 @@ ShellRoot {
 
     CommandQueueTest {}
 
+    PopupCoordinatorTest {}
+
     LauncherTest {}
 
     ConfigTest {}
@@ -22,6 +24,8 @@ ShellRoot {
     PolkitTest {}
 
     MorphPillTest {}
+
+    WallpaperTest {}
 
     Window {
         visible: true
@@ -47,7 +51,6 @@ ShellRoot {
 
                 baseWidth: 260
                 baseHeight: 50
-                surfaceColor: Theme.components.surface.fill
                 expanded: toggleBtn.checked
                 onSatelliteClicked: toggleBtn.checked = false
 

@@ -1,10 +1,13 @@
 // ============================================================================
 // Niri 快捷键体系设计定理 (Keybinding Axioms)
-// 1. 【Base 流】   Mod         : 纯视线漫游与基础启闭（方向键看焦点、数字键切工作区、Tab总览、基础应用启闭）
-// 2. 【Shift 位】  Mod + Shift : 物理空间位移与搬迁（方向键挪动、数字键投送工作区、M甩显示器、[]吞吐窗口）
-// 3. 【Alt 改】    Mod + Alt   : 修改尺寸比例与排版形态（W宽/H高预设、R重置、方向键拉伸、F填满、S堆叠、Space浮动）
-// 4. 【Control 控】Mod + Ctrl  : 系统底层与全局中枢（Q/Del退出、R重载、P息屏、方向键/Tab切物理显示器）
+// 1. 【Base    流】Mod         : 纯视线漫游与基础启闭（方向键看焦点、数字键切工作区、Tab总览/回跳、回车/F 全屏与填满状态开关、基础应用启闭）
+// 2. 【Shift   位】Mod + Shift : 物理空间位移与搬迁（方向键挪动、数字键投送工作区、M甩显示器、[]吞吐窗口）
+// 3. 【Alt     改】Mod + Alt   : 修改尺寸比例与排版形态（W宽/H高预设、R重置、F填满剩余、方向键拉伸、S堆叠、Space浮动、C居中、V浮层焦点、数字键单窗投送变体）
+// 4. 【Control 控】Mod + Ctrl  : 系统底层与全局中枢（Q退出、R重载、P息屏、方向键/Tab/M切物理显示器、/快捷键帮助）
 // 规则约定：字母键全语义助记；全局双修饰键封顶，零4键冗余。
+// 补充约定：Ctrl+Alt+Del 退出会话（经典肌肉记忆）；
+//         裸 Alt 层（Tab窗口切换、A/Print截图）、滚轮与 XF86 硬件键保留 OS 级直觉，游离于四定理之外；
+//         Shift+滚轮=横向焦点、Ctrl+滚轮=投送工作区为刻意的设备级变体。
 // ============================================================================
 
 binds {
@@ -12,6 +15,7 @@ binds {
     // 1. 【Base / View (流)】主要窗口与会话基础操作
     // ------------------------------------------------------------------------
     Mod+Q repeat=false { close-window; }                // [Q]: 关闭当前聚焦窗口
+    Mod+F              { maximize-column; }             // [F]: Fill 切换当前列最大化/还原（状态开关）
     Mod+Return         { fullscreen-window; }           // [回车]: 切换当前窗口独占全屏
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; } // [Esc]: 切换快捷键拦截
 
@@ -37,11 +41,12 @@ binds {
     Mod+9 { focus-workspace "9"; }                      // [9]: 切换到工作区 9
     Mod+0 { focus-workspace "10"; }                     // [0]: 切换到工作区 10
     Mod+Tab repeat=false       { toggle-overview; }          // [Tab]: 工作区总览视图
+    Mod+Shift+Tab repeat=false { focus-workspace-previous; } // [Tab]: 回到上一个工作区（视线回跳）
     Mod+Page_Up                { focus-workspace-up; }       // [PgUp]: 视线向上一个工作区
     Mod+Page_Down              { focus-workspace-down; }     // [PgDn]: 视线向下一个工作区
 
     // ------------------------------------------------------------------------
-    // 应用快捷启动 
+    // 应用快捷启动与窗口切换器
     // ------------------------------------------------------------------------
     Mod+grave          { spawn "kitty"; }               // [~ 反引号]: 终端 Kitty
     Mod+E              { spawn "nautilus"; }            // [E]: 文件管理器
@@ -64,19 +69,18 @@ binds {
     Mod+Shift+End       { move-column-to-last; }         // [End]: 把当前列移到最右侧
 
     // 跨工作区搬运 (整列投送)
-    Mod+Shift+1 { move-column-to-workspace "1"; }       // [1]: 移动当前列到工作区 1
-    Mod+Shift+2 { move-column-to-workspace "2"; }       // [2]: 移动当前列到工作区 2
-    Mod+Shift+3 { move-column-to-workspace "3"; }       // [3]: 移动当前列到工作区 3
-    Mod+Shift+4 { move-column-to-workspace "4"; }       // [4]: 移动当前列到工作区 4
-    Mod+Shift+5 { move-column-to-workspace "5"; }       // [5]: 移动当前列到工作区 5
-    Mod+Shift+6 { move-column-to-workspace "6"; }       // [6]: 移动当前列到工作区 6
-    Mod+Shift+7 { move-column-to-workspace "7"; }       // [7]: 移动当前列到工作区 7
-    Mod+Shift+8 { move-column-to-workspace "8"; }       // [8]: 移动当前列到工作区 8
-    Mod+Shift+9 { move-column-to-workspace "9"; }       // [9]: 移动当前列到工作区 9
-    Mod+Shift+0 { move-column-to-workspace "10"; }      // [0]: 移动当前列到工作区 10
+    Mod+Shift+1 { move-column-to-workspace "1"; }          // [1]: 移动当前列到工作区 1
+    Mod+Shift+2 { move-column-to-workspace "2"; }          // [2]: 移动当前列到工作区 2
+    Mod+Shift+3 { move-column-to-workspace "3"; }          // [3]: 移动当前列到工作区 3
+    Mod+Shift+4 { move-column-to-workspace "4"; }          // [4]: 移动当前列到工作区 4
+    Mod+Shift+5 { move-column-to-workspace "5"; }          // [5]: 移动当前列到工作区 5
+    Mod+Shift+6 { move-column-to-workspace "6"; }          // [6]: 移动当前列到工作区 6
+    Mod+Shift+7 { move-column-to-workspace "7"; }          // [7]: 移动当前列到工作区 7
+    Mod+Shift+8 { move-column-to-workspace "8"; }          // [8]: 移动当前列到工作区 8
+    Mod+Shift+9 { move-column-to-workspace "9"; }          // [9]: 移动当前列到工作区 9
+    Mod+Shift+0 { move-column-to-workspace "10"; }         // [0]: 移动当前列到工作区 10
     Mod+Shift+Page_Up   { move-column-to-workspace-up; }   // [PgUp]: 移动当前列到上方工作区
     Mod+Shift+Page_Down { move-column-to-workspace-down; } // [PgDn]: 移动当前列到下方工作区
-    Mod+Shift+Tab repeat=false { focus-workspace-previous; } // [Tab]: 回到刚才那个工作区
 
     // 跨显示器搬运 (Monitor)
     Mod+Shift+M          { move-column-to-monitor-next; }  // [M]: 将当前列直接抛到下一台显示器
@@ -84,17 +88,17 @@ binds {
     // 列间吞吐 (跨列物理位移)
     Mod+Shift+Comma        { consume-or-expel-window-left; }  // [ < 逗号 ]: 向左吞入/吐出当前窗口
     Mod+Shift+Period       { consume-or-expel-window-right; } // [ > 句号 ]: 向右吞入/吐出当前窗口
-    Mod+Shift+BracketLeft  { consume-window-into-column; }    // [ { 左中括号 ]: 把右侧窗口吞进当前列底部
-    Mod+Shift+BracketRight { expel-window-from-column; }      // [ } 右中括号 ]: 把列底窗口吐到右侧
+    Mod+Shift+I            { consume-window-into-column; }    // [I]: In 吞入右侧窗口
+    Mod+Shift+O            { expel-window-from-column; }      // [O]: Out 吐出列底窗口
 
     // ------------------------------------------------------------------------
     // 3. 【Alter (改)】修改尺寸比例与形态 (Alter Size, Borders & Modes)
     // ------------------------------------------------------------------------
-    // 尺寸比例跳变 (W = Width, H = Height, R = Reset)
+    // 尺寸比例跳变 (W = Width, H = Height, R = Reset, F = Fill)
     Mod+Alt+W              { switch-preset-column-width; }      // [W]: Alter Width 循环切换列宽预设比例
     Mod+Alt+H              { switch-preset-window-height; }     // [H]: Alter Height 循环切换窗高预设比例
     Mod+Alt+R              { reset-window-height; }             // [R]: Alter Reset 恢复窗口默认高度
-    Mod+Alt+F              { maximize-column; }                 // [F]: Alter Fill 扩展当前列填满屏幕剩余空间
+    Mod+Alt+F              { expand-column-to-available-width; } // [F]: Alter Fill 扩展当前列以填充视口剩余尺寸
     Mod+Alt+C              { center-column; }                   // [C]: Alter Center 将当前列居中视口
 
     // 边框连续拉伸微调 (Alter Borders)
@@ -104,8 +108,8 @@ binds {
     Mod+Alt+Down           { set-window-height "+10%"; }        // [↓]: 连续增大当前窗口高度
 
     // 排版形态与浮动模式切换 (Alter Modes)
-    Mod+Alt+S              { toggle-column-tabbed-display; }    // [S]: Alter Stacked 切换多窗口为垂直标签页堆叠
-    Mod+Alt+Space          { toggle-window-floating; }          // [空格]: Alter Floating 切换窗口浮动/平铺状态
+    Mod+Alt+S              { toggle-column-tabbed-display; }             // [S]: Alter Stacked 切换多窗口为垂直标签页堆叠
+    Mod+Alt+Space          { toggle-window-floating; }                   // [空格]: Alter Floating 切换窗口浮动/平铺状态
     Mod+Alt+V              { switch-focus-between-floating-and-tiling; } // [V]: 在浮动层与平铺层之间切换焦点
 
     // 单窗精准提取变体 (只移动单窗，不移动整列)
@@ -125,11 +129,10 @@ binds {
     // ------------------------------------------------------------------------
     // 会话与配置控制
     Ctrl+Alt+Delete        { quit; }                            // [Del]: 退出桌面会话
-    Mod+Ctrl+Delete        { quit; }                            // [Del]: Control 退出桌面会话
     Mod+Ctrl+Q             { quit; }                            // [Q]: Control 退出桌面会话
-    Mod+Ctrl+R             { spawn "niri" "msg" "action" "load-config-file"; } // [R]: Control 重新加载配置
     Mod+Ctrl+P             { power-off-monitors; }              // [P]: Control 关闭显示器电源 (息屏)
     Mod+Ctrl+Slash         { show-hotkey-overlay; }             // [/ 斜杠]: Control 显示快捷键帮助
+    Mod+Ctrl+R             { spawn "niri" "msg" "action" "load-config-file"; } // [R]: Control 重新加载配置
 
     // 物理显示器硬件焦点控制
     Mod+Ctrl+M             { focus-monitor-next; }              // [M]: 视线跳到下一台显示器
@@ -163,10 +166,10 @@ binds {
     Alt+Print           { screenshot; }                  // [Alt+PrtScn]: 框选区域截图
     Alt+A               { screenshot; }                  // [Alt+A]: 框选区域截图
     Ctrl+Print          { screenshot-screen; }           // [Ctrl+PrtScn]: 全屏截图
-    Mod+Ctrl+S          { screenshot; }                  // [S]: Control 截图快捷键
 
     // ------------------------------------------------------------------------
     // 鼠标滚轮高级导航
+    // 设备级变体：Shift+滚轮=横向焦点(OS惯例)、Ctrl+滚轮=投送工作区(社区惯例)
     // ------------------------------------------------------------------------
     Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }          // [滚轮向下]: 视线向下一个工作区
     Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }            // [滚轮向上]: 视线向上一个工作区

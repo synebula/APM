@@ -10,10 +10,21 @@ PanelWindow {
     id: root
 
     readonly property var activePopup: PopupCoordinator.activePopup
-    readonly property bool shouldShow: activePopup !== null && (activePopup.isOpen ?? true) && (activePopup.enableBackdrop ?? true)
-    readonly property bool dim: activePopup ? (activePopup.dimBackdrop ?? false) : false
+    readonly property bool ownsActivePopup: activePopup !== null && root.screen
+        && PopupCoordinator.activeScreenName !== ""
+        && root.screen.name === PopupCoordinator.activeScreenName
+    readonly property bool shouldShow: root.ownsActivePopup && (activePopup.isOpen ?? true) && (activePopup.enableBackdrop ?? true)
+    readonly property bool dim: root.ownsActivePopup && activePopup ? (activePopup.dimBackdrop ?? false) : false
+    readonly property real transitionProgress: {
+        if (!root.ownsActivePopup || !activePopup)
+            return 0;
+        const progress = activePopup.transitionProgress;
+        if (typeof progress === "number")
+            return Math.max(0, Math.min(1, progress));
+        return (activePopup.isOpen ?? true) ? 1 : 0;
+    }
 
-    visible: root.shouldShow || backdropRect.opacity > 0
+    visible: root.shouldShow || backdropRect.opacity > 0.01
     color: "transparent"
     exclusiveZone: -1
     WlrLayershell.layer: WlrLayer.Top
@@ -34,14 +45,7 @@ PanelWindow {
 
         anchors.fill: parent
         color: root.dim ? Theme.colors.scrim : "transparent"
-        opacity: root.shouldShow ? 1.0 : 0.0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.motion.fastEffects.duration
-                easing.type: Theme.motion.fastEffects.easing
-            }
-        }
+        opacity: root.transitionProgress
     }
 
     MouseArea {

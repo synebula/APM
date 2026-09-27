@@ -31,7 +31,11 @@ BarButton {
     Connections {
         target: NotificationService
         function onToggleCenterRequested() {
-            if (!root.barWindow || !WindowManagerService.focusedScreen || root.barWindow.screen === WindowManagerService.focusedScreen)
+            const focusedScreen = WindowManagerService.focusedScreen;
+            const popupScreen = root.barWindow ? root.barWindow.screen : null;
+            const focusedName = focusedScreen && focusedScreen.name ? String(focusedScreen.name) : "";
+            const popupName = popupScreen && popupScreen.name ? String(popupScreen.name) : "";
+            if (focusedName && popupName && focusedName === popupName)
                 root.toggleMenu();
         }
     }

@@ -57,11 +57,12 @@ layout {
         off
     }
 
-    // 窗口边框：Catppuccin 45 度双色渐变（激活高亮，未激活深邃半透明）
+    // 窗口边框：45 度双色渐变（激活高亮，未激活深邃半透明）
+    // 此处为 Catppuccin 回落默认值；主题切换时由 theme-colors.kdl 覆盖
     border {
         width 1
-        active-gradient from="#ca9ee6" to="#f2d5cf" angle=45
-        inactive-gradient from="#6c708680" to="#31324480" angle=45
+        active-gradient from="#7aa2f7" to="#1a1b26" angle=45
+        inactive-gradient from="#292e42" to="#1a1b26" angle=45
         urgent-color "#f38ba8"
     }
 
@@ -77,6 +78,7 @@ layout {
     }
 
     // 标签页列指示器 (Tab Indicator)：单列包含多窗口时的精致指示条
+    // 渐变色同样由 theme-colors.kdl 覆盖，此处为回落默认值
     tab-indicator {
         hide-when-single-tab
         place-within-column
@@ -84,7 +86,7 @@ layout {
         width 4
         position "right"
         corner-radius 6
-        active-gradient from="#ca9ee6" to="#f2d5cf" angle=45
+        active-gradient from="#7aa2f7" to="#1a1b26" angle=45
         inactive-color "#585b70"
     }
 }
@@ -114,3 +116,6 @@ include "autostart.kdl"
 include "theme.kdl"
 include "windowrules.kdl"
 include "keybindings.kdl"
+// 主题色外链（置于末尾覆盖上文颜色字段；缺失时优雅回落主配置默认值）
+// 由 quickshell ThemeSyncService 整文件原子生成，请勿手改
+include "theme-colors.kdl"

@@ -5,7 +5,14 @@ Singleton {
     id: root
 
     property bool isOpen: false
-    property var request: ({})
+    property var request: ({
+        "title": "确认操作",
+        "message": "确定要继续吗？",
+        "glyph": "",
+        "confirmText": "确定",
+        "cancelText": "取消",
+        "destructive": false
+    })
     property var callback: null
 
     function ask(options) {

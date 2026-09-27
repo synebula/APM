@@ -27,5 +27,5 @@ function expandHome(path, homePath) {
 function isValidPath(path) {
     if (typeof path !== "string" || path.trim().length === 0)
         return false;
-    return path.indexOf("\u0000") === -1 && path.indexOf("\n") === -1;
+    return path.indexOf("\u0000") === -1 && path.indexOf("\n") === -1 && path.indexOf("\r") === -1;
 }

@@ -41,6 +41,7 @@ PanelWindow {
             anchors.margins: -container.blurOverflow
             sourcePath: WallpaperService.wallpaperForScreen(root.screen ? root.screen.name : "")
             transitionDurationMs: WallpaperSettings.transitionDurationMs
+            paused: !root.visible
 
             layer.enabled: WallpaperSettings.overviewBlurRadius > 0
                            || WallpaperSettings.overviewSaturation !== 1

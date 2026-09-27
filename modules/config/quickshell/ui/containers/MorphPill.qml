@@ -9,9 +9,14 @@ Item {
     property bool expanded: false
     property real baseWidth: 260
     property real baseHeight: 52
-    property color surfaceColor: Theme.components.surface.fill
+    property color surfaceColor: Qt.rgba(
+        Theme.components.surface.fill.r,
+        Theme.components.surface.fill.g,
+        Theme.components.surface.fill.b,
+        Theme.components.surface.fill.a * Theme.components.surface.fillOpacity
+    )
     property real edgeSoftness: 0.8
-    property bool shadowEnabled: Theme.components.surface.shadowEnabled
+    property bool shadowEnabled: Theme.components.surface.shadowEnabled && !Theme.components.surface.isGlass
     property bool satelliteClickable: true
     property int animationDuration: Theme.motion.slowEffects.duration
 

@@ -22,16 +22,16 @@ function kind(source) {
     if (/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(source))
         return "solid";
     var path = localPath(source);
-    if (path.indexOf("\u0000") >= 0 || path.indexOf("\n") >= 0 || path.startsWith("#")
+    if (path.indexOf("\u0000") >= 0 || path.indexOf("\n") >= 0 || path.indexOf("\r") >= 0 || path.startsWith("#")
             || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path))
         return "invalid";
     return /\.(jpg|jpeg|png|webp|bmp|gif)$/i.test(path) ? "image" : "invalid";
 }
 
-function isImage(source) {
-    return kind(source) === "image";
+function isImage(path) {
+    return kind(path) === "image";
 }
 
-function isSolid(source) {
-    return kind(source) === "solid";
+function isSolid(path) {
+    return kind(path) === "solid";
 }

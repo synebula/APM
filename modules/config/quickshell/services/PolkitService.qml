@@ -9,6 +9,7 @@ Singleton {
 
     signal errorTriggered
     signal authenticationCompleted(bool successful)
+    readonly property bool testMode: Quickshell.env("APM_QUICKSHELL_TEST_MODE") === "1"
 
     IpcHandler {
         target: "polkit"
@@ -36,7 +37,7 @@ Singleton {
         if (root.simulatedFlow !== null)
             return !!root.simulatedFlow.isOpen;
         const f = root.agentFlow;
-        return polkitAgent.isActive && f !== null && !f.isCompleted;
+        return !!root.polkitAgent && root.polkitAgent.isActive && f !== null && !f.isCompleted;
     }
 
     readonly property string message: {
@@ -127,8 +128,8 @@ Singleton {
         return !!root.activeFlow.failed;
     }
 
-    readonly property bool isRegistered: polkitAgent.isRegistered
-    readonly property bool isAgentActive: polkitAgent.isActive
+    readonly property bool isRegistered: !!root.polkitAgent && root.polkitAgent.isRegistered
+    readonly property bool isAgentActive: !!root.polkitAgent && root.polkitAgent.isActive
 
     function submit(value) {
         if (!root.isOpen || root.isSubmitting)
@@ -225,24 +226,36 @@ Singleton {
         root.simulatedFlow = null;
     }
 
-    PolkitAgent {
-        id: polkitAgent
-        path: "/org/quickshell/PolkitAgent"
+    readonly property var polkitAgent: polkitAgentLoader.item
 
-        onFlowChanged: {
-            // qmllint disable unresolved-type
-            root.agentFlow = polkitAgent["flow"];
-            // qmllint enable unresolved-type
-        }
+    Loader {
+        id: polkitAgentLoader
+        active: !root.testMode
+        sourceComponent: polkitAgentComponent
+    }
 
-        Component.onCompleted: {
-            // qmllint disable unresolved-type
-            root.agentFlow = polkitAgent["flow"];
-            // qmllint enable unresolved-type
-        }
+    Component {
+        id: polkitAgentComponent
 
-        onAuthenticationRequestStarted: {
-            root.isSubmitting = false;
+        PolkitAgent {
+            id: agent
+            path: "/org/quickshell/PolkitAgent"
+
+            onFlowChanged: {
+                // qmllint disable unresolved-type
+                root.agentFlow = agent["flow"];
+                // qmllint enable unresolved-type
+            }
+
+            Component.onCompleted: {
+                // qmllint disable unresolved-type
+                root.agentFlow = agent["flow"];
+                // qmllint enable unresolved-type
+            }
+
+            onAuthenticationRequestStarted: {
+                root.isSubmitting = false;
+            }
         }
     }
 

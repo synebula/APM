@@ -1,4 +1,6 @@
 import "../config"
+import "../config/ConfigDefaults.js" as ConfigDefaults
+import "../config/ConfigSchema.js" as ConfigSchema
 import "../config/PathUtil.js" as PathUtil
 import "../services"
 import QtQuick
@@ -14,6 +16,9 @@ TestSuite {
         compare(PathUtil.expandHome("/usr/share/backgrounds", "/home/alex"), "/usr/share/backgrounds");
         compare(PathUtil.expandHome("~", "/home/alex"), "/home/alex");
         compare(PathUtil.expandHome("", "/home/alex"), "");
+        verify(!PathUtil.isValidPath("/tmp/wallpapers\ninvalid"));
+        verify(!PathUtil.isValidPath("/tmp/wallpapers\rinvalid"));
+        verify(!PathUtil.isValidPath("/tmp/wallpapers\u0000invalid"));
     }
 
     function test_configServiceDefaultsAndResolve() {
@@ -41,6 +46,15 @@ TestSuite {
         verify(!WallpaperSettings.wallpaperPath.startsWith("~"), "wallpaperPath should be expanded");
         verify(!WallpaperService.wallpaperDir.startsWith("~"), "wallpaperDir should be expanded");
         verify(WallpaperService.wallpaperDir.length > 0, "wallpaperDir should not be empty");
+    }
+
+    function test_wallpaperSettingsPreservesExplicitZeroDuration() {
+        tryVerify(() => WallpaperSettings.ready);
+        const configuredDuration = ConfigService.wallpaper.transitionDurationMs;
+        WallpaperSettings.update({ transitionDurationMs: 0 });
+        compare(WallpaperSettings.transitionDurationMs, 0);
+        WallpaperSettings.update({ transitionDurationMs: -1 });
+        compare(WallpaperSettings.transitionDurationMs, configuredDuration);
     }
 
     function test_barAndClockAndMetricsSettings() {
@@ -75,5 +89,53 @@ TestSuite {
         compare(parsed.stringWithCommaBracket, "foo, ]");
         compare(parsed.items.length, 2);
         compare(parsed.items[0], "a");
+    }
+
+    function test_configSchemaNormalizesInvalidValues() {
+        const defaults = ConfigDefaults.create();
+        const normalized = ConfigSchema.normalize({
+            "bar": {
+                "showClock": "yes"
+            },
+            "wallpaper": {
+                "transitionDurationMs": -1,
+                "carouselIntervalMinutes": 0,
+                "overviewDim": 2
+            },
+            "audio": {
+                "volumeStep": 2
+            },
+            "apps": {
+                "taskbarExcludedAppPatterns": ["[", "^kitty$"]
+            }
+        }, defaults);
+
+        compare(normalized.bar.showClock, defaults.bar.showClock);
+        compare(normalized.wallpaper.transitionDurationMs, defaults.wallpaper.transitionDurationMs);
+        compare(normalized.wallpaper.carouselIntervalMinutes, defaults.wallpaper.carouselIntervalMinutes);
+        compare(normalized.wallpaper.overviewDim, defaults.wallpaper.overviewDim);
+        compare(normalized.audio.volumeStep, defaults.audio.volumeStep);
+        compare(normalized.apps.taskbarExcludedAppPatterns.length, 1);
+    }
+
+    function test_configSchemaPreservesExplicitDisableAndRejectsUnsafeValues() {
+        const defaults = ConfigDefaults.create();
+        const normalized = ConfigSchema.normalize({
+            "wallpaper": {
+                "transitionDurationMs": 0,
+                "directory": "/tmp/wallpapers\ninvalid"
+            },
+            "audio": {
+                "volumeStep": 0
+            },
+            "commands": {
+                "terminal": "kitty\u0000--bad"
+            }
+        }, defaults);
+
+        compare(normalized.wallpaper.transitionDurationMs, 0);
+        compare(normalized.wallpaper.directory, defaults.wallpaper.directory);
+        compare(normalized.audio.volumeStep, defaults.audio.volumeStep);
+        compare(normalized.commands.terminal, defaults.commands.terminal);
     }
 }

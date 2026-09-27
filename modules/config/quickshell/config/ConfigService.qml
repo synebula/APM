@@ -2,6 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "./ConfigDefaults.js" as ConfigDefaults
+import "./ConfigSchema.js" as ConfigSchema
 import "./PathUtil.js" as PathUtil
 
 Singleton {
@@ -10,95 +12,25 @@ Singleton {
     readonly property string homeDir: Quickshell.env("HOME") || ""
     property bool ready: false
 
-    readonly property var defaultData: ({
-        "workspaces": {
-            "byOutput": ({}),
-            "default": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-            "autoDistribute": true
-        },
-        "bar": {
-            "showWorkspaces": true,
-            "showWindowTitle": true,
-            "showMedia": true,
-            "showClock": true,
-            "showNotifications": true,
-            "showTray": true,
-            "showMetrics": true,
-            "showIndicators": true,
-            "showTaskbar": false
-        },
-        "wallpaper": {
-            "directory": "~/doc/wallpapers",
-            "defaultPath": "",
-            "transitionDurationMs": 800,
-            "carouselEnabled": true,
-            "carouselIntervalMinutes": 15,
-            "carouselRandom": true,
-            "overviewEnabled": true,
-            "overviewBlurRadius": 48,
-            "overviewDim": 0.3,
-            "overviewSaturation": 0.85,
-            "overviewContrast": 0.9
-        },
-        "notifications": {
-            "timeoutMs": 5000,
-            "historyLimit": 50,
-            "toastLimit": 4,
-            "toastsOnFocusedScreenOnly": true
-        },
-        "clock": {
-            "format": "yyyy/MM/dd HH:mm",
-            "detailedFormat": "dddd, MMMM d yyyy (HH:mm)",
-            "locale": "zh_CN"
-        },
-        "metrics": {
-            "cpuPollIntervalMs": 5000,
-            "memoryPollIntervalMs": 30000
-        },
-        "osd": {
-            "timeoutMs": 1800
-        },
-        "audio": {
-            "volumeStep": 0.05
-        },
-        "apps": {
-            "taskbarExcludedAppPatterns": []
-        },
-        "commands": {
-            "terminal": "kitty",
-            "lock": "hyprlock"
-        }
-    })
+    readonly property var defaultData: ConfigDefaults.create()
 
-    property var currentConfig: defaultData
+    property var currentConfig: ConfigSchema.normalize({}, root.defaultData)
 
-    readonly property var workspaces: currentConfig.workspaces || defaultData.workspaces
-    readonly property var bar: currentConfig.bar || defaultData.bar
-    readonly property var wallpaper: currentConfig.wallpaper || defaultData.wallpaper
-    readonly property var notifications: currentConfig.notifications || defaultData.notifications
-    readonly property var clock: currentConfig.clock || defaultData.clock
-    readonly property var metrics: currentConfig.metrics || defaultData.metrics
-    readonly property var osd: currentConfig.osd || defaultData.osd
-    readonly property var audio: currentConfig.audio || defaultData.audio
-    readonly property var apps: currentConfig.apps || defaultData.apps
-    readonly property var commands: currentConfig.commands || defaultData.commands
+    readonly property var workspaces: currentConfig.workspaces
+    readonly property var bar: currentConfig.bar
+    readonly property var wallpaper: currentConfig.wallpaper
+    readonly property var notifications: currentConfig.notifications
+    readonly property var clock: currentConfig.clock
+    readonly property var metrics: currentConfig.metrics
+    readonly property var osd: currentConfig.osd
+    readonly property var audio: currentConfig.audio
+    readonly property var apps: currentConfig.apps
+    readonly property var commands: currentConfig.commands
 
     function resolvePath(path) {
+        if (!PathUtil.isValidPath(path))
+            return "";
         return PathUtil.expandHome(path, root.homeDir);
-    }
-
-    function mergeDeep(base, override) {
-        if (!override || typeof override !== "object")
-            return base;
-        const result = Object.assign({}, base);
-        for (const key of Object.keys(override)) {
-            if (override[key] !== null && typeof override[key] === "object" && !Array.isArray(override[key])) {
-                result[key] = mergeDeep(base[key] || {}, override[key]);
-            } else {
-                result[key] = override[key];
-            }
-        }
-        return result;
     }
 
     function parseJsonc(text) {
@@ -116,14 +48,14 @@ Singleton {
     }
 
     function reloadConfig() {
-        let merged = JSON.parse(JSON.stringify(root.defaultData));
+        let merged = ConfigDefaults.create();
 
         const defaultText = defaultJsoncFile.text() || "";
         if (defaultText.trim().length > 0) {
             try {
                 const parsedDefault = root.parseJsonc(defaultText);
                 if (parsedDefault)
-                    merged = mergeDeep(merged, parsedDefault);
+                    merged = ConfigSchema.mergeDeep(merged, parsedDefault);
             } catch (e) {
                 console.warn("ConfigService: Failed to parse default config:", e);
             }
@@ -134,7 +66,7 @@ Singleton {
             try {
                 const parsedUser = root.parseJsonc(userJ);
                 if (parsedUser)
-                    merged = mergeDeep(merged, parsedUser);
+                    merged = ConfigSchema.mergeDeep(merged, parsedUser);
             } catch (e) {
                 console.warn("ConfigService: Failed to parse config.json:", e);
             }
@@ -145,13 +77,13 @@ Singleton {
             try {
                 const parsedUserC = root.parseJsonc(userC);
                 if (parsedUserC)
-                    merged = mergeDeep(merged, parsedUserC);
+                    merged = ConfigSchema.mergeDeep(merged, parsedUserC);
             } catch (e) {
                 console.warn("ConfigService: Failed to parse config.jsonc:", e);
             }
         }
 
-        root.currentConfig = merged;
+        root.currentConfig = ConfigSchema.normalize(merged, root.defaultData);
         root.ready = true;
     }
 

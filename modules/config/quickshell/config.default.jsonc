@@ -65,7 +65,7 @@
     "timeoutMs": 5000,
     // 通知中心历史记录最大留存数量
     "historyLimit": 50,
-    // 屏幕右侧同时堆叠显示的最大弹窗数
+    // 屏幕右侧同时堆叠显示的最大弹窗数（当前合成器模糊区域支持 1~4）
     "toastLimit": 4,
     // 通知弹窗是否仅在当前聚焦的显示器上弹出（false 则在所有屏弹出）
     "toastsOnFocusedScreenOnly": true

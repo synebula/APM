@@ -1,5 +1,4 @@
 ActiveWindowTitle 1.0 ActiveWindowTitle.qml
-StatusBar 1.0 StatusBar.qml
 SystemIndicators 1.0 SystemIndicators.qml
 Taskbar 1.0 Taskbar.qml
 WorkspaceSwitcher 1.0 WorkspaceSwitcher.qml

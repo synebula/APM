@@ -9,6 +9,7 @@ Singleton {
     id: root
 
     property bool enabled: true
+    readonly property bool testMode: Quickshell.env("APM_QUICKSHELL_TEST_MODE") === "1"
     readonly property string scriptPath: decodeURIComponent(Qt.resolvedUrl("../scripts/sync-desktop-theme.sh").toString().replace(/^file:\/\//, ""))
 
     Component.onCompleted: {
@@ -16,7 +17,7 @@ Singleton {
     }
 
     function syncNow() {
-        if (!root.enabled)
+        if (!root.enabled || root.testMode)
             return;
         syncProcess.exec([
             "bash", root.scriptPath,
@@ -39,6 +40,8 @@ Singleton {
         target: Theme
         function onResolvedColorModeChanged() { debounceTimer.restart(); }
         function onPaletteChanged() { debounceTimer.restart(); }
+        function onPaletteVariantChanged() { debounceTimer.restart(); }
+        function onDefinitionChanged() { debounceTimer.restart(); }
         function onAccentIdChanged() { debounceTimer.restart(); }
     }
 

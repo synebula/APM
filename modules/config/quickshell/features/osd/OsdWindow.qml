@@ -5,7 +5,7 @@ import "../../ui/IconGlyphs.js" as IconGlyphs
 import "../../ui/containers"
 import "../../ui/controls"
 import "../../ui/effects"
-import "../audio/AudioPresentation.js" as AudioPresentation
+import "../../shared/lib/audio/AudioPresentation.js" as AudioPresentation
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -106,7 +106,6 @@ PanelWindow {
             anchors.centerIn: parent
             baseWidth: 260 * Theme.controlScale
             baseHeight: 52 * Theme.controlScale
-            surfaceColor: Theme.components.surface.fill
             expanded: root.muted
             satelliteClickable: true
             onSatelliteClicked: {
@@ -172,6 +171,7 @@ PanelWindow {
         CompositorBlurRegion {
             id: blurRegion
             targetWindow: root
+            effectEnabled: root.isOpen || container.opacity > 0.04
 
             Region {
                 item: morphPill.mainBodyItem

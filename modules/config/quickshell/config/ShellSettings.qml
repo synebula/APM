@@ -5,40 +5,40 @@ import "."
 Singleton {
     id: root
 
-    readonly property var workspacesByOutput: ConfigService.workspaces.byOutput || ({})
-    readonly property var defaultWorkspaces: ConfigService.workspaces.default || ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
-    readonly property bool autoDistribute: ConfigService.workspaces.autoDistribute !== false
-    readonly property var taskbarExcludedAppPatterns: ConfigService.apps.taskbarExcludedAppPatterns || []
-    readonly property int notificationTimeout: ConfigService.notifications.timeoutMs || 5000
-    readonly property int notificationHistoryLimit: ConfigService.notifications.historyLimit || 50
-    readonly property int notificationToastLimit: ConfigService.notifications.toastLimit || 4
-    readonly property bool toastsOnFocusedScreenOnly: ConfigService.notifications.toastsOnFocusedScreenOnly !== false
-    readonly property string terminalCommand: ConfigService.commands.terminal || Quickshell.env("TERMINAL") || "kitty"
-    readonly property string lockCommand: ConfigService.commands.lock || (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ? "hyprlock" : "swaylock")
+    readonly property var workspacesByOutput: ConfigService.workspaces.byOutput
+    readonly property var defaultWorkspaces: ConfigService.workspaces.default
+    readonly property bool autoDistribute: ConfigService.workspaces.autoDistribute
+    readonly property var taskbarExcludedAppPatterns: ConfigService.apps.taskbarExcludedAppPatterns
+    readonly property int notificationTimeout: ConfigService.notifications.timeoutMs
+    readonly property int notificationHistoryLimit: ConfigService.notifications.historyLimit
+    readonly property int notificationToastLimit: ConfigService.notifications.toastLimit
+    readonly property bool toastsOnFocusedScreenOnly: ConfigService.notifications.toastsOnFocusedScreenOnly
+    readonly property string terminalCommand: ConfigService.commands.terminal
+    readonly property string lockCommand: ConfigService.commands.lock
 
     // 状态栏各模块显隐开关
-    readonly property bool barShowWorkspaces: ConfigService.bar.showWorkspaces !== false
-    readonly property bool barShowWindowTitle: ConfigService.bar.showWindowTitle !== false
-    readonly property bool barShowMedia: ConfigService.bar.showMedia !== false
-    readonly property bool barShowClock: ConfigService.bar.showClock !== false
-    readonly property bool barShowNotifications: ConfigService.bar.showNotifications !== false
-    readonly property bool barShowTray: ConfigService.bar.showTray !== false
-    readonly property bool barShowMetrics: ConfigService.bar.showMetrics !== false
-    readonly property bool barShowIndicators: ConfigService.bar.showIndicators !== false
-    readonly property bool barShowTaskbar: ConfigService.bar.showTaskbar === true
+    readonly property bool barShowWorkspaces: ConfigService.bar.showWorkspaces
+    readonly property bool barShowWindowTitle: ConfigService.bar.showWindowTitle
+    readonly property bool barShowMedia: ConfigService.bar.showMedia
+    readonly property bool barShowClock: ConfigService.bar.showClock
+    readonly property bool barShowNotifications: ConfigService.bar.showNotifications
+    readonly property bool barShowTray: ConfigService.bar.showTray
+    readonly property bool barShowMetrics: ConfigService.bar.showMetrics
+    readonly property bool barShowIndicators: ConfigService.bar.showIndicators
+    readonly property bool barShowTaskbar: ConfigService.bar.showTaskbar
 
     // 时钟与区域格式
-    readonly property string clockFormat: ConfigService.clock.format || "yyyy/MM/dd HH:mm"
-    readonly property string clockDetailedFormat: ConfigService.clock.detailedFormat || "dddd, MMMM d yyyy (HH:mm)"
-    readonly property string clockLocale: ConfigService.clock.locale || "zh_CN"
+    readonly property string clockFormat: ConfigService.clock.format
+    readonly property string clockDetailedFormat: ConfigService.clock.detailedFormat
+    readonly property string clockLocale: ConfigService.clock.locale
 
     // 硬件监控采集频率
-    readonly property int metricsCpuInterval: ConfigService.metrics.cpuPollIntervalMs || 5000
-    readonly property int metricsMemoryInterval: ConfigService.metrics.memoryPollIntervalMs || 30000
+    readonly property int metricsCpuInterval: ConfigService.metrics.cpuPollIntervalMs
+    readonly property int metricsMemoryInterval: ConfigService.metrics.memoryPollIntervalMs
 
     // OSD 与音频步进
-    readonly property int osdTimeoutMs: ConfigService.osd.timeoutMs || 1800
-    readonly property real volumeStep: ConfigService.audio.volumeStep || 0.05
+    readonly property int osdTimeoutMs: ConfigService.osd.timeoutMs
+    readonly property real volumeStep: ConfigService.audio.volumeStep
 
     function workspacesForOutput(name) {
         if (root.workspacesByOutput && root.workspacesByOutput[name] && root.workspacesByOutput[name].length > 0) {
@@ -73,6 +73,12 @@ Singleton {
     }
 
     function showInTaskbar(appId) {
-        return !root.taskbarExcludedAppPatterns.some(pattern => new RegExp(pattern, "i").test(appId));
+        return !root.taskbarExcludedAppPatterns.some(pattern => {
+            try {
+                return new RegExp(pattern, "i").test(appId);
+            } catch (error) {
+                return false;
+            }
+        });
     }
 }

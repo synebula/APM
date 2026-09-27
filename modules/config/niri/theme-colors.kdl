@@ -1,0 +1,15 @@
+// 由 quickshell ThemeSyncService 自动生成，请勿手改
+layout {
+    border {
+        active-gradient from="#7aa2f7" to="#1a1b26" angle=45
+        inactive-gradient from="#292e42" to="#1a1b26" angle=45
+    }
+
+    tab-indicator {
+        active-gradient from="#7aa2f7" to="#1a1b26" angle=45
+    }
+}
+
+overview {
+    backdrop-color "#1a1b26cc"
+}

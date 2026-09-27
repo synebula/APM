@@ -51,7 +51,7 @@ ModalWindow {
 
             IconGlyph {
                 text: root.request.glyph || ""
-                color: Theme.components.status.tone(root.request.destructive)
+                color: Theme.components.status.tone(!!root.request.destructive)
                 font.pixelSize: Theme.typography.headingSize
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -84,7 +84,7 @@ ModalWindow {
                 ActionButton {
                     text: (root.request.confirmText || "确定") + " (Enter)"
                     primary: true
-                    destructive: root.request.destructive
+                    destructive: !!root.request.destructive
                     Layout.fillWidth: true
                     onClicked: ConfirmationController.confirm()
                 }

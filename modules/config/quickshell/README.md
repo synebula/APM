@@ -10,15 +10,18 @@
 ## 目录结构
 
 ```text
-config/                 统一配置服务 (ConfigService)、外观设置 (AppearanceSettings)、桌面外壳设置 (ShellSettings)、壁纸设置 (WallpaperSettings)
+app/                    应用级启动装配层（RuntimeBootstrap）
+config/                 统一配置服务 (ConfigService/ConfigSchema)、外观设置 (AppearanceSettings)、桌面外壳设置 (ShellSettings)、壁纸设置 (WallpaperSettings)
 config.default.jsonc    开箱即用的用户统一配置模板 (可复制为 config.jsonc 或 config.json 进行自定义)
 features/<domain>/      按用户功能组织的视图、控制器、Provider 和 Store
+surfaces/bar/           面向桌面表面的多屏状态栏组合根
+shared/lib/             跨功能、无 UI 副作用的纯 JS 工具
 services/               系统服务门面（音频、蓝牙、媒体、亮度、指标、桌面主题同步等）
 services/windowmanager/ 窗口管理后端契约、Niri/Hyprland 实现和领域对象
 theme/                  主题定义、配色调色板、变体、设计令牌门面与控制器
 theme/palettes/         配色家族定义 (Catppuccin, Everforest, Nord, PastelRelief, TokyoNight)
 theme/variants/         各配色家族的 light / dark 语义色及强调色变体
-theme/themes/           外观风格定义 (FlatTheme, NeumorphicTheme)
+theme/themes/           外观风格定义 (FlatTheme, NeumorphicTheme, FrostedGlassTheme, LiquidGlassTheme)
 ui/controls/            可复用按钮、文字、图标、滑块、开关等基础控件
 ui/containers/          弹窗、模态窗口、遮罩和栏分组等容器
 ui/controllers/         跨功能的弹窗、提示、滚动和确认状态协调器
@@ -27,7 +30,7 @@ ui/effects/             表面底框 (SurfaceFrame)、交互状态层 (StateLaye
 tests/                  QuickShell 行为测试与主题断言
 ```
 
-每个可复用 QML 目录都有 `qmldir`。它既是 QML 模块的导出清单，也是该目录对外暴露的边界；新增类型时应同步更新对应文件。
+每个可复用 QML 目录都有 `qmldir`。它既是 QML 模块的导出清单，也是该目录对外暴露的边界；新增类型时应同步更新对应文件。`shell.qml` 保持在根目录以满足 QuickShell 的 `ShellRoot` 入口约定，启动服务装配放在 `app/`。
 
 ## 架构依赖与单一事实来源 (SSOT)
 
@@ -42,14 +45,14 @@ tests/                  QuickShell 行为测试与主题断言
        └── ColorModeResolver (系统 Portal / GSettings / Darkman 嗅探)
        │
        ├──> features/ & ui/ (设计令牌消费)
-       └──> ThemeSyncService ──> sync-desktop-theme.sh ──> (GTK / Kitty / Hyprland)
+       └──> ThemeSyncService ──> sync-desktop-theme.sh ──> (GTK / Kitty / Niri / Hyprland)
 ```
 
 1. **持久化源头 (Persistence)**：`config/AppearanceSettings.qml`（对应 `~/.local/state/quickshell/appearance.json`）是外观配置的唯一真实来源。除 `Theme`（读取）和 `ThemeController`（写入）外，禁止任何 UI 或业务模块直接读写该配置。
 2. **状态变异网关 (Mutator)**：`theme/ThemeController.qml` 是唯一的状态修改网关，集中校验并处理主题、调色板、深浅模式、强调色和缩放因子的修改。
 3. **设计令牌门面 (Runtime Tokens)**：`theme/Theme.qml` 是唯一的消费入口。功能模块和基础 UI 统一且仅能通过 `Theme` 获取颜色、排版、间距、形状、动效与组件 tokens。
-4. **外部环境同步 (Desktop Sync)**：`services/ThemeSyncService.qml` 监听 `Theme` 变动，通过 `scripts/sync-desktop-theme.sh` 联动同步 GTK、Kitty 终端配色和 Hyprland 边框颜色。
-5. **用户声明式配置 (User Config)**：`config/ConfigService.qml` 统一监听并解析当前模块根目录下的 `config.jsonc` 或 `config.json`（基于模板 `config.default.jsonc`），提供工作区自适应划分、壁纸目录探测、终端与锁屏命令、通知参数的热重载支持；各领域设置（`ShellSettings`, `WallpaperSettings`）作为领域门面对外提供安全降级与统一消费。
+4. **外部环境同步 (Desktop Sync)**：`services/ThemeSyncService.qml` 监听 `Theme` 变动，通过 `scripts/sync-desktop-theme.sh` 联动同步 GTK、Kitty 终端配色、Niri/Hyprland 边框颜色；Niri 通过整文件原子生成外链 `theme-colors.kdl`（include 字段级合并覆盖主配置颜色默认值，watcher 自动重载）实现。
+5. **用户声明式配置 (User Config)**：`config/ConfigService.qml` 按“读取 → JSONC 解析 → 深合并 → `ConfigSchema` 规范化”处理当前模块根目录下的 `config.jsonc` 或 `config.json`（基于模板 `config.default.jsonc`），提供工作区自适应划分、壁纸目录探测、终端与锁屏命令、通知参数的热重载支持；各领域设置（`ShellSettings`, `WallpaperSettings`）作为领域门面对外提供安全降级与统一消费。
 
 ## 设计令牌体系 (Design Tokens)
 
@@ -119,7 +122,7 @@ tests/                  QuickShell 行为测试与主题断言
 
 ```sh
 qmllint shell.qml tests.qml
-qs -p tests.qml
+scripts/run-tests.sh
 ```
 
 生产切换前，应在隔离的 Niri 或 Xvfb 环境中检查多屏栏、启动器、主题缩放和通知窗口。

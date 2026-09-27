@@ -3,20 +3,25 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../config"
-import "../features/wallpaper/WallpaperSource.js" as WallpaperSource
+import "../shared/lib/wallpaper/WallpaperSource.js" as WallpaperSource
 
 Singleton {
     id: root
 
     readonly property string configuredWallpaper: WallpaperSettings.wallpaperPath
     readonly property string currentWallpaper: root.configuredWallpaper || (root.wallpapers.length > 0 ? root.wallpapers[0] : "#1e1e2e")
-    readonly property bool carouselEnabled: ConfigService.wallpaper.carouselEnabled !== false
-    readonly property int carouselIntervalMinutes: Math.max(1, ConfigService.wallpaper.carouselIntervalMinutes || 15)
-    readonly property bool carouselRandom: ConfigService.wallpaper.carouselRandom === true
+    readonly property bool carouselEnabled: ConfigService.wallpaper.carouselEnabled
+    readonly property int carouselIntervalMinutes: ConfigService.wallpaper.carouselIntervalMinutes
+    readonly property bool carouselRandom: ConfigService.wallpaper.carouselRandom
     property var wallpapers: []
     property bool isScanning: false
+    property bool scanError: false
+    property bool rescanRequested: false
+    property int scanGeneration: 0
+    property int activeScanGeneration: 0
+    property string activeScanDirectory: ""
     property string wallpaperDir: {
-        const configDir = ConfigService.resolvePath(ConfigService.wallpaper.directory || "");
+        const configDir = ConfigService.resolvePath(ConfigService.wallpaper.directory);
         if (configDir && configDir.length > 0)
             return configDir;
 
@@ -73,11 +78,26 @@ Singleton {
     }
 
     function scanWallpapers() {
-        if (root.isScanning)
+        if (root.isScanning) {
+            root.rescanRequested = true;
             return;
+        }
+
+        root.scanGeneration += 1;
+        root.activeScanGeneration = root.scanGeneration;
+        root.activeScanDirectory = root.wallpaperDir;
+        root.rescanRequested = false;
         root.isScanning = true;
+        root.scanError = false;
         scanner.buffer = [];
         scanner.running = true;
+    }
+
+    onWallpaperDirChanged: {
+        // Do not expose entries from the previous directory while the new
+        // scan is in flight.
+        root.wallpapers = [];
+        root.scanWallpapers();
     }
 
     Process {
@@ -86,7 +106,7 @@ Singleton {
 
         command: [
             "sh", "-c",
-            "dir=\"$1\"; if [ -d \"$dir\" ]; then find \"$dir\" -maxdepth 1 -type f \\( -iname \"*.jpg\" -o -iname \"*.jpeg\" -o -iname \"*.png\" -o -iname \"*.webp\" -o -iname \"*.gif\" \\); fi",
+            "dir=\"$1\"; if [ -d \"$dir\" ]; then find \"$dir\" -maxdepth 1 -type f \\( -iname \"*.jpg\" -o -iname \"*.jpeg\" -o -iname \"*.png\" -o -iname \"*.webp\" -o -iname \"*.bmp\" -o -iname \"*.gif\" \\); else exit 1; fi",
             "_", root.wallpaperDir
         ]
         running: false
@@ -100,18 +120,27 @@ Singleton {
             }
         }
 
-        onExited: (exitCode, exitStatus) => {
+        onExited: exitCode => {
             root.isScanning = false;
-            if (scanner.buffer && scanner.buffer.length > 0) {
-                const sorted = scanner.buffer.slice().sort();
-                const uniqueList = [];
-                for (let i = 0; i < sorted.length; i++) {
-                    if (i === 0 || sorted[i] !== sorted[i - 1])
-                        uniqueList.push(sorted[i]);
-                }
-                root.wallpapers = uniqueList;
+            const sorted = (scanner.buffer || []).slice().sort();
+            const uniqueList = [];
+            for (let i = 0; i < sorted.length; i++) {
+                if (i === 0 || sorted[i] !== sorted[i - 1])
+                    uniqueList.push(sorted[i]);
+            }
+
+            const isCurrentScan = root.activeScanGeneration === root.scanGeneration
+                && root.activeScanDirectory === root.wallpaperDir;
+            if (isCurrentScan) {
+                root.scanError = exitCode !== 0;
+                root.wallpapers = root.scanError ? [] : uniqueList;
+                if (root.scanError)
+                    console.warn("WallpaperService: wallpaper scan failed with exit code " + exitCode);
             }
             scanner.buffer = [];
+
+            if (root.rescanRequested)
+                Qt.callLater(root.scanWallpapers);
         }
     }
 

@@ -59,5 +59,6 @@ void main()
         distanceToSurface
     );
 
-    fragColor = ubuf.fillColor * alpha * ubuf.qt_Opacity;
+    vec4 premultipliedColor = vec4(ubuf.fillColor.rgb * ubuf.fillColor.a, ubuf.fillColor.a);
+    fragColor = premultipliedColor * alpha * ubuf.qt_Opacity;
 }

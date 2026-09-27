@@ -24,6 +24,12 @@ QtObject {
         curve: [0.42, 1.67, 0.21, 0.9, 1, 1]
     }
 
+    // 退场/收起：加速曲线，时长与 fastEffects 对齐，收得干脆
+    readonly property MotionSpec accelerate: MotionSpec {
+        duration: Math.round(root.baseDuration * 0.75 * root.scale)
+        curve: [0.3, 0, 0.8, 0.15, 1, 1]
+    }
+
     readonly property MotionSpec scroll: MotionSpec {
         duration: Math.round(root.baseDuration * root.scale)
         curve: [0, 0, 0, 1, 1, 1]

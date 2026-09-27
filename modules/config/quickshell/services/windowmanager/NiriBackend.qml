@@ -7,14 +7,52 @@ WindowManagerBackend {
     id: root
 
     property var state: NiriState.empty()
+    property bool hasWorkspacesSnapshot: false
+    property bool hasWindowsSnapshot: false
+    property bool connectionRequested: true
     readonly property string socketPath: Quickshell.env("NIRI_SOCKET") || ""
+    readonly property bool initialSyncReady: events.connected && actions.connected
+        && root.hasWorkspacesSnapshot && root.hasWindowsSnapshot
+
+    function resetConnectionState() {
+        root.hasWorkspacesSnapshot = false;
+        root.hasWindowsSnapshot = false;
+        root.state = NiriState.empty();
+        root.publish(NiriState.snapshot(root.state));
+    }
+
+    function scheduleReconnect() {
+        if (root.socketPath.length > 0)
+            reconnect.restart();
+        else
+            reconnect.stop();
+    }
+
+    function invalidateConnection() {
+        // Both sockets belong to one IPC session. If either side fails, discard
+        // the snapshot and reconnect both sides so availability cannot expose a
+        // half-old state.
+        root.connectionRequested = false;
+        root.resetConnectionState();
+        root.scheduleReconnect();
+    }
 
     function receive(line) {
         try {
-            const next = NiriState.apply(root.state, JSON.parse(line));
+            const event = JSON.parse(line);
+            const hasWorkspacesSnapshot = event.WorkspacesChanged
+                && Array.isArray(event.WorkspacesChanged.workspaces);
+            const hasWindowsSnapshot = event.WindowsChanged
+                && Array.isArray(event.WindowsChanged.windows);
+
+            const next = NiriState.apply(root.state, event);
             if (next === root.state)
                 return;
 
+            if (hasWorkspacesSnapshot)
+                root.hasWorkspacesSnapshot = true;
+            if (hasWindowsSnapshot)
+                root.hasWindowsSnapshot = true;
             root.state = next;
             root.publish(NiriState.snapshot(next));
         } catch (error) {
@@ -23,7 +61,7 @@ WindowManagerBackend {
     }
 
     function sendAction(action) {
-        if (!actions.connected) {
+        if (!root.available) {
             console.warn("Niri action unavailable: IPC socket is disconnected");
             return;
         }
@@ -33,7 +71,7 @@ WindowManagerBackend {
         actions.flush();
     }
 
-    available: events.connected && actions.connected
+    available: root.initialSyncReady
     onSwitchWorkspaceRequested: name => {
         return root.sendAction({
             "FocusWorkspace": {
@@ -65,17 +103,22 @@ WindowManagerBackend {
         id: events
 
         path: root.socketPath
-        connected: path.length > 0
+        connected: root.connectionRequested && path.length > 0
         onConnectionStateChanged: {
             if (connected) {
-                root.state = NiriState.empty();
+                root.resetConnectionState();
                 write('"EventStream"\n');
                 flush();
             } else {
-                reconnect.restart();
+                if (root.connectionRequested)
+                    root.invalidateConnection();
+                else
+                    root.scheduleReconnect();
             }
         }
-        onError: reconnect.restart()
+        onError: {
+            root.invalidateConnection();
+        }
 
         parser: SplitParser {
             onRead: line => {
@@ -88,12 +131,19 @@ WindowManagerBackend {
         id: actions
 
         path: root.socketPath
-        connected: path.length > 0
+        connected: root.connectionRequested && path.length > 0
         onConnectionStateChanged: {
-            if (!connected)
-                reconnect.restart();
+            // The event socket owns the snapshot handshake. Do not clear a
+            // snapshot merely because the action socket finishes connecting
+            // slightly later; that would race the initial EventStream reply.
+            if (!connected && root.connectionRequested)
+                root.invalidateConnection();
+            else if (!connected)
+                root.scheduleReconnect();
         }
-        onError: reconnect.restart()
+        onError: {
+            root.invalidateConnection();
+        }
 
         parser: SplitParser {
             onRead: line => {
@@ -115,12 +165,7 @@ WindowManagerBackend {
         onTriggered: {
             if (!root.socketPath)
                 return;
-
-            if (!events.connected)
-                events.connected = true;
-
-            if (!actions.connected)
-                actions.connected = true;
+            root.connectionRequested = true;
         }
     }
 }

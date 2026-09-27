@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import "../../services"
 import "../../theme"
 import "../../ui/controls"
-import "./AudioPresentation.js" as AudioPresentation
+import "../../shared/lib/audio/AudioPresentation.js" as AudioPresentation
 
 Column {
     id: root
