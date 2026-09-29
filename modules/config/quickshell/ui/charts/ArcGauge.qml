@@ -1,4 +1,5 @@
 import "../../theme"
+import "../../theme/components"
 import QtQuick
 
 // ============================================================================
@@ -9,6 +10,8 @@ Item {
     // 中心图标颜色
 
     id: root
+
+    readonly property ArcGaugeTokens _tokens: Theme.components.arcGauge
 
     // === 必需属性 ===
     property real value: 0
@@ -24,20 +27,20 @@ Item {
     property color glyphColor: Theme.colors.textPrimary
     // === 可选微调属性 ===
     property string glyphFont: Theme.typography.iconFamily
-    property real glyphSize: 9 * Theme.fontScale
-    property real arcRadius: 8.5 * Theme.controlScale
-    property real lineWidth: 2.2 * Theme.controlScale
+    property real glyphSize: root._tokens.glyphSize
+    property real arcRadius: root._tokens.arcRadius
+    property real lineWidth: root._tokens.lineWidth
     property real gapAngle: 40
-    property real handleSpacing: 3 * Theme.controlScale
-    property real handleInner: 1.2 * Theme.controlScale
-    property real handleOuter: 2.2 * Theme.controlScale
+    property real handleSpacing: root._tokens.handleSpacing
+    property real handleInner: root._tokens.handleInner
+    property real handleOuter: root._tokens.handleOuter
     property bool showHandle: false
     property int animationDuration: Theme.motion.standard.duration
     // --- 内部动画属性 ---
     readonly property real clampedValue: Math.max(0, Math.min(1, root.value))
     property real displayedAngle: clampedValue * (360 - 2 * root.gapAngle)
 
-    implicitWidth: Theme.components.barButton.height
+    implicitWidth: root._tokens.size
     implicitHeight: implicitWidth
     // --- 重绘触发器 ---
     onProgressColorChanged: canvas.requestPaint()

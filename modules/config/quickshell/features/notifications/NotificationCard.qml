@@ -5,8 +5,9 @@ import Quickshell
 
 import "../../theme"
 import "../../ui/controls"
+import "../../ui/containers"
 
-ActionButton {
+InteractiveCard {
     id: root
     required property NotificationRecord notification
     property bool toastMode: false
@@ -43,7 +44,7 @@ ActionButton {
     rightPadding: Theme.spacing.large
 
     fillColor: Theme.components.notification.cardBackground(root.toastMode, root.isUnread, root.hovered, root.notificationUrgency)
-    borderWidth: Theme.components.surface.borderWidth
+    borderWidth: Theme.surface.borderWidth
     borderColor: Theme.components.notification.cardBorderColor(root.toastMode, root.isUnread, root.hovered, root.notificationUrgency)
     foreground: Theme.components.notification.appNameColor(root.notificationUrgency)
     cornerRadius: Theme.shape.controlRadius
@@ -100,8 +101,7 @@ ActionButton {
 
                     TextLabel {
                         text: root.notification ? root.notification.appName : ""
-                        font.bold: true
-                        font.pixelSize: Theme.typography.captionSize
+                        font: Theme.typography.withOverrides(Theme.typography.caption, { weight: Theme.typography.title.weight })
                         color: Theme.components.notification.appNameColor(root.notificationUrgency)
                         elide: Text.ElideRight
                     }
@@ -138,8 +138,7 @@ ActionButton {
             id: summaryLabel
             visible: text.length > 0
             text: root.notification ? root.notification.summary : ""
-            font.bold: true
-            font.pixelSize: Theme.typography.bodySize
+            font: Theme.typography.withOverrides(Theme.typography.body, { weight: Theme.typography.title.weight })
             color: Theme.colors.textPrimary
             wrapMode: Text.Wrap
             maximumLineCount: 2

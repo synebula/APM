@@ -14,6 +14,7 @@ ActionButton {
     signal wheel(var event)
 
     fillColor: Theme.components.barButton.background(root.active, root.urgent)
+    materialEnabled: !root.active && !root.urgent
     foreground: Theme.components.barButton.foreground(root.active, root.urgent)
     implicitHeight: Theme.components.barButton.height
     implicitWidth: Math.max(implicitHeight, implicitContentWidth + leftPadding + rightPadding)

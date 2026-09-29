@@ -1,554 +1,78 @@
-pragma ComponentBehavior: Bound
 pragma Singleton
 import QtQuick
 import Quickshell
-
 import "../config"
-import "./ColorMath.js" as ColorMath
+import "appearance"
+import "themes"
+import "colors"
+import "colors/runtime"
+import "geometry/runtime"
+import "materials/runtime"
+import "typography/runtime"
+import "motion/runtime"
+import "components"
 
 Singleton {
     id: root
 
     readonly property ThemeDefinition definition: ThemeCatalog.find(AppearanceSettings.themeId) || ThemeCatalog.defaultTheme
-    readonly property PaletteDefinition palette: PaletteCatalog.find(AppearanceSettings.paletteId) || PaletteCatalog.defaultPalette
+    readonly property bool paletteFollowsTheme: PaletteCatalog.find(AppearanceSettings.paletteId) === null
+    readonly property PaletteDefinition palette: PaletteCatalog.find(AppearanceSettings.paletteId) || root.definition.palette
     readonly property string colorMode: ["system", "light", "dark"].includes(AppearanceSettings.colorMode) ? AppearanceSettings.colorMode : "system"
     readonly property string resolvedColorMode: root.colorMode === "system" ? ColorModeResolver.systemMode : root.colorMode
     readonly property bool isDark: root.resolvedColorMode === "dark"
-    readonly property PaletteVariant paletteVariant: PaletteCatalog.variant(root.palette.paletteId, root.resolvedColorMode)
+    readonly property PaletteVariant paletteVariant: root.palette.variant(root.resolvedColorMode) || root.palette.defaultVariant
     readonly property string displayName: root.definition.displayName
-    readonly property string accentId: PaletteCatalog.accentIds(root.paletteVariant).includes(AppearanceSettings.accentId) ? AppearanceSettings.accentId : root.paletteVariant.defaultAccentId
+    readonly property string accentId: root.colors.accentId
     readonly property bool accentCustomized: root.accentId !== root.paletteVariant.defaultAccentId
     readonly property real fontScale: Math.max(0.75, Math.min(2, AppearanceSettings.fontScale))
     readonly property real spacingScale: Math.max(0.5, Math.min(2, AppearanceSettings.spacingScale))
     readonly property real controlScale: Math.max(root.fontScale, root.spacingScale)
     readonly property real disabledOpacity: 0.45
 
-    readonly property ColorTokens colors: ColorTokens {}
+    readonly property ColorTokens colors: ColorTokens {
+        variant: root.paletteVariant
+        requestedAccentId: AppearanceSettings.accentId
+        isDark: root.isDark
+    }
 
-    readonly property TypographyTokens typography: TypographyTokens {}
+    readonly property ShapeTokens shape: ShapeTokens {
+        spec: root.definition.geometry.shape
+        radiusScale: AppearanceSettings.radiusScale
+    }
 
-    readonly property SpacingTokens spacing: SpacingTokens {}
+    readonly property SpacingTokens spacing: SpacingTokens {
+        spec: root.definition.geometry.spacing
+        spacingScale: root.spacingScale
+    }
 
-    readonly property ShapeTokens shape: ShapeTokens {}
+    readonly property TypographyTokens typography: TypographyTokens {
+        spec: root.definition.typography
+        fontFamily: AppearanceSettings.fontFamily
+        iconFamily: AppearanceSettings.iconFontFamily
+        fontScale: root.fontScale
+    }
 
     readonly property MotionTokens motion: MotionTokens {
-        baseDuration: root.definition.motion.duration
+        spec: root.definition.motion
         scale: Math.max(0, Math.min(4, AppearanceSettings.motionScale))
     }
 
-    readonly property ComponentTokens components: ComponentTokens {}
-
-    component SliderTokens: QtObject {
-        readonly property int height: Math.round(20 * root.controlScale)
-        readonly property int trackHeight: Math.round(6 * root.spacingScale)
-        readonly property int handleSize: Math.round(14 * root.controlScale)
-
-        function handleBorderWidth(visualFocus: bool): int {
-            return visualFocus ? 3 : 2;
-        }
+    readonly property SurfaceTokens surface: SurfaceTokens {
+        spec: root.definition.material
+        colors: root.colors
+        isDark: root.isDark
+        controlScale: root.controlScale
     }
 
-    component PopupTokens: QtObject {
-        readonly property color background: root.components.surface.fill
-        readonly property int padding: root.spacing.large
-        readonly property int gap: root.spacing.small
-        readonly property int tooltipMaxWidth: Math.round(480 * root.controlScale)
-
-        function swatchBorderColor(selected: bool, visualFocus: bool): color {
-            return (selected || visualFocus) ? root.colors.textPrimary : root.colors.outline;
-        }
-
-        function swatchBorderWidth(selected: bool, visualFocus: bool): int {
-            return (selected || visualFocus) ? 2 : 1;
-        }
+    readonly property ComponentTokens components: ComponentTokens {
+        colors: root.colors
+        shape: root.shape
+        spacing: root.spacing
+        _surface: root.surface
+        isDark: root.isDark
+        controlScale: root.controlScale
+        fontScale: root.fontScale
+        spacingScale: root.spacingScale
     }
-
-    component IconButtonTokens: QtObject {
-        readonly property int size: Math.round(28 * root.controlScale)
-        readonly property int compactSize: Math.round(22 * root.controlScale)
-        readonly property int iconSize: Math.round(14 * root.fontScale)
-    }
-
-    component ActionButtonTokens: QtObject {
-        readonly property int height: Math.round(32 * root.controlScale)
-
-        function background(enabled: bool, checked: bool, primary: var, tonal: var, destructive: var): color {
-            if (!enabled)
-                return root.colors.disabledSurface;
-            if (destructive && (primary || checked))
-                return root.colors.danger;
-            if (destructive && tonal)
-                return root.colors.dangerContainer;
-            if (primary || checked)
-                return root.colors.accent;
-            if (tonal)
-                return root.colors.accentContainer;
-            return Qt.color("transparent");
-        }
-
-        function foreground(enabled: bool, checked: bool, primary: var, tonal: var, destructive: var): color {
-            if (!enabled)
-                return root.colors.disabledText;
-            if (destructive && (primary || checked))
-                return root.colors.dangerForeground;
-            if (primary || checked)
-                return root.colors.accentForeground;
-            if (destructive)
-                return root.colors.danger;
-            if (tonal)
-                return root.colors.accent;
-            return root.colors.textPrimary;
-        }
-
-        function borderColor(visualFocus: bool, checked: bool, destructive: var): color {
-            if (visualFocus)
-                return destructive ? root.colors.danger : root.colors.focusRing;
-            if (checked)
-                return destructive ? root.colors.danger : root.colors.accent;
-            return Qt.color("transparent");
-        }
-
-        function borderWidth(visualFocus: bool, checked: bool, isSurface: bool): int {
-            if (isSurface)
-                return root.components.surface.borderWidth;
-            if (visualFocus || checked)
-                return root.shape.borderWidth;
-            return 0;
-        }
-    }
-
-    component ActionRowTokens: QtObject {
-        readonly property int height: Math.round(32 * root.controlScale)
-        readonly property int padding: Math.round(10 * root.spacingScale)
-
-        function background(enabled: bool, selected: bool, destructive: var): color {
-            if (selected)
-                return destructive ? root.colors.dangerContainer : root.colors.selectedSurface;
-            return Qt.color("transparent");
-        }
-
-        function foreground(enabled: bool, selected: bool, destructive: bool): color {
-            if (!enabled)
-                return root.colors.disabledText;
-            if (destructive)
-                return root.colors.danger;
-            if (selected)
-                return root.colors.accent;
-            return root.colors.textPrimary;
-        }
-
-        function borderColor(visualFocus: bool, selected: bool, destructive: var): color {
-            if (visualFocus || selected)
-                return destructive ? root.colors.danger : (visualFocus ? root.colors.focusRing : root.colors.accent);
-            return Qt.color("transparent");
-        }
-
-        function borderWidth(visualFocus: bool, selected: bool): int {
-            return (visualFocus || selected) ? root.shape.borderWidth : 0;
-        }
-    }
-
-    component BarButtonTokens: QtObject {
-        readonly property int height: Math.round(22 * root.controlScale)
-        readonly property int padding: root.spacing.small
-
-        function background(active: bool, urgent: bool): color {
-            if (active)
-                return root.colors.accent;
-            if (urgent)
-                return root.colors.danger;
-            return "transparent";
-        }
-
-        function foreground(active: bool, urgent: bool): color {
-            if (active)
-                return root.colors.accentForeground;
-            if (urgent)
-                return root.colors.dangerForeground;
-            return root.colors.textPrimary;
-        }
-    }
-
-    component ToggleSwitchTokens: QtObject {
-        function trackColor(enabled: bool, checked: bool): color {
-            if (!enabled)
-                return root.colors.disabledSurface;
-            if (checked)
-                return root.colors.accent;
-            return root.colors.surfaceVariant;
-        }
-
-        function knobColor(enabled: bool, checked: bool): color {
-            if (!enabled)
-                return root.colors.disabledText;
-            if (checked)
-                return root.colors.accentForeground;
-            return root.colors.textSecondary;
-        }
-
-        function borderColor(visualFocus: bool): color {
-            if (visualFocus)
-                return root.colors.focusRing;
-            return "transparent";
-        }
-    }
-
-    component BarGroupTokens: QtObject {
-        readonly property int height: Math.round(24 * root.controlScale)
-        readonly property color background: root.components.surface.fill
-        readonly property int padding: Math.round(6 * root.spacingScale)
-        readonly property real radius: Math.min(height / 2, 13 * root.shape.scale)
-    }
-
-    component BarTokens: QtObject {
-        readonly property int height: Math.round(30 * root.controlScale)
-        readonly property int inset: Math.round(2 * root.spacingScale)
-        readonly property color background: "transparent"
-        readonly property color borderColor: "transparent"
-        readonly property int padding: Math.round(6 * root.spacingScale)
-    }
-
-    component SurfaceTokens: QtObject {
-        readonly property color fill: root.isDark ? root.colors.surface : root.colors.background
-        readonly property real fillOpacity: root.definition.surface.fillOpacity
-        readonly property string mode: root.definition.surface.mode
-        readonly property real blurRadius: root.definition.surface.blurRadius
-        readonly property int borderWidth: root.definition.border.width
-        readonly property color borderColor: root.borderColor
-        readonly property bool shadowEnabled: root.definition.elevation.shadowStyle !== "none"
-        readonly property real shadowBlur: root.definition.elevation.shadowBlur
-        readonly property real shadowHorizontalOffset: root.definition.elevation.shadowHorizontalOffset
-        readonly property real shadowVerticalOffset: root.definition.elevation.shadowVerticalOffset
-        readonly property color shadowColor: root.shadowColor
-        readonly property bool highlightEnabled: root.definition.elevation.highlightStyle !== "none"
-        readonly property color highlightColor: root.highlightColor
-        readonly property real gradientLighten: root.definition.surface.gradientLighten
-        readonly property real gradientDarken: root.definition.surface.gradientDarken
-        readonly property real fresnelStrength: root.definition.surface.fresnelStrength
-        readonly property real specularOpacity: root.definition.surface.specularOpacity
-        // 玻璃面没有实体底衬，文字需要反向描边才能在任何底色上保持边界对比
-        readonly property real textHaloOpacity: isGlass ? root.definition.surface.textHaloOpacity : 0
-        readonly property color textHaloColor: Qt.rgba(root.isDark ? 0 : 1, root.isDark ? 0 : 1, root.isDark ? 0 : 1, textHaloOpacity)
-        readonly property int shadowMargin: shadowEnabled ? Math.round(24 * root.controlScale) : 0
-        readonly property bool isLiquid: mode === "liquid"
-        readonly property bool isGlass: mode === "acrylic" || isLiquid || fillOpacity < 1.0
-        readonly property bool isGradient: mode === "gradient" && !isGlass
-        readonly property bool layerEffectsEnabled: !isGlass && (shadowEnabled || blurRadius > 0)
-    }
-
-    component StatusTokens: QtObject {
-        function tone(urgent: bool): color {
-            return urgent ? root.colors.danger : root.colors.accent;
-        }
-
-        function foreground(urgent: bool): color {
-            return urgent ? root.colors.dangerForeground : root.colors.accentForeground;
-        }
-
-        function text(urgent: bool): color {
-            return urgent ? root.colors.danger : root.colors.textPrimary;
-        }
-    }
-
-    component CalendarTokens: QtObject {
-        readonly property real otherMonthOpacity: 0.35
-
-        function dayBackground(today: bool, hovered: bool): color {
-            if (today)
-                return root.colors.accent;
-            if (hovered)
-                return root.colors.hoveredSurface;
-            return Qt.color("transparent");
-        }
-
-        function dayForeground(today: bool): color {
-            if (today)
-                return root.colors.accentForeground;
-            return root.colors.textPrimary;
-        }
-
-        function dayOpacity(inCurrentMonth: bool): real {
-            return inCurrentMonth ? 1.0 : otherMonthOpacity;
-        }
-    }
-
-    component ThemeCardTokens: QtObject {
-        function background(checked: bool): color {
-            return checked ? root.colors.selectedSurface : Qt.color("transparent");
-        }
-
-        function borderColor(checked: bool, visualFocus: bool): color {
-            return (checked || visualFocus) ? root.colors.accent : root.colors.outline;
-        }
-
-        function borderWidth(checked: bool, visualFocus: bool): int {
-            return (checked || visualFocus) ? 2 : 1;
-        }
-
-        function accentColor(checked: bool): color {
-            return checked ? root.colors.accent : root.colors.textSecondary;
-        }
-    }
-
-    component ColorModeToggleTokens: QtObject {
-        readonly property real inactiveIconOpacity: 0.65
-
-        function trackColor(checked: bool): color {
-            return checked ? Qt.rgba(root.colors.accent.r, root.colors.accent.g, root.colors.accent.b, 0.2) : root.colors.surfaceVariant;
-        }
-
-        function trackBorder(checked: bool): color {
-            return checked ? root.colors.accent : root.colors.outline;
-        }
-
-        function knobColor(checked: bool): color {
-            return checked ? root.colors.accent : root.colors.background;
-        }
-
-        function knobBorder(checked: bool): color {
-            return checked ? root.colors.accent : root.colors.outline;
-        }
-
-        function knobForeground(checked: bool): color {
-            return checked ? root.colors.accentForeground : root.colors.accent;
-        }
-
-        function iconColor(active: bool): color {
-            return active ? root.colors.accent : root.colors.textSecondary;
-        }
-
-        function knobGlyph(checked: bool): string {
-            return checked ? "󰖔" : "󰖙";
-        }
-    }
-
-    component BluetoothTokens: QtObject {
-        function actionGlyph(connected: bool): string {
-            return connected ? "󰅖" : "󰄬";
-        }
-
-        function actionColor(connected: bool): color {
-            return connected ? root.colors.danger : root.colors.textSecondary;
-        }
-    }
-
-    component MenuTokens: QtObject {
-        readonly property int separatorHeight: root.spacing.medium
-
-        function checkGlyph(isRadio: bool, selected: bool): string {
-            if (isRadio)
-                return selected ? "●" : "○";
-            return selected ? "✓" : "";
-        }
-
-        function trailingGlyph(hasChildren: bool): string {
-            return hasChildren ? "›" : "";
-        }
-    }
-
-    component NotificationTokens: QtObject {
-        function cardColor(toastMode: bool): color {
-            if (toastMode)
-                return root.colors.surface;
-            return ColorMath.blend(root.colors.surface, root.colors.surfaceVariant, 0.24);
-        }
-
-        function indicatorTone(dnd: bool, unread: bool): color {
-            if (dnd)
-                return root.colors.danger;
-            if (unread)
-                return root.colors.accent;
-            return root.colors.textPrimary;
-        }
-
-        function centerStatusTone(dnd: bool, hasRecords: bool): color {
-            if (dnd)
-                return root.colors.warning;
-            if (hasRecords)
-                return root.colors.accent;
-            return root.colors.textPrimary;
-        }
-
-        function urgencyColor(urgency: int): color {
-            return urgency === 2 ? root.colors.danger : root.colors.accent;
-        }
-
-        function cardBackground(toastMode: bool, unread: bool, hovered: bool, urgency: int): color {
-            let baseColor;
-            if (toastMode) {
-                baseColor = root.components.surface.isGlass
-                    ? root.components.surface.fill
-                    : ColorMath.blend(root.colors.surface, root.colors.surfaceVariant, 0.45);
-            } else {
-                if (urgency === 2) {
-                    baseColor = ColorMath.blend(root.colors.surface, root.colors.danger, 0.12);
-                } else if (unread) {
-                    const variantSurface = ColorMath.blend(root.colors.surface, root.colors.surfaceVariant, 0.55);
-                    baseColor = ColorMath.blend(variantSurface, root.colors.accent, 0.08);
-                } else {
-                    baseColor = ColorMath.blend(root.colors.surface, root.colors.surfaceVariant, 0.55);
-                }
-            }
-
-            if (hovered)
-                return ColorMath.blend(baseColor, root.colors.accent, 0.10);
-            return baseColor;
-        }
-
-        function cardBorderColor(toastMode: bool, unread: bool, hovered: bool, urgency: int): color {
-            if (urgency === 2)
-                return ColorMath.alpha(root.colors.danger, hovered ? 0.85 : 0.60);
-            if (toastMode)
-                return hovered ? root.colors.accent : ColorMath.blend(root.colors.outline, root.colors.accent, 0.35);
-            if (unread)
-                return hovered ? root.colors.accent : ColorMath.alpha(root.colors.accent, 0.45);
-            return hovered ? ColorMath.alpha(root.colors.accent, 0.50) : ColorMath.alpha(root.colors.outline, 0.70);
-        }
-
-        function appNameColor(urgency: int): color {
-            return urgencyColor(urgency);
-        }
-
-        function iconContainerColor(urgency: int): color {
-            return urgency === 2 ? root.colors.dangerContainer : root.colors.accentContainer;
-        }
-
-        function iconGlyphColor(urgency: int): color {
-            return urgencyColor(urgency);
-        }
-
-        function accentStripColor(unread: bool, urgency: int): color {
-            if (urgency === 2)
-                return root.colors.danger;
-            if (unread)
-                return root.colors.accent;
-            return ColorMath.alpha(root.colors.textSecondary, 0.35);
-        }
-
-        function emptyBadgeColor(dnd: bool): color {
-            return ColorMath.alpha(dnd ? root.colors.warning : root.colors.accent, 0.12);
-        }
-
-        readonly property color listBackground: ColorMath.alpha(root.colors.background, root.isDark ? 0.35 : 0.25)
-        readonly property int cardWidth: Math.round(420 * root.controlScale)
-        readonly property int overflowBadgeHeight: Math.round(26 * root.controlScale)
-    }
-
-    component ComponentTokens: QtObject {
-        readonly property SurfaceTokens surface: SurfaceTokens {}
-        readonly property BarTokens bar: BarTokens {}
-        readonly property BarGroupTokens barGroup: BarGroupTokens {}
-        readonly property BarButtonTokens barButton: BarButtonTokens {}
-        readonly property ActionButtonTokens actionButton: ActionButtonTokens {}
-        readonly property ActionRowTokens actionRow: ActionRowTokens {}
-        readonly property ToggleSwitchTokens toggleSwitch: ToggleSwitchTokens {}
-        readonly property IconButtonTokens iconButton: IconButtonTokens {}
-        readonly property PopupTokens popup: PopupTokens {}
-        readonly property SliderTokens slider: SliderTokens {}
-        readonly property StatusTokens status: StatusTokens {}
-        readonly property CalendarTokens calendar: CalendarTokens {}
-        readonly property ThemeCardTokens themeCard: ThemeCardTokens {}
-        readonly property ColorModeToggleTokens colorModeToggle: ColorModeToggleTokens {}
-        readonly property NotificationTokens notification: NotificationTokens {}
-        readonly property BluetoothTokens bluetooth: BluetoothTokens {}
-        readonly property MenuTokens menu: MenuTokens {}
-    }
-
-    component ShapeTokens: QtObject {
-        readonly property real scale: Math.max(0, Math.min(3, AppearanceSettings.radiusScale))
-        readonly property real smallRadius: root.definition.shape.smallRadius * scale
-        readonly property real controlRadius: root.definition.shape.controlRadius * scale
-        readonly property real panelRadius: root.definition.shape.panelRadius * scale
-        readonly property real roundRadius: root.definition.shape.roundRadius * scale
-        readonly property int borderWidth: 1
-        readonly property int focusBorderWidth: 2
-    }
-
-    component SpacingTokens: QtObject {
-        readonly property real density: root.definition.spacing.density
-        readonly property int tiny: Math.round(root.definition.spacing.tiny * density * root.spacingScale)
-        readonly property int small: Math.round(root.definition.spacing.small * density * root.spacingScale)
-        readonly property int medium: Math.round(root.definition.spacing.medium * density * root.spacingScale)
-        readonly property int large: Math.round(root.definition.spacing.large * density * root.spacingScale)
-        readonly property int extraLarge: Math.round(root.definition.spacing.extraLarge * density * root.spacingScale)
-        readonly property int section: Math.round(root.definition.spacing.section * density * root.spacingScale)
-    }
-
-    component TypographyTokens: QtObject {
-        readonly property string family: root.definition.typography.family || AppearanceSettings.fontFamily
-        readonly property string iconFamily: AppearanceSettings.iconFontFamily
-        readonly property int bodyWeight: root.definition.typography.bodyWeight
-        readonly property int titleWeight: root.definition.typography.titleWeight
-        readonly property real letterSpacing: root.definition.typography.letterSpacing
-        readonly property int smallSize: Math.round(10 * root.fontScale)
-        readonly property int captionSize: Math.round(11 * root.fontScale)
-        readonly property int bodySize: Math.round(12 * root.fontScale)
-        readonly property int titleSize: Math.round(15 * root.fontScale)
-        readonly property int headingSize: Math.round(20 * root.fontScale)
-        readonly property font body: Qt.font({
-            family: family,
-            pixelSize: bodySize,
-            weight: bodyWeight,
-            letterSpacing: letterSpacing
-        })
-        readonly property font caption: Qt.font({
-            family: family,
-            pixelSize: captionSize
-        })
-        readonly property font title: Qt.font({
-            family: family,
-            pixelSize: titleSize,
-            weight: titleWeight,
-            letterSpacing: letterSpacing
-        })
-    }
-
-    component ColorTokens: QtObject {
-        readonly property color background: root.paletteVariant.background
-        readonly property color surface: root.paletteVariant.surface
-        readonly property color surfaceVariant: root.paletteVariant.surfaceVariant
-        readonly property color outline: root.paletteVariant.outline
-        readonly property color textPrimary: root.paletteVariant.textPrimary
-        readonly property color textSecondary: root.paletteVariant.textSecondary
-        readonly property color danger: root.paletteVariant.danger
-        readonly property color warning: root.paletteVariant.warning
-        readonly property color success: root.paletteVariant.success
-        readonly property color info: root.paletteVariant.info
-        readonly property color accent: root.paletteVariant.accents[root.accentId]
-        readonly property color accentForeground: ColorMath.foreground(accent.r, accent.g, accent.b)
-        readonly property color dangerForeground: ColorMath.foreground(danger.r, danger.g, danger.b)
-        readonly property color disabledText: ColorMath.alpha(textSecondary, 0.45)
-        readonly property color disabledSurface: ColorMath.alpha(surfaceVariant, 0.5)
-        readonly property color focusRing: ColorMath.alpha(accent, 0.5)
-        readonly property color hoveredSurface: ColorMath.blend(surface, textPrimary, 0.08)
-        readonly property color selectedSurface: ColorMath.blend(surface, accent, 0.16)
-        readonly property color accentContainer: ColorMath.alpha(accent, 0.15)
-        readonly property color dangerContainer: ColorMath.alpha(danger, 0.15)
-        readonly property color scrim: Qt.rgba(0, 0, 0, root.isDark ? 0.45 : 0.25)
-    }
-
-    readonly property color borderColor: {
-        const policy = root.definition.border.colorPolicy;
-        const source = policy === "surfaceVariant" ? root.colors.surfaceVariant : root.colors.outline;
-        if (policy === "transparent")
-            return Qt.rgba(0, 0, 0, 0);
-        return Qt.rgba(source.r, source.g, source.b, root.definition.border.opacity);
-    }
-
-    component ActiveElevationTokens: QtObject {
-        readonly property ElevationSpec _spec: root.definition.elevation
-        readonly property string shadowColorPolicy: root.isDark ? _spec.darkShadowColorPolicy : _spec.shadowColorPolicy
-        readonly property real shadowOpacity: root.isDark ? _spec.darkShadowOpacity : _spec.shadowOpacity
-        readonly property real highlightOpacity: root.isDark ? _spec.darkHighlightOpacity : _spec.highlightOpacity
-    }
-
-    readonly property ActiveElevationTokens activeElevation: ActiveElevationTokens {}
-
-    readonly property color shadowColor: {
-        const policy = root.activeElevation.shadowColorPolicy;
-        const source = policy === "foreground" ? root.colors.textPrimary : Qt.rgba(0, 0, 0, 1);
-        return Qt.rgba(source.r, source.g, source.b, root.activeElevation.shadowOpacity);
-    }
-
-    readonly property color highlightColor: Qt.rgba(1, 1, 1, root.activeElevation.highlightOpacity)
 }

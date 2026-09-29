@@ -1,2 +1,3 @@
 SessionMenu 1.0 SessionMenu.qml
 singleton SessionActions 1.0 SessionActions.qml
+SessionIndicator 1.0 SessionIndicator.qml

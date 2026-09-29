@@ -1,5 +1,4 @@
 pragma Singleton
-import "../../services"
 import QtQuick
 import Quickshell
 
@@ -10,7 +9,6 @@ Singleton {
     // The popup registry is global, but the backdrop is instantiated once per screen.
     // Keep ownership explicit so a popup opened from one bar cannot block another.
     property string activeScreenName: ""
-    property string windowIdAtOpen: ""
 
     function screenNameFor(popup) {
         if (!popup)
@@ -43,14 +41,12 @@ Singleton {
 
         root.activePopup = popup;
         root.activeScreenName = root.screenNameFor(popup);
-        root.windowIdAtOpen = WindowManagerService.activeWindowId;
     }
 
     function release(popup) {
         if (root.activePopup === popup) {
             root.activePopup = null;
             root.activeScreenName = "";
-            root.windowIdAtOpen = "";
         }
     }
 
@@ -69,22 +65,8 @@ Singleton {
             const popup = root.activePopup;
             root.activePopup = null;
             root.activeScreenName = "";
-            root.windowIdAtOpen = "";
             popup.close();
         }
     }
 
-    Connections {
-        function onActiveWindowIdChanged() {
-            const current = WindowManagerService.activeWindowId;
-            if (root.windowIdAtOpen && current && current !== root.windowIdAtOpen)
-                root.closeActive();
-        }
-
-        function onFocusedWorkspaceIdChanged() {
-            root.closeActive();
-        }
-
-        target: WindowManagerService
-    }
 }

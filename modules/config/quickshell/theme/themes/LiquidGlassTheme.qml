@@ -1,5 +1,10 @@
-import ".."
 import QtQuick
+import ".."
+import "../colors/presets"
+import "../geometry/presets"
+import "../materials/presets"
+import "../typography/presets"
+import "../motion/presets"
 
 ThemeDefinition {
     themeId: "liquid-glass"
@@ -8,53 +13,9 @@ ThemeDefinition {
     description: "清澈流体 · 菲涅尔曲光 · 灵动立面"
     suggestedPaletteIds: ["pastel-relief", "catppuccin", "nord"]
 
-    shape: ShapeSpec {
-        smallRadius: 8
-        controlRadius: 16
-        panelRadius: 24
-        roundRadius: 32
-    }
-
-    border: BorderSpec {
-        width: 1
-        opacity: 0.90
-        colorPolicy: "outline"
-    }
-
-    elevation: ElevationSpec {
-        level: "elevated"
-        shadowStyle: "soft"
-        shadowBlur: 0.90
-        shadowHorizontalOffset: 0
-        shadowVerticalOffset: 8
-        shadowOpacity: 0.22
-        shadowColorPolicy: "black"
-        highlightStyle: "top"
-        highlightOpacity: 0.65
-    }
-
-    surface: SurfaceSpec {
-        mode: "liquid"
-        fillOpacity: 0.10
-        blurRadius: 0
-        gradientLighten: 1.06
-        gradientDarken: 0.94
-        fresnelStrength: 0.85
-        specularOpacity: 0.60
-        textHaloOpacity: 0.20
-    }
-
-    spacing: SpacingSpec {
-        density: 1.06
-    }
-
-    typography: TypographySpec {
-        bodyWeight: Font.Normal
-        titleWeight: Font.DemiBold
-        letterSpacing: -0.15
-    }
-
-    motion: MotionSpec {
-        duration: 360
-    }
+    palette: PastelReliefPalette {}
+    material: LiquidGlassMaterial {}
+    geometry: LargeRoundedGeometry {}
+    typography: SoftTypography {}
+    motion: StandardMotion { duration: 360 }
 }

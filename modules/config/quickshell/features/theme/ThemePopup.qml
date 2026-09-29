@@ -1,7 +1,10 @@
 pragma ComponentBehavior: Bound
-import "../../config"
+import "../../theme/appearance"
+import "../../theme/themes"
+import "../../theme/colors/runtime"
+import "../../theme/colors"
 import "../../theme"
-import "../../theme/ColorMath.js" as ColorMath
+import "../../theme/colors/runtime/ColorMath.js" as ColorMath
 import "../../ui/containers"
 import "../../ui/controls"
 import QtQuick
@@ -86,9 +89,9 @@ PopupPanel {
                     }
 
                     TextLabel {
-                        text: AppearanceSettings.motionScale <= 0
+                        text: Theme.motion.scale <= 0
                             ? "无动效 (0ms)"
-                            : AppearanceSettings.motionScale.toFixed(1) + "x · " + Theme.motion.slowEffects.duration + "ms"
+                            : Theme.motion.scale.toFixed(1) + "x · " + Theme.motion.slowEffects.duration + "ms"
                         font: Theme.typography.caption
                         color: Theme.colors.accent
                     }
@@ -101,7 +104,7 @@ PopupPanel {
                     from: 0
                     to: 3
                     stepSize: 0.1
-                    value: AppearanceSettings.motionScale
+                    value: Theme.motion.scale
                     onMoved: ThemeController.setMotionScale(value)
                 }
             }
@@ -134,6 +137,15 @@ PopupPanel {
                     width: parent.width
                     spacing: Theme.spacing.tiny
 
+                    ActionRow {
+                        objectName: "followThemePalette"
+                        width: parent.width
+                        text: "跟随主题"
+                        description: Theme.definition.palette.displayName
+                        selected: Theme.paletteFollowsTheme
+                        onClicked: ThemeController.resetPalette()
+                    }
+
                     Repeater {
                         model: PaletteCatalog.palettes
                         delegate: ActionRow {
@@ -143,7 +155,7 @@ PopupPanel {
                             objectName: "palette-" + modelData.paletteId
                             width: parent.width
                             text: modelData.displayName
-                            selected: Theme.palette.paletteId === modelData.paletteId
+                            selected: !Theme.paletteFollowsTheme && Theme.palette.paletteId === modelData.paletteId
                             onClicked: ThemeController.setPalette(modelData.paletteId)
 
                             Rectangle {
@@ -199,6 +211,7 @@ PopupPanel {
                             padding: 0
                             cornerRadius: width / 2
                             fillColor: accentColor
+                            materialEnabled: false
                             foreground: ColorMath.foreground(accentColor.r, accentColor.g, accentColor.b)
                             glyph: Theme.accentId === modelData.accentId ? "󰄬" : ""
                             tooltipText: modelData.accentId

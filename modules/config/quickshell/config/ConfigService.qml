@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 pragma Singleton
 import QtQuick
 import Quickshell
@@ -11,6 +12,7 @@ Singleton {
 
     readonly property string homeDir: Quickshell.env("HOME") || ""
     property bool ready: false
+    property string lastError: ""
 
     readonly property var defaultData: ConfigDefaults.create()
 
@@ -47,44 +49,38 @@ Singleton {
         return JSON.parse(cleanJson);
     }
 
-    function reloadConfig() {
+    // Commit all layers together; a broken edit must not reset the live shell.
+    function applySources(sources) {
         let merged = ConfigDefaults.create();
-
-        const defaultText = defaultJsoncFile.text() || "";
-        if (defaultText.trim().length > 0) {
+        for (const source of sources) {
             try {
-                const parsedDefault = root.parseJsonc(defaultText);
-                if (parsedDefault)
-                    merged = ConfigSchema.mergeDeep(merged, parsedDefault);
+                if (source.error)
+                    throw new Error(source.error);
+                if (!source.text.trim())
+                    continue;
+                const parsed = root.parseJsonc(source.text);
+                if (!ConfigSchema.isObject(parsed))
+                    throw new Error("The configuration root must be an object");
+                merged = ConfigSchema.mergeDeep(merged, parsed);
             } catch (e) {
-                console.warn("ConfigService: Failed to parse default config:", e);
+                root.lastError = source.name + ": " + e.message;
+                console.warn("ConfigService: keeping previous configuration:", root.lastError);
+                root.ready = true;
+                return false;
             }
         }
-
-        const userJ = userJsonFile.text() || "";
-        if (userJ.trim().length > 0) {
-            try {
-                const parsedUser = root.parseJsonc(userJ);
-                if (parsedUser)
-                    merged = ConfigSchema.mergeDeep(merged, parsedUser);
-            } catch (e) {
-                console.warn("ConfigService: Failed to parse config.json:", e);
-            }
-        }
-
-        const userC = userJsoncFile.text() || "";
-        if (userC.trim().length > 0) {
-            try {
-                const parsedUserC = root.parseJsonc(userC);
-                if (parsedUserC)
-                    merged = ConfigSchema.mergeDeep(merged, parsedUserC);
-            } catch (e) {
-                console.warn("ConfigService: Failed to parse config.jsonc:", e);
-            }
-        }
-
         root.currentConfig = ConfigSchema.normalize(merged, root.defaultData);
+        root.lastError = "";
         root.ready = true;
+        return true;
+    }
+
+    function reloadConfig() {
+        return root.applySources([defaultJsoncFile, userJsonFile, userJsoncFile].map(file => ({
+            name: file.path,
+            text: file.text() || "",
+            error: file.readError
+        })));
     }
 
     Timer {
@@ -98,37 +94,35 @@ Singleton {
         reloadDebounce.restart();
     }
 
-    FileView {
+    component ConfigFile: FileView {
+        property string readError: ""
+        preload: true
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            readError = "";
+            root.requestReload();
+        }
+        onLoadFailed: error => {
+            readError = error === FileViewError.FileNotFound ? "" : "Cannot read file (" + error + ")";
+            root.requestReload();
+        }
+    }
+
+    ConfigFile {
         id: defaultJsoncFile
         path: Quickshell.shellPath("config.default.jsonc")
-        preload: true
-        printErrors: false
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.requestReload()
-        onLoadFailed: error => root.requestReload()
     }
 
-    FileView {
+    ConfigFile {
         id: userJsoncFile
         path: Quickshell.shellPath("config.jsonc")
-        preload: true
-        printErrors: false
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.requestReload()
-        onLoadFailed: error => root.requestReload()
     }
 
-    FileView {
+    ConfigFile {
         id: userJsonFile
         path: Quickshell.shellPath("config.json")
-        preload: true
-        printErrors: false
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.requestReload()
-        onLoadFailed: error => root.requestReload()
     }
 
     Component.onCompleted: {

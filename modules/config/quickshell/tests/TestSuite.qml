@@ -1,6 +1,9 @@
 import QtTest
+import QtQuick
 
 TestCase {
+    Component.onCompleted: console.log("APM_TEST_BEGIN " + name)
+
     function verify(condition, message) {
         if (!condition) {
             console.error("APM_ASSERT " + name + "/" + qtest_results.functionName + ": " + (message || "condition failed"));

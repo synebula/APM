@@ -1,10 +1,13 @@
+import "../theme/appearance"
+import "../theme/themes"
+import "../theme/colors/runtime"
+import "../theme/colors/presets"
 import "../config"
 import "../features/theme"
 import "../services"
 import "../theme"
-import "../theme/ColorMath.js" as ColorMath
+import "../theme/colors/runtime/ColorMath.js" as ColorMath
 import QtQuick
-import QtTest
 import Quickshell
 import Quickshell.Io
 
@@ -51,38 +54,38 @@ TestSuite {
             verify(theme.recommendedPaletteIds.length > 0);
             for (const paletteId of theme.recommendedPaletteIds)
                 verify(PaletteCatalog.find(paletteId) !== null, theme.themeId + " recommendation");
-            verify(theme.shape !== null);
-            verify(theme.shape.smallRadius >= 0);
-            verify(theme.shape.controlRadius >= 0);
-            verify(theme.shape.panelRadius >= 0);
-            verify(theme.shape.roundRadius >= 0);
+            verify(theme.geometry.shape !== null);
+            verify(theme.geometry.shape.smallRadius >= 0);
+            verify(theme.geometry.shape.controlRadius >= 0);
+            verify(theme.geometry.shape.panelRadius >= 0);
+            verify(theme.geometry.shape.roundRadius >= 0);
 
-            verify(theme.border !== null);
-            verify(theme.border.width >= 0);
-            verify(theme.border.opacity >= 0 && theme.border.opacity <= 1);
-            verify(["outline", "surfaceVariant", "transparent"].includes(theme.border.colorPolicy));
+            verify(theme.material.border !== null);
+            verify(theme.material.border.width >= 0);
+            verify(theme.material.border.opacity >= 0 && theme.material.border.opacity <= 1);
+            verify(["outline", "surfaceVariant", "transparent"].includes(theme.material.border.colorPolicy));
 
-            verify(theme.elevation !== null);
-            verify(["flat", "elevated"].includes(theme.elevation.level));
-            verify(["none", "soft", "hard"].includes(theme.elevation.shadowStyle));
-            verify(theme.elevation.shadowOpacity >= 0 && theme.elevation.shadowOpacity <= 1);
-            verify(theme.elevation.darkShadowOpacity >= 0 && theme.elevation.darkShadowOpacity <= 1);
-            verify(theme.elevation.highlightOpacity >= 0 && theme.elevation.highlightOpacity <= 1);
-            verify(theme.elevation.darkHighlightOpacity >= 0 && theme.elevation.darkHighlightOpacity <= 1);
-            verify(["black", "foreground"].includes(theme.elevation.shadowColorPolicy));
-            verify(["black", "foreground"].includes(theme.elevation.darkShadowColorPolicy));
+            verify(theme.material.elevation !== null);
+            compare(typeof theme.material.elevation.shadowEnabled, "boolean");
+            compare(typeof theme.material.elevation.highlightEnabled, "boolean");
+            verify(theme.material.elevation.shadowOpacity >= 0 && theme.material.elevation.shadowOpacity <= 1);
+            verify(theme.material.elevation.darkShadowOpacity >= 0 && theme.material.elevation.darkShadowOpacity <= 1);
+            verify(theme.material.elevation.highlightOpacity >= 0 && theme.material.elevation.highlightOpacity <= 1);
+            verify(theme.material.elevation.darkHighlightOpacity >= 0 && theme.material.elevation.darkHighlightOpacity <= 1);
+            verify(["black", "foreground"].includes(theme.material.elevation.shadowColorPolicy));
+            verify(["black", "foreground"].includes(theme.material.elevation.darkShadowColorPolicy));
 
-            verify(theme.surface !== null);
-            verify(["solid", "gradient", "acrylic", "liquid"].includes(theme.surface.mode));
-            verify(theme.surface.fillOpacity >= 0 && theme.surface.fillOpacity <= 1);
-            verify(theme.surface.blurRadius >= 0);
+            verify(theme.material.surface !== null);
+            verify(["solid", "gradient", "acrylic", "liquid"].includes(theme.material.surface.mode));
+            verify(theme.material.surface.fillOpacity >= 0 && theme.material.surface.fillOpacity <= 1);
+            verify(theme.material.surface.blurRadius >= 0);
 
-            verify(theme.spacing !== null);
-            verify(theme.spacing.density > 0);
-            verify(theme.spacing.tiny >= 0);
-            verify(theme.spacing.small >= 0);
-            verify(theme.spacing.medium >= 0);
-            verify(theme.spacing.large >= 0);
+            verify(theme.geometry.spacing !== null);
+            verify(theme.geometry.spacing.density > 0);
+            verify(theme.geometry.spacing.tiny >= 0);
+            verify(theme.geometry.spacing.small >= 0);
+            verify(theme.geometry.spacing.medium >= 0);
+            verify(theme.geometry.spacing.large >= 0);
 
             verify(theme.typography !== null);
 
@@ -243,31 +246,21 @@ TestSuite {
         compare(Theme.components.slider.handleBorderWidth(true), 3);
         compare(Theme.components.slider.handleBorderWidth(false), 2);
         compare(Theme.components.actionButton.borderWidth(true, false, false), Theme.shape.borderWidth);
-        compare(Theme.components.actionButton.borderWidth(false, false, true), Theme.components.surface.borderWidth);
+        compare(Theme.components.actionButton.borderWidth(false, false, true), Theme.surface.borderWidth);
         compare(Theme.components.actionRow.borderWidth(true, false), Theme.shape.borderWidth);
         compare(Theme.components.themeCard.borderWidth(true, false), 2);
         compare(Theme.components.themeCard.borderWidth(false, false), 1);
         compare(Theme.components.calendar.dayOpacity(true), 1.0);
         compare(Theme.components.calendar.dayOpacity(false), 0.35);
         compare(Theme.components.colorModeToggle.inactiveIconOpacity, 0.65);
-        compare(Theme.components.colorModeToggle.knobGlyph(true), "󰖔");
-        compare(Theme.components.colorModeToggle.knobGlyph(false), "󰖙");
         compare(Theme.components.notification.centerStatusTone(true, false).toString(), Theme.colors.warning.toString());
         compare(Theme.components.notification.centerStatusTone(false, true).toString(), Theme.colors.accent.toString());
-        compare(Theme.components.bluetooth.actionGlyph(true), "󰅖");
-        compare(Theme.components.bluetooth.actionGlyph(false), "󰄬");
         compare(Theme.components.bluetooth.actionColor(true).toString(), Theme.colors.danger.toString());
         compare(Theme.components.bluetooth.actionColor(false).toString(), Theme.colors.textSecondary.toString());
-        compare(Theme.components.menu.checkGlyph(true, true), "●");
-        compare(Theme.components.menu.checkGlyph(true, false), "○");
-        compare(Theme.components.menu.checkGlyph(false, true), "✓");
-        compare(Theme.components.menu.checkGlyph(false, false), "");
-        compare(Theme.components.menu.trailingGlyph(true), "›");
-        compare(Theme.components.menu.trailingGlyph(false), "");
         verify(Theme.components.menu.separatorHeight > 0);
 
         // SurfaceTokens
-        verify(Theme.components.surface.shadowMargin !== undefined);
+        verify(Theme.surface.shadowMargin !== undefined);
     }
 
     function test_colorModeResolverState() {
@@ -337,7 +330,7 @@ TestSuite {
         compare(Theme.shape.controlRadius, 0);
         compare(Theme.components.barGroup.radius, 0);
         verify(ThemeController.setScale("fontScale", 1.5));
-        compare(Theme.typography.bodySize, 18);
+        compare(Theme.typography.body.pixelSize, 18);
         verify(Theme.components.bar.height >= 45);
         ThemeController.setScale("radiusScale", 1);
         ThemeController.setScale("fontScale", 1);
@@ -380,45 +373,45 @@ TestSuite {
     function test_themeSelectionUpdatesSurfaceTokens() {
         verify(ThemeController.setTheme("flat"));
         compare(Theme.definition.themeId, "flat");
-        compare(Theme.components.surface.borderWidth, 1);
-        compare(Theme.components.surface.mode, "solid");
-        verify(!Theme.components.surface.shadowEnabled);
-        verify(!Theme.components.surface.highlightEnabled);
-        verify(!Theme.components.surface.isGlass);
-        verify(!Theme.components.surface.isGradient);
-        verify(!Theme.components.surface.layerEffectsEnabled);
+        compare(Theme.surface.borderWidth, 1);
+        compare(Theme.surface.mode, "solid");
+        verify(!Theme.surface.shadowEnabled);
+        verify(!Theme.surface.highlightEnabled);
+        verify(!Theme.surface.isGlass);
+        verify(!Theme.surface.isGradient);
+        verify(!Theme.surface.layerEffectsEnabled);
         verify(ThemeController.setTheme("neumorphic"));
         compare(Theme.definition.themeId, "neumorphic");
-        compare(Theme.components.surface.borderWidth, 0);
-        compare(Theme.components.surface.mode, "gradient");
-        verify(Theme.components.surface.shadowEnabled);
-        verify(Theme.components.surface.highlightEnabled);
-        verify(!Theme.components.surface.isGlass);
-        verify(Theme.components.surface.isGradient);
-        verify(Theme.components.surface.layerEffectsEnabled);
+        compare(Theme.surface.borderWidth, 0);
+        compare(Theme.surface.mode, "gradient");
+        verify(Theme.surface.shadowEnabled);
+        verify(Theme.surface.highlightEnabled);
+        verify(!Theme.surface.isGlass);
+        verify(Theme.surface.isGradient);
+        verify(Theme.surface.layerEffectsEnabled);
         verify(ThemeController.setTheme("frosted-glass"));
         compare(Theme.definition.themeId, "frosted-glass");
-        compare(Theme.components.surface.borderWidth, 1);
-        compare(Theme.components.surface.mode, "acrylic");
-        compare(Theme.components.surface.fillOpacity, 0.42);
-        verify(Theme.components.surface.shadowEnabled);
-        verify(Theme.components.surface.highlightEnabled);
-        verify(Theme.components.surface.isGlass);
-        verify(!Theme.components.surface.isLiquid);
-        verify(!Theme.components.surface.isGradient);
-        verify(!Theme.components.surface.layerEffectsEnabled);
+        compare(Theme.surface.borderWidth, 1);
+        compare(Theme.surface.mode, "acrylic");
+        compare(Theme.surface.fillOpacity, 0.42);
+        verify(Theme.surface.shadowEnabled);
+        verify(Theme.surface.highlightEnabled);
+        verify(Theme.surface.isGlass);
+        verify(!Theme.surface.isLiquid);
+        verify(!Theme.surface.isGradient);
+        verify(!Theme.surface.layerEffectsEnabled);
 
         verify(ThemeController.setTheme("liquid-glass"));
         compare(Theme.definition.themeId, "liquid-glass");
-        compare(Theme.components.surface.borderWidth, 1);
-        compare(Theme.components.surface.mode, "liquid");
-        compare(Theme.components.surface.fillOpacity, 0.10);
-        verify(Theme.components.surface.shadowEnabled);
-        verify(Theme.components.surface.highlightEnabled);
-        verify(Theme.components.surface.isGlass);
-        verify(Theme.components.surface.isLiquid);
-        verify(!Theme.components.surface.isGradient);
-        verify(!Theme.components.surface.layerEffectsEnabled);
+        compare(Theme.surface.borderWidth, 1);
+        compare(Theme.surface.mode, "liquid");
+        compare(Theme.surface.fillOpacity, 0.10);
+        verify(Theme.surface.shadowEnabled);
+        verify(Theme.surface.highlightEnabled);
+        verify(Theme.surface.isGlass);
+        verify(Theme.surface.isLiquid);
+        verify(!Theme.surface.isGradient);
+        verify(!Theme.surface.layerEffectsEnabled);
         verify(!ThemeController.setTheme("ios-glass"));
         verify(!ThemeController.setTheme("invalid-theme"));
         ThemeController.setTheme("neumorphic");
@@ -427,13 +420,13 @@ TestSuite {
     function test_neumorphicShadowColorInDarkAndLightMode() {
         verify(ThemeController.setTheme("neumorphic"));
         verify(ThemeController.setColorMode("dark"));
-        compare(Theme.shadowColor.r, 0);
-        compare(Theme.shadowColor.g, 0);
-        compare(Theme.shadowColor.b, 0);
+        compare(Theme.surface.shadowColor.r, 0);
+        compare(Theme.surface.shadowColor.g, 0);
+        compare(Theme.surface.shadowColor.b, 0);
         verify(ThemeController.setColorMode("light"));
-        compare(Theme.shadowColor.r, Theme.colors.textPrimary.r);
-        compare(Theme.shadowColor.g, Theme.colors.textPrimary.g);
-        compare(Theme.shadowColor.b, Theme.colors.textPrimary.b);
+        compare(Theme.surface.shadowColor.r, Theme.colors.textPrimary.r);
+        compare(Theme.surface.shadowColor.g, Theme.colors.textPrimary.g);
+        compare(Theme.surface.shadowColor.b, Theme.colors.textPrimary.b);
     }
 
     function test_themeSelectionPreservesAppearance() {
@@ -446,6 +439,112 @@ TestSuite {
         compare(AppearanceSettings.colorMode, "dark");
         compare(AppearanceSettings.accentId, "green");
         compare(Theme.accentId, "green");
+    }
+
+    function test_themePaletteIsUsedWithoutExplicitSelection() {
+        ThemeController.resetPalette();
+        verify(ThemeController.setTheme("flat"));
+        compare(Theme.palette.paletteId, "catppuccin");
+        compare(Theme.palette, Theme.definition.palette);
+        verify(ThemeController.setTheme("neumorphic"));
+        compare(Theme.palette.paletteId, "pastel-relief");
+        verify(ThemeController.setPalette("nord"));
+        verify(ThemeController.setTheme("flat"));
+        compare(Theme.palette.paletteId, "nord");
+    }
+
+    function test_followThemePaletteControlResetsAndPersistsSelection() {
+        verify(ThemeController.setPalette("nord"));
+        verify(ThemeController.setColorMode("dark"));
+        verify(ThemeController.setAccent("green"));
+        verify(!Theme.paletteFollowsTheme);
+        const popup = createTemporaryObject(popupComponent, root);
+        verify(popup !== null);
+        const follow = findChild(popup, "followThemePalette");
+        verify(follow !== null);
+        verify(!follow.selected);
+        follow.clicked();
+        verify(Theme.paletteFollowsTheme);
+        verify(follow.selected);
+        compare(Theme.palette, Theme.definition.palette);
+        compare(AppearanceSettings.colorMode, "dark");
+        compare(AppearanceSettings.accentId, "green");
+        tryVerify(() => root.persistedAppearance.paletteId === "");
+        verify(ThemeController.setTheme("flat"));
+        compare(Theme.palette.paletteId, "catppuccin");
+        verify(ThemeController.setPalette("catppuccin"));
+        verify(!Theme.paletteFollowsTheme, "Explicitly choosing the same palette still disables following");
+        verify(ThemeController.setTheme("neumorphic"));
+        compare(Theme.palette.paletteId, "catppuccin");
+    }
+
+    Component {
+        id: previewComponent
+        ThemeCard {
+            width: 160
+            definition: FrostedGlassTheme {
+                geometry.shape.controlRadius: 19
+                material {
+                    border { width: 3; opacity: 0.25; colorPolicy: "surfaceVariant" }
+                    elevation { shadowColorPolicy: "foreground"; shadowOpacity: 0.3 }
+                }
+            }
+        }
+    }
+
+    function test_previewUsesCandidateTokensAndRespondsToModeAndOverrides() {
+        verify(ThemeController.setTheme("flat"));
+        const preview = createTemporaryObject(previewComponent, root);
+        verify(preview !== null);
+        const surface = findChild(preview, "themePreviewSurface");
+        verify(surface !== null);
+        compare(surface.fill.toString(), preview.previewVariant.surface.toString());
+        verify(surface.layer.enabled, "Glass previews need their local shadow on the preview backdrop");
+        compare(surface.radius, 19 * Theme.shape.scale);
+        compare(surface.border.width, 3);
+        compare(surface.border.color.a, Qt.rgba(0, 0, 0, 0.25).a);
+        compare(surface.border.color.r, preview.previewVariant.surfaceVariant.r);
+        compare(surface.surface.shadowColor.r, preview.previewVariant.textPrimary.r);
+        compare(surface.color.a, Qt.rgba(0, 0, 0, 0.42).a);
+        verify(!surface.isDark);
+        preview.definition.material.surface.fillOpacity = 0.6;
+        tryVerify(() => surface.color.a === Qt.rgba(0, 0, 0, 0.6).a);
+        verify(ThemeController.setColorMode("dark"));
+        verify(surface.isDark);
+        compare(preview.previewVariant.variantId, "dark");
+        compare(surface.fill.toString(), preview.previewVariant.surface.toString());
+        compare(surface.surface.shadowColor.r, 0);
+        preview.definition.material.elevation.highlightEnabled = false;
+        verify(!surface.highlightEnabled);
+        preview.definition.material.elevation.shadowEnabled = false;
+        verify(!surface.shadowEnabled);
+        verify(!surface.layer.enabled, "Disabling the candidate shadow must disable the preview effect");
+        verify(ThemeController.setTheme("liquid-glass"));
+        compare(surface.radius, 19 * Theme.shape.scale);
+        verify(!surface.isLiquid, "Candidate material must not inherit the active material");
+    }
+
+    Component {
+        id: localPaletteComponent
+        Catppuccin { paletteId: "local-palette" }
+    }
+
+    function test_themeCanUsePaletteOutsideCatalog() {
+        const definition = ThemeCatalog.find("flat");
+        const original = definition.palette;
+        const local = createTemporaryObject(localPaletteComponent, root);
+        verify(local !== null);
+        try {
+            definition.palette = local;
+            ThemeController.resetPalette();
+            verify(ThemeController.setTheme("flat"));
+            compare(Theme.palette, local);
+            verify(ThemeController.setColorMode("dark"));
+            compare(Theme.paletteVariant, local.variant("dark"));
+            compare(Theme.colors.background.toString(), local.variant("dark").background.toString());
+        } finally {
+            definition.palette = original;
+        }
     }
 
     function test_resetAccentPreservesPaletteAndMode() {
@@ -498,8 +597,8 @@ TestSuite {
     }
 
     function test_themePopup() {
-        const popup = popupComponent.createObject(root);
-        verify(popup !== null, "ThemePopup should instantiate");
+        const popup = popupComponent.createObject(root) as ThemePopup;
+        verify(popup !== null, "ThemePopup should instantiate: " + popupComponent.errorString());
         popup.open();
         verify(popup.isOpen, "ThemePopup should open");
         popup.close();
@@ -512,7 +611,8 @@ TestSuite {
         verify(ThemeSyncService.enabled);
         verify(ThemeSyncService.testMode);
         verify(ThemeSyncService.scriptPath.endsWith("sync-desktop-theme.sh"));
-        ThemeSyncService.syncNow();
+        verify(!ThemeSyncService.syncNow());
+        verify(!ThemeSyncService.syncing);
     }
 
     name: "ThemeContract"

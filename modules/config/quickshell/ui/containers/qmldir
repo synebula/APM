@@ -1,4 +1,5 @@
 BarGroup 1.0 BarGroup.qml
+InteractiveCard 1.0 InteractiveCard.qml
 ConfirmationDialog 1.0 ConfirmationDialog.qml
 ModalWindow 1.0 ModalWindow.qml
 MorphPill 1.0 MorphPill.qml

@@ -1,4 +1,9 @@
 import QtQuick
+import "colors"
+import "geometry"
+import "materials"
+import "typography"
+import "motion"
 
 QtObject {
     id: root
@@ -9,13 +14,11 @@ QtObject {
     // 建议配色方案列表（展示与预览搭配建议，不强行耦合运行时）
     property list<string> suggestedPaletteIds: []
     property alias recommendedPaletteIds: root.suggestedPaletteIds
-    readonly property string defaultPaletteId: root.suggestedPaletteIds.length > 0 ? root.suggestedPaletteIds[0] : "pastel-relief"
+    readonly property string defaultPaletteId: root.palette.paletteId
+    required property PaletteDefinition palette
 
-    property ShapeSpec shape: ShapeSpec {}
-    property BorderSpec border: BorderSpec {}
-    property ElevationSpec elevation: ElevationSpec {}
-    property SurfaceSpec surface: SurfaceSpec {}
-    property SpacingSpec spacing: SpacingSpec {}
+    property MaterialSpec material: MaterialSpec {}
+    property GeometrySpec geometry: GeometrySpec {}
     property TypographySpec typography: TypographySpec {}
-    property MotionSpec motion: MotionSpec {}
+    property MotionProfile motion: MotionProfile {}
 }

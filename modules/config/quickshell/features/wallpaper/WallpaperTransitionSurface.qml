@@ -1,5 +1,5 @@
 import QtQuick
-import "../../shared/lib/wallpaper/WallpaperSource.js" as WallpaperSource
+import "../../shared/WallpaperSource.js" as WallpaperSource
 
 Item {
     id: root

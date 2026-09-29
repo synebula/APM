@@ -1,5 +1,5 @@
 import "../features/wallpaper"
-import "../shared/lib/wallpaper/WallpaperSource.js" as WallpaperSource
+import "../shared/WallpaperSource.js" as WallpaperSource
 import QtQuick
 import Quickshell
 

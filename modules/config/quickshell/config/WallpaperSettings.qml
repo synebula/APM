@@ -11,8 +11,7 @@ Singleton {
     readonly property string wallpaperPath: ConfigService.resolvePath(wallpaperData.wallpaperPath.length > 0 ? wallpaperData.wallpaperPath : ConfigService.wallpaper.defaultPath)
     readonly property int transitionDurationMs: {
         const storedDuration = wallpaperData.transitionDurationMs;
-        const legacyZero = wallpaperData.schemaVersion < root.stateSchemaVersion && storedDuration === 0;
-        if (legacyZero || storedDuration < 0)
+        if (storedDuration < 0)
             return ConfigService.wallpaper.transitionDurationMs;
         return storedDuration;
     }
@@ -39,16 +38,7 @@ Singleton {
         saveTimer.restart();
     }
 
-    function finishLoading(hasPersistedState) {
-        if (hasPersistedState && wallpaperData.schemaVersion < root.stateSchemaVersion) {
-            // Before the state schema existed, JsonAdapter's default 0 meant
-            // "unset". Preserve the global config instead of treating it as
-            // an explicit zero-duration preference.
-            if (wallpaperData.schemaVersion === 0 && wallpaperData.transitionDurationMs === 0)
-                wallpaperData.transitionDurationMs = -1;
-            wallpaperData.schemaVersion = root.stateSchemaVersion;
-            saveTimer.restart();
-        }
+    function finishLoading() {
         root.ready = true;
         if (Object.keys(root.pendingChanges).length > 0) {
             const changes = root.pendingChanges;
@@ -71,17 +61,17 @@ Singleton {
         atomicWrites: true
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.finishLoading(true)
+        onLoaded: root.finishLoading()
         onLoadFailed: error => {
             if (error !== FileViewError.FileNotFound)
                 console.warn("Cannot load wallpaper settings:", error);
-            root.finishLoading(false);
+            root.finishLoading();
         }
         onSaveFailed: error => console.warn("Cannot save wallpaper settings:", error)
 
         JsonAdapter {
             id: wallpaperData
-            property int schemaVersion: 0
+            property int schemaVersion: 1
             property string wallpaperPath: ""
             property int transitionDurationMs: -1
             property bool hasOverviewEnabled: false

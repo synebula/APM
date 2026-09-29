@@ -25,13 +25,14 @@ Scope {
         if (!candidates.length)
             return;
 
-        const focused = candidates.find(window => {
+        root.windows = candidates;
+        const focusedIndex = candidates.findIndex(window => {
             return window.focused;
         });
-        root.windows = focused ? [focused].concat(candidates.filter(window => {
-            return window !== focused;
-        })) : candidates;
-        root.selectedIndex = (direction < 0 ? root.windows.length - 1 : 1) % root.windows.length;
+        if (focusedIndex >= 0)
+            root.selectedIndex = ((focusedIndex + direction) % candidates.length + candidates.length) % candidates.length;
+        else
+            root.selectedIndex = direction < 0 ? candidates.length - 1 : 0;
         root.isOpen = true;
     }
 
@@ -39,7 +40,7 @@ Scope {
         if (!root.isOpen)
             root.open(direction, wsOnly);
         else if (root.windows.length)
-            root.selectedIndex = (root.selectedIndex + direction + root.windows.length) % root.windows.length;
+            root.selectedIndex = ((root.selectedIndex + direction) % root.windows.length + root.windows.length) % root.windows.length;
     }
 
     function close() {
@@ -58,12 +59,16 @@ Scope {
             if (!root.isOpen)
                 return;
 
+            const selectedWindow = root.windows[root.selectedIndex];
             root.windows = root.windows.filter(window => {
                 return window && WindowManagerService.windows.includes(window);
             });
-            root.selectedIndex = Math.min(root.selectedIndex, root.windows.length - 1);
-            if (!root.windows.length)
+            if (!root.windows.length) {
                 root.close();
+                return;
+            }
+            const newIndex = root.windows.indexOf(selectedWindow);
+            root.selectedIndex = newIndex >= 0 ? newIndex : Math.min(root.selectedIndex, root.windows.length - 1);
         }
 
         target: WindowManagerService

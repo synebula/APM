@@ -5,7 +5,7 @@ import "../../ui/IconGlyphs.js" as IconGlyphs
 import "../../ui/containers"
 import "../../ui/controls"
 import "../../ui/effects"
-import "../../shared/lib/audio/AudioPresentation.js" as AudioPresentation
+import "../../shared/AudioPresentation.js" as AudioPresentation
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -127,7 +127,7 @@ PanelWindow {
                         IconGlyph {
                             anchors.centerIn: parent
                             text: "󰝟"
-                            font.pixelSize: Theme.typography.captionSize
+                            font.pixelSize: Theme.typography.caption.pixelSize
                             color: Theme.colors.dangerForeground
                         }
                     }
@@ -145,7 +145,7 @@ PanelWindow {
                     horizontalAlignment: Text.AlignHCenter
                     Layout.preferredWidth: 26 * Theme.controlScale
                     text: root.glyph
-                    font.pixelSize: Theme.typography.headingSize
+                    font.pixelSize: Theme.typography.heading.pixelSize
                     color: Theme.components.status.tone(root.muted)
                 }
 

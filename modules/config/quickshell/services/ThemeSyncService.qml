@@ -11,22 +11,27 @@ Singleton {
     property bool enabled: true
     readonly property bool testMode: Quickshell.env("APM_QUICKSHELL_TEST_MODE") === "1"
     readonly property string scriptPath: decodeURIComponent(Qt.resolvedUrl("../scripts/sync-desktop-theme.sh").toString().replace(/^file:\/\//, ""))
+    readonly property bool syncing: syncQueue.activeProcess !== null || syncQueue.pendingCommands.length > 0
+    property int lastExitCode: 0
+    signal syncFinished(int exitCode)
 
     Component.onCompleted: {
         debounceTimer.restart();
     }
 
-    function syncNow() {
+    function syncNow(): bool {
+        debounceTimer.stop();
         if (!root.enabled || root.testMode)
-            return;
-        syncProcess.exec([
+            return false;
+        syncQueue.replacePending([[
             "bash", root.scriptPath,
             "--mode", Theme.resolvedColorMode,
             "--palette", Theme.palette.paletteId,
             "--accent", Theme.colors.accent.toString(),
             "--surface", Theme.colors.surface.toString(),
             "--outline", Theme.colors.outline.toString()
-        ]);
+        ]]);
+        return true;
     }
 
     Timer {
@@ -45,15 +50,20 @@ Singleton {
         function onAccentIdChanged() { debounceTimer.restart(); }
     }
 
-    Process {
-        id: syncProcess
+    CommandQueue {
+        id: syncQueue
+        onCommandFinished: (command, exitCode) => {
+            root.lastExitCode = exitCode;
+            if (exitCode !== 0)
+                console.warn("ThemeSyncService: desktop synchronization failed (exit " + exitCode + ")");
+            root.syncFinished(exitCode);
+        }
     }
 
     IpcHandler {
         target: "theme-sync"
         function sync(): bool {
-            root.syncNow();
-            return true;
+            return root.syncNow();
         }
     }
 }

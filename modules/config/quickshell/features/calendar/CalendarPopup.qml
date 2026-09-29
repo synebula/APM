@@ -74,7 +74,7 @@ PopupPanel {
         Controls.MonthGrid {
             id: monthGrid
             Layout.fillWidth: true
-            Layout.preferredHeight: Theme.components.actionRow.height * 6
+            Layout.preferredHeight: Theme.components.actionRow.minHeight * 6
             locale: Qt.locale(ShellSettings.clockLocale || "zh_CN")
             month: root.displayedMonth.getMonth()
             year: root.displayedMonth.getFullYear()
@@ -90,7 +90,7 @@ PopupPanel {
                 TextLabel {
                     anchors.centerIn: parent
                     text: day.model.day
-                    font.bold: day.model.today
+                    font: day.model.today ? Theme.typography.withOverrides(Theme.typography.body, { weight: Theme.typography.title.weight }) : Theme.typography.body
                     opacity: Theme.components.calendar.dayOpacity(day.model.month === monthGrid.month)
                     color: Theme.components.calendar.dayForeground(day.model.today)
                 }

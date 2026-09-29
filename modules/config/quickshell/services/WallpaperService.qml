@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../config"
-import "../shared/lib/wallpaper/WallpaperSource.js" as WallpaperSource
+import "../shared/WallpaperSource.js" as WallpaperSource
 
 Singleton {
     id: root

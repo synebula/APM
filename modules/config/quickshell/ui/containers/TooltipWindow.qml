@@ -8,10 +8,10 @@ import Quickshell
 PopupWindow {
     id: root
 
-    readonly property bool glass: Theme.components.surface.isGlass
+    readonly property bool glass: Theme.surface.isGlass
     // 玻璃主题下无阴影，卡片铺满表面并使用 panelRadius，
     // 与 niri popups 规则的 geometry-corner-radius 对齐，避免圆角/霜边错位。
-    readonly property int edgeInset: root.glass ? 0 : Theme.components.surface.shadowMargin
+    readonly property int edgeInset: root.glass ? 0 : Theme.surface.shadowMargin
 
     anchor.item: TooltipController.activeItem
     anchor.window: TooltipController.activeItem ? TooltipController.activeItem.QsWindow.window : null
@@ -28,7 +28,7 @@ PopupWindow {
 
         anchors.fill: parent
         anchors.margins: root.edgeInset
-        fill: Theme.components.surface.fill
+        fill: Theme.surface.fill
         radius: root.glass ? Theme.shape.panelRadius : Theme.shape.controlRadius
 
         CompositorBlurRegion {

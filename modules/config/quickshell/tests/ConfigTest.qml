@@ -10,6 +10,55 @@ TestSuite {
 
     name: "Config"
 
+    function test_failedReloadPreservesSnapshot_data() {
+        return [
+            { tag: "syntax", text: '{"bar":', error: "" },
+            { tag: "array-root", text: "[]", error: "" },
+            { tag: "null-root", text: "null", error: "" },
+            { tag: "read-error", text: "", error: "Permission denied" }
+        ];
+    }
+
+    function test_failedReloadPreservesSnapshot(data) {
+        tryVerify(() => ConfigService.ready);
+        const saved = ConfigService.currentConfig;
+        try {
+            verify(ConfigService.applySources([
+                { name: "config.json", text: '{"bar":{"showClock":false}}' }
+            ]));
+            const previous = ConfigService.currentConfig;
+            verify(!ConfigService.applySources([
+                { name: "config.json", text: '{"bar":{"showClock":true}}' },
+                { name: "config.jsonc", text: data.text, error: data.error }
+            ]));
+            compare(ConfigService.currentConfig, previous);
+            compare(ConfigService.bar.showClock, false);
+            verify(ConfigService.lastError.startsWith("config.jsonc:"));
+            verify(ConfigService.applySources([
+                { name: "config.json", text: '{"bar":{"showClock":false}}' },
+                { name: "config.jsonc", text: '{"bar":{"showClock":true}}' }
+            ]));
+            compare(ConfigService.bar.showClock, true);
+            compare(ConfigService.lastError, "");
+        } finally {
+            ConfigService.currentConfig = saved;
+            ConfigService.lastError = "";
+        }
+    }
+
+    function test_emptyConfigRestoresDefaults() {
+        const saved = ConfigService.currentConfig;
+        try {
+            verify(ConfigService.applySources([
+                { name: "config.jsonc", text: '{"bar":{"showClock":false}}' }
+            ]));
+            verify(ConfigService.applySources([{ name: "config.jsonc", text: "" }]));
+            compare(ConfigService.bar.showClock, ConfigDefaults.create().bar.showClock);
+        } finally {
+            ConfigService.currentConfig = saved;
+        }
+    }
+
     function test_pathUtilExpandHome() {
         compare(PathUtil.expandHome("~/pictures", "/home/alex"), "/home/alex/pictures");
         compare(PathUtil.expandHome("$HOME/pictures", "/home/alex"), "/home/alex/pictures");

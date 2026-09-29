@@ -41,21 +41,23 @@ done
 
 # 1. 同步系统 / GTK 明暗模式
 sync_gtk() {
+    local result=0
     if command -v gsettings >/dev/null 2>&1; then
         if [[ "$COLOR_MODE" == "dark" ]]; then
-            gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || result=1
         else
-            gsettings set org.gnome.desktop.interface color-scheme 'default' 2>/dev/null || true
+            gsettings set org.gnome.desktop.interface color-scheme 'default' 2>/dev/null || result=1
         fi
     fi
 
     if command -v darkman >/dev/null 2>&1; then
         if [[ "$COLOR_MODE" == "dark" ]]; then
-            darkman set dark 2>/dev/null || true
+            darkman set dark 2>/dev/null || result=1
         else
-            darkman set light 2>/dev/null || true
+            darkman set light 2>/dev/null || result=1
         fi
     fi
+    return "$result"
 }
 
 # 2. 同步 Kitty 终端配色
@@ -96,7 +98,7 @@ sync_kitty() {
     if [[ -n "$target_theme" ]] \
         && [[ -f "${config_home}/kitty/themes/${target_theme}" ]] \
         && grep -q "^[[:space:]]*include[[:space:]]\+themes/" "$kitty_conf"; then
-        sed -i -E "s|^[[:space:]]*include[[:space:]]+themes/.*$|include themes/${target_theme}|" "$kitty_conf"
+        sed -i -E "s|^[[:space:]]*include[[:space:]]+themes/.*$|include themes/${target_theme}|" "$kitty_conf" || return 1
         killall -SIGUSR1 kitty 2>/dev/null || true
     fi
 }
@@ -119,11 +121,11 @@ sync_niri() {
         local value
 
         for value in "$active_from" "$active_to" "$inactive_from" "$inactive_to"; do
-            [[ "$value" =~ ^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$ ]] || return 0
+            [[ "$value" =~ ^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$ ]] || return 1
         done
 
         local candidate
-        candidate=$(mktemp "${niri_dir}/.quickshell-theme.XXXXXX.kdl") || return 0
+        candidate=$(mktemp "${niri_dir}/.quickshell-theme.XXXXXX.kdl") || return 1
         {
             printf '// 由 quickshell ThemeSyncService 自动生成，请勿手改\n'
             printf 'layout {\n'
@@ -145,21 +147,21 @@ sync_niri() {
             printf '}\n'
         } >"$candidate" || {
             rm -f -- "$candidate"
-            return 0
+            return 1
         }
 
-        # 候选文件与 theme-colors.kdl 同目录，niri validate 会一并解析主配置的
-        # 全部 include（字段级合并），提前拦截非法颜色/结构。
+        # 单独校验候选片段的语法和颜色；这里不会加载主配置及其其他 include。
         if niri validate -c "$candidate" >/dev/null 2>&1; then
             chmod --reference="$niri_dir/config.kdl" "$candidate" 2>/dev/null || true
             if ! mv -f -- "$candidate" "$theme_file"; then
                 rm -f -- "$candidate"
-                return 0
+                return 1
             fi
             # 双保险：niri watcher 已监视 include 文件，此处显式请求一次重载
-            niri msg action load-config-file >/dev/null 2>&1 || true
+            niri msg action load-config-file >/dev/null 2>&1 || return 1
         else
             rm -f -- "$candidate"
+            return 1
         fi
     fi
 }
@@ -171,11 +173,15 @@ sync_hyprland() {
         local clean_outline="${OUTLINE_HEX#"#"}"
         [[ ${#clean_accent} -eq 6 ]] && clean_accent="${clean_accent}ff"
         [[ ${#clean_outline} -eq 6 ]] && clean_outline="${clean_outline}ff"
-        hyprctl keyword general:col.active_border "rgba(${clean_accent}) rgba(${clean_outline}) 45deg" 2>/dev/null || true
+        hyprctl keyword general:col.active_border "rgba(${clean_accent}) rgba(${clean_outline}) 45deg" 2>/dev/null || return 1
     fi
 }
 
-sync_gtk
-sync_kitty
-sync_niri
-sync_hyprland
+failed=0
+for target in gtk kitty niri hyprland; do
+    if ! "sync_${target}"; then
+        printf 'Theme sync failed: %s\n' "$target" >&2
+        failed=1
+    fi
+done
+exit "$failed"

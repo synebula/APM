@@ -1,5 +1,5 @@
 import "../../theme"
-import "../../theme/ColorMath.js" as ColorMath
+import "../../theme/colors/runtime/ColorMath.js" as ColorMath
 import QtQuick
 import QtQuick.Layouts
 
@@ -16,7 +16,7 @@ RowLayout {
 
     Rectangle {
         visible: root.glyph.length > 0
-        implicitWidth: Theme.components.actionRow.height
+        implicitWidth: Theme.components.sectionHeader.iconContainerSize
         implicitHeight: implicitWidth
         radius: Theme.shape.controlRadius
         color: ColorMath.alpha(root.tone, 0.15)
@@ -33,8 +33,9 @@ RowLayout {
         spacing: Theme.spacing.tiny
 
         TextLabel {
+            objectName: "sectionTitle"
             text: root.title
-            font.bold: true
+            font: Theme.typography.title
             elide: Text.ElideRight
             Layout.fillWidth: true
         }

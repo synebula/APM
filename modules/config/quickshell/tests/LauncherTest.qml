@@ -20,6 +20,20 @@ TestSuite {
         });
         verify(root.savedHistory.applications.editor.lastUsed > 0);
         verify(!root.savedHistory.drun);
+        const reloaded = createTemporaryObject(historyFactory, root, { path: history.path });
+        verify(reloaded !== null);
+        tryVerify(() => reloaded.ready);
+        compare(reloaded.applications.editor.count, 3);
+        compare(reloaded.applications.editor.lastUsed, root.savedHistory.applications.editor.lastUsed);
+    }
+
+    function test_historyUsesExactProviderKeys() {
+        const usage = {
+            "editor.desktop": { count: 3, lastUsed: 0 },
+            "Editor": { count: 8, lastUsed: 0 }
+        };
+        compare(LauncherSearch.getCount(usage, { key: "editor.desktop", label: "Editor" }), 3);
+        compare(LauncherSearch.getCount(usage, { key: "another.desktop", label: "Editor" }), 0);
     }
 
     function test_rankingCombinesSearchAndUsageWithoutDuplicatingEntries() {
@@ -56,11 +70,15 @@ TestSuite {
 
     name: "Launcher"
 
+    Component {
+        id: historyFactory
+        LaunchHistoryStore {}
+    }
+
     LaunchHistoryStore {
         id: history
 
         path: Quickshell.statePath("history-test-" + Date.now() + ".json")
-        legacyImportEnabled: false
         Component.onCompleted: {
             record("applications", "editor");
             record("applications", "editor");

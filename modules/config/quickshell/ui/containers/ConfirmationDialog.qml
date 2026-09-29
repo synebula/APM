@@ -22,7 +22,7 @@ ModalWindow {
         width: Math.min(parent.width - Theme.spacing.section * 2, 360 * Theme.controlScale)
         height: content.implicitHeight + Theme.spacing.section * 2
         radius: Theme.shape.panelRadius
-        fill: Theme.components.surface.fill
+        fill: Theme.surface.fill
 
         CompositorBlurRegion {
             targetWindow: root
@@ -52,7 +52,7 @@ ModalWindow {
             IconGlyph {
                 text: root.request.glyph || ""
                 color: Theme.components.status.tone(!!root.request.destructive)
-                font.pixelSize: Theme.typography.headingSize
+                font.pixelSize: Theme.typography.heading.pixelSize
                 Layout.alignment: Qt.AlignHCenter
             }
 

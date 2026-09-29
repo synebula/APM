@@ -102,9 +102,9 @@ ModalWindow {
         width: Math.min(parent.width - Theme.spacing.section * 2, 440 * Theme.controlScale)
         height: contentLayout.implicitHeight + Theme.spacing.section * 2
         radius: Theme.shape.panelRadius
-        fill: Theme.components.surface.fill
-        borderWidth: Theme.components.surface.borderWidth
-        borderColor: Theme.components.surface.borderColor
+        fill: Theme.surface.fill
+        borderWidth: Theme.surface.borderWidth
+        borderColor: Theme.surface.borderColor
 
         CompositorBlurRegion {
             targetWindow: root
@@ -140,7 +140,7 @@ ModalWindow {
                     IconGlyph {
                         anchors.centerIn: parent
                         text: "󰌾"
-                        font.pixelSize: Theme.typography.headingSize
+                        font.pixelSize: Theme.typography.heading.pixelSize
                         color: Theme.colors.accent
                     }
                 }
@@ -168,8 +168,7 @@ ModalWindow {
 
                             anchors.centerIn: parent
                             text: PolkitService.actionId
-                            font.pixelSize: Theme.typography.smallSize
-                            font.family: Theme.typography.family
+                            font: Theme.typography.small
                             color: Theme.colors.textSecondary
                             elide: Text.ElideMiddle
                         }
@@ -226,7 +225,7 @@ ModalWindow {
 
                 IconGlyph {
                     text: "󰀄"
-                    font.pixelSize: Theme.typography.captionSize
+                    font.pixelSize: Theme.typography.caption.pixelSize
                     color: Theme.colors.textSecondary
                 }
 
@@ -242,7 +241,7 @@ ModalWindow {
                 id: inputContainer
 
                 Layout.fillWidth: true
-                implicitHeight: Math.max(40 * Theme.controlScale, Theme.components.actionRow.height)
+                implicitHeight: Math.max(40 * Theme.controlScale, Theme.components.actionRow.minHeight)
                 radius: Theme.shape.controlRadius
                 fill: Theme.colors.surfaceVariant
                 borderWidth: passwordInput.activeFocus ? Theme.shape.focusBorderWidth : Theme.shape.borderWidth
@@ -256,7 +255,7 @@ ModalWindow {
 
                     IconGlyph {
                         text: "󰌾"
-                        font.pixelSize: Theme.typography.bodySize
+                        font.pixelSize: Theme.typography.body.pixelSize
                         color: passwordInput.activeFocus ? Theme.colors.accent : Theme.colors.textSecondary
                     }
 
@@ -266,8 +265,7 @@ ModalWindow {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         echoMode: (PolkitService.responseVisible || root.showPlaintext) ? TextInput.Normal : TextInput.Password
-                        font.family: Theme.typography.family
-                        font.pixelSize: Theme.typography.bodySize
+                        font: Theme.typography.body
                         color: Theme.colors.textPrimary
                         selectionColor: Theme.colors.accent
                         selectedTextColor: Theme.colors.accentForeground
@@ -302,7 +300,7 @@ ModalWindow {
 
                 IconGlyph {
                     text: PolkitService.supplementaryIsError ? "󰅙" : "󰋼"
-                    font.pixelSize: Theme.typography.captionSize
+                    font.pixelSize: Theme.typography.caption.pixelSize
                     color: PolkitService.supplementaryIsError ? Theme.colors.danger : Theme.colors.info
                 }
 

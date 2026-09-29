@@ -78,7 +78,7 @@ T.Switch {
 
             IconGlyph {
                 anchors.centerIn: parent
-                text: Theme.components.colorModeToggle.knobGlyph(root.checked)
+                text: root.checked ? "󰖔" : "󰖙"
                 color: Theme.components.colorModeToggle.knobForeground(root.checked)
                 font.pixelSize: Math.round(13 * Theme.controlScale)
             }

@@ -59,7 +59,7 @@ BarButton {
             anchors.verticalCenter: parent.verticalCenter
             text: NotificationService.doNotDisturb ? "󰂛" : "󰂚"
             color: Theme.components.notification.indicatorTone(NotificationService.doNotDisturb, NotificationService.unreadCount > 0)
-            font.pixelSize: Theme.typography.bodySize
+            font.pixelSize: Theme.typography.body.pixelSize
         }
 
         BarText {

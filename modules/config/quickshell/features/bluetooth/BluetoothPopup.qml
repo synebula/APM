@@ -96,7 +96,7 @@ PopupPanel {
                         }
 
                         IconGlyph {
-                            text: Theme.components.bluetooth.actionGlyph(deviceRow.modelData.connected)
+                            text: deviceRow.modelData.connected ? "󰅖" : "󰄬"
                             color: Theme.components.bluetooth.actionColor(deviceRow.modelData.connected)
                         }
                     }

@@ -1,17 +1,41 @@
 pragma ComponentBehavior: Bound
+import "../../theme/colors"
+import "../../theme/colors/runtime"
+import "../../theme/geometry/runtime"
+import "../../theme/materials/runtime"
 import "../../theme"
 import "../../ui/controls"
+import "../../ui/containers"
+import "../../ui/effects"
 import QtQuick
-import QtQuick.Effects
 import QtQuick.Layouts
 
-ActionButton {
+InteractiveCard {
     id: root
 
     required property ThemeDefinition definition
-    readonly property PaletteDefinition previewPalette: PaletteCatalog.find(root.definition.defaultPaletteId) || PaletteCatalog.defaultPalette
-    readonly property PaletteVariant previewVariant: PaletteCatalog.variant(root.previewPalette.paletteId, "light")
-    readonly property color previewBorderColor: root.definition.border.colorPolicy === "transparent" ? "transparent" : root.previewVariant.outline
+    readonly property PaletteDefinition previewPalette: root.definition.palette
+    readonly property PaletteVariant previewVariant: root.previewPalette.variant(Theme.resolvedColorMode) || root.previewPalette.defaultVariant
+    readonly property bool previewIsDark: root.previewVariant.variantId === "dark"
+    readonly property ColorTokens previewColors: ColorTokens {
+        variant: root.previewVariant
+        requestedAccentId: ""
+        isDark: root.previewIsDark
+    }
+    readonly property ShapeTokens previewShape: ShapeTokens {
+        spec: root.definition.geometry.shape
+        radiusScale: Theme.shape.scale
+    }
+    readonly property SpacingTokens previewSpacing: SpacingTokens {
+        spec: root.definition.geometry.spacing
+        spacingScale: Theme.spacingScale
+    }
+    readonly property SurfaceTokens previewSurface: SurfaceTokens {
+        spec: root.definition.material
+        colors: root.previewColors
+        isDark: root.previewIsDark
+        controlScale: Theme.controlScale
+    }
 
     objectName: "theme-" + root.definition.themeId
     text: root.definition.displayName
@@ -31,39 +55,25 @@ ActionButton {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.round(62 * Theme.controlScale)
-            radius: Theme.shape.smallRadius
-            color: root.previewVariant.background
+            radius: root.previewShape.smallRadius
+            color: root.previewColors.background
 
-            Rectangle {
+            SurfaceFrame {
                 id: sample
+                objectName: "themePreviewSurface"
                 anchors.centerIn: parent
-                width: parent.width - Theme.spacing.large * 2
+                width: parent.width - root.previewSpacing.large * 2
                 height: Math.round(32 * Theme.controlScale)
-                radius: Theme.shape.controlRadius
-                color: Qt.rgba(root.previewVariant.surface.r, root.previewVariant.surface.g, root.previewVariant.surface.b, root.previewVariant.surface.a * root.definition.surface.fillOpacity)
-                border.width: root.definition.border.width
-                border.color: root.previewBorderColor
-                gradient: root.definition.surface.mode === "gradient" ? sampleGradient : null
-                layer.enabled: root.definition.elevation.shadowStyle !== "none" || root.definition.surface.blurRadius > 0
-                layer.effect: MultiEffect {
-                    blurEnabled: root.definition.surface.blurRadius > 0
-                    blur: root.definition.surface.blurRadius
-                    shadowEnabled: true
-                    shadowColor: Qt.rgba(0, 0, 0, root.definition.elevation.shadowOpacity)
-                    shadowBlur: root.definition.elevation.shadowBlur
-                    shadowHorizontalOffset: root.definition.elevation.shadowHorizontalOffset
-                    shadowVerticalOffset: root.definition.elevation.shadowVerticalOffset
-                }
-
-                Gradient {
-                    id: sampleGradient
-                    GradientStop { position: 0; color: Qt.lighter(root.previewVariant.surface, root.definition.surface.gradientLighten) }
-                    GradientStop { position: 1; color: Qt.darker(root.previewVariant.surface, root.definition.surface.gradientDarken) }
-                }
+                surface: root.previewSurface
+                fill: root.previewColors.surface
+                isDark: root.previewIsDark
+                radius: root.previewShape.controlRadius
+                // This sample has its own backdrop, so local effects can render glass shadows.
+                layer.enabled: root.previewSurface.shadowEnabled || root.previewSurface.blurRadius > 0
 
                 Row {
                     anchors.centerIn: parent
-                    spacing: Theme.spacing.small
+                    spacing: root.previewSpacing.small
                     Rectangle {
                         width: Math.round(16 * Theme.controlScale)
                         height: width
@@ -94,7 +104,7 @@ ActionButton {
             Layout.fillWidth: true
             TextLabel {
                 text: root.text
-                font.bold: true
+                font: Theme.typography.title
                 Layout.fillWidth: true
             }
             IconGlyph {

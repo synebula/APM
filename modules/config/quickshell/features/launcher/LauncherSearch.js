@@ -2,25 +2,8 @@
 .import "FuzzySearch.js" as FuzzySearch
 
 function getCount(history, entry) {
-    if (!history || !entry) return 0;
-    const key = entry.key || "";
-    const label = entry.label || "";
-
-    const candidates = [
-        key,
-        key.endsWith(".desktop") ? key.slice(0, -8) : (key ? key + ".desktop" : ""),
-        label,
-        label.endsWith(".desktop") ? label.slice(0, -8) : (label ? label + ".desktop" : "")
-    ];
-
-    for (const k of candidates) {
-        if (!k) continue;
-        const item = history[k];
-        if (item !== undefined && item !== null) {
-            return typeof item === "number" ? item : (item.count || 0);
-        }
-    }
-    return 0;
+    const usage = history && entry ? history[entry.key] : null;
+    return usage ? (usage.count || 0) : 0;
 }
 
 function rank(entries, query, history) {

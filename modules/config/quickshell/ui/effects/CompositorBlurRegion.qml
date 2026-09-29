@@ -11,7 +11,7 @@ Item {
     property real radius: 0
     // Do not shadow QQuickItem.enabled. This flag controls the compositor effect,
     // not the QML item's input/scene-graph enabled state.
-    property bool effectEnabled: Theme.components.surface.isGlass
+    property bool effectEnabled: Theme.surface.isGlass
     property bool surfaceReady: false
     property bool destroying: false
     // 声明式子 Region（默认属性）与 backgroundItem 区域取并集，

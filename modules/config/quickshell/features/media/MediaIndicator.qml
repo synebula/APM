@@ -56,7 +56,7 @@ Item {
             content: BarText {
                 text: (root.activePlayer && root.activePlayer.isPlaying) ? "󰏤" : "󰐊"
                 color: Theme.colors.accent
-                font.pixelSize: Theme.typography.captionSize
+                font: Theme.typography.withOverrides(Theme.typography.caption, { weight: Theme.typography.title.weight })
             }
         }
 
@@ -88,14 +88,14 @@ Item {
                 BarText {
                     text: "󰎈"
                     color: Theme.colors.accent
-                    font.pixelSize: Theme.typography.captionSize
+                    font.pixelSize: Theme.typography.caption.pixelSize
                     Layout.alignment: Qt.AlignVCenter
                 }
 
                 BarText {
                     text: infoBtn.trackText
                     color: Theme.colors.textPrimary
-                    font.pixelSize: Theme.typography.captionSize
+                    font: Theme.typography.withOverrides(Theme.typography.caption, { weight: Theme.typography.title.weight })
                     Layout.maximumWidth: 160 * Theme.fontScale
                     Layout.alignment: Qt.AlignVCenter
                     elide: Text.ElideRight

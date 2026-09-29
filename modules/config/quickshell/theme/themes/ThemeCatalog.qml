@@ -1,0 +1,20 @@
+pragma Singleton
+import ".."
+import QtQuick
+import Quickshell
+
+Singleton {
+    id: root
+
+    readonly property list<ThemeDefinition> themes: [
+        FlatTheme {},
+        NeumorphicTheme {},
+        LiquidGlassTheme {},
+        FrostedGlassTheme {}
+    ]
+    readonly property ThemeDefinition defaultTheme: root.find("neumorphic")
+
+    function find(themeId: string): ThemeDefinition {
+        return root.themes.find(theme => theme.themeId === themeId) || null;
+    }
+}

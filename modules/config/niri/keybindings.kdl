@@ -1,6 +1,6 @@
 // ============================================================================
 // Niri 快捷键体系设计定理 (Keybinding Axioms)
-// 1. 【Base    流】Mod         : 纯视线漫游与基础启闭（方向键看焦点、数字键切工作区、Tab总览/回跳、回车/F 全屏与填满状态开关、基础应用启闭）
+// 1. 【Base    流】Mod         : 纯视线漫游与基础启闭（方向键看焦点、数字键切工作区、Tab总览/回跳、回车/F 全屏与填满、W/H 尺寸比例快切、基础应用启闭）
 // 2. 【Shift   位】Mod + Shift : 物理空间位移与搬迁（方向键挪动、数字键投送工作区、M甩显示器、[]吞吐窗口）
 // 3. 【Alt     改】Mod + Alt   : 修改尺寸比例与排版形态（W宽/H高预设、R重置、F填满剩余、方向键拉伸、S堆叠、Space浮动、C居中、V浮层焦点、数字键单窗投送变体）
 // 4. 【Control 控】Mod + Ctrl  : 系统底层与全局中枢（Q退出、R重载、P息屏、方向键/Tab/M切物理显示器、/快捷键帮助）
@@ -14,8 +14,10 @@ binds {
     // ------------------------------------------------------------------------
     // 1. 【Base / View (流)】主要窗口与会话基础操作
     // ------------------------------------------------------------------------
-    Mod+Q repeat=false { close-window; }                // [Q]: 关闭当前聚焦窗口
+    Mod+C repeat=false { close-window; }                // [C]: 关闭当前聚焦窗口
     Mod+F              { maximize-column; }             // [F]: Fill 切换当前列最大化/还原（状态开关）
+    Mod+W              { switch-preset-column-width; }  // [W]: Width 循环切换列宽预设比例
+    Mod+H              { switch-preset-window-height; } // [H]: Height 循环切换窗高预设比例
     Mod+Return         { fullscreen-window; }           // [回车]: 切换当前窗口独占全屏
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; } // [Esc]: 切换快捷键拦截
 

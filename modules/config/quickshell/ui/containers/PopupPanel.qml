@@ -1,3 +1,4 @@
+import "../../theme/motion"
 import "../../theme"
 import "../controllers"
 import "../effects"
@@ -217,7 +218,7 @@ PanelWindow {
         y: root.slideDistance * root.transitionProgress
         width: root.contentWidth
         height: root.contentHeight
-        fill: Theme.components.surface.fill
+        fill: Theme.surface.fill
         radius: Theme.shape.panelRadius
         // A compositor blur region is binary and can arrive before the first
         // painted QML frame. Keep the card fully visible on entry so the user

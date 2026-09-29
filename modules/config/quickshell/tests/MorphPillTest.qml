@@ -14,8 +14,8 @@ TestSuite {
     }
 
     function test_surfaceColorMatchesThemeOpacity() {
-        compare(Math.round(pill.surfaceColor.a * 100), Math.round(Theme.components.surface.fillOpacity * 100));
-        compare(Math.round(surface.surfaceColor.a * 100), Math.round(Theme.components.surface.fillOpacity * 100));
+        compare(Math.round(pill.surfaceColor.a * 100), Math.round(Theme.surface.fillOpacity * 100));
+        compare(Math.round(surface.surfaceColor.a * 100), Math.round(Theme.surface.fillOpacity * 100));
     }
 
     function test_morphPillExpandsAndCollapses() {

@@ -15,13 +15,13 @@ Item {
     required property real blendRadius
 
     property color surfaceColor: Qt.rgba(
-        Theme.components.surface.fill.r,
-        Theme.components.surface.fill.g,
-        Theme.components.surface.fill.b,
-        Theme.components.surface.fill.a * Theme.components.surface.fillOpacity
+        Theme.surface.fill.r,
+        Theme.surface.fill.g,
+        Theme.surface.fill.b,
+        Theme.surface.fill.a * Theme.surface.fillOpacity
     )
     property real edgeSoftness: 0.8
-    property bool shadowEnabled: Theme.components.surface.shadowEnabled && !Theme.components.surface.isGlass
+    property bool shadowEnabled: Theme.surface.shadowEnabled && !Theme.surface.isGlass
 
     Item {
         id: surfaceContainer
@@ -31,10 +31,10 @@ Item {
         layer.smooth: true
         layer.effect: MultiEffect {
             shadowEnabled: root.shadowEnabled
-            shadowColor: Theme.components.surface.shadowColor
-            shadowBlur: Theme.components.surface.shadowBlur
-            shadowHorizontalOffset: Theme.components.surface.shadowHorizontalOffset
-            shadowVerticalOffset: Theme.components.surface.shadowVerticalOffset
+            shadowColor: Theme.surface.shadowColor
+            shadowBlur: Theme.surface.shadowBlur
+            shadowHorizontalOffset: Theme.surface.shadowHorizontalOffset
+            shadowVerticalOffset: Theme.surface.shadowVerticalOffset
         }
 
         ShaderEffect {

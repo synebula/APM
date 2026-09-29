@@ -1,4 +1,5 @@
 import "../../theme"
+import "../../theme/components"
 import "../effects"
 import QtQuick
 import QtQuick.Layouts
@@ -7,30 +8,32 @@ import QtQuick.Templates as T
 T.ItemDelegate {
     id: root
 
+    readonly property ActionRowTokens _tokens: Theme.components.actionRow
+
     property string glyph: ""
     property string description: ""
     property string trailingText: ""
     property bool selected: false
     property bool destructive: false
-    property color foreground: Theme.components.actionRow.foreground(root.enabled, root.selected, root.destructive)
+    property color foreground: root._tokens.foreground(root.enabled, root.selected, root.destructive)
     property int iconSize: Theme.components.iconButton.iconSize
     default property alias trailingContent: trailing.data
 
     font: Theme.typography.body
     hoverEnabled: true
     padding: Theme.spacing.small
-    leftPadding: Theme.components.actionRow.padding
+    leftPadding: root._tokens.padding
     rightPadding: leftPadding
     spacing: Theme.spacing.medium
-    implicitHeight: Math.max(Theme.components.actionRow.height, implicitContentHeight + topPadding + bottomPadding)
+    implicitHeight: Math.max(root._tokens.minHeight, implicitContentHeight + topPadding + bottomPadding)
     implicitWidth: implicitContentWidth + leftPadding + rightPadding
     opacity: enabled ? 1 : Theme.disabledOpacity
 
     background: Rectangle {
-        color: Theme.components.actionRow.background(root.enabled, root.selected, root.destructive)
+        color: root._tokens.background(root.enabled, root.selected, root.destructive)
         radius: Theme.shape.controlRadius
-        border.width: Theme.components.actionRow.borderWidth(root.visualFocus, root.selected)
-        border.color: Theme.components.actionRow.borderColor(root.visualFocus, root.selected, root.destructive)
+        border.width: root._tokens.borderWidth(root.visualFocus, root.selected)
+        border.color: root._tokens.borderColor(root.visualFocus, root.selected, root.destructive)
 
         StateLayer {
             anchors.fill: parent
@@ -70,12 +73,9 @@ T.ItemDelegate {
             spacing: Theme.spacing.tiny
 
             TextLabel {
+                objectName: "actionRowTitle"
                 text: root.text
-                font: root.selected ? Qt.font({
-                    "family": root.font.family,
-                    "pixelSize": root.font.pixelSize,
-                    "bold": true
-                }) : root.font
+                font: root.selected ? Theme.typography.withOverrides(root.font, { weight: Theme.typography.title.weight }) : root.font
                 color: root.foreground
                 elide: Text.ElideRight
                 Layout.fillWidth: true

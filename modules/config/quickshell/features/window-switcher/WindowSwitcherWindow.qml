@@ -38,7 +38,7 @@ ModalWindow {
             anchors.centerIn: parent
             width: Math.min(parent.width - Theme.spacing.section * 2, Math.max(340 * Theme.controlScale, windows.contentWidth + Theme.spacing.extraLarge * 2))
             height: 154 * Theme.controlScale
-            fill: Theme.components.surface.fill
+            fill: Theme.surface.fill
             radius: Theme.shape.panelRadius
 
             CompositorBlurRegion {
@@ -68,13 +68,15 @@ ModalWindow {
                 highlightMoveDuration: Theme.motion.fastEffects.duration
                 boundsBehavior: Flickable.StopAtBounds
                 onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
-                delegate: ActionButton {
+                delegate: InteractiveCard {
                     id: windowButton
                     required property var modelData
                     required property int index
                     width: 180 * Theme.controlScale
                     height: windows.height
                     fillColor: Theme.components.actionRow.background(true, index === controller.selectedIndex)
+                    borderWidth: fillColor.a > 0.99 ? Theme.surface.borderWidth : (visualFocus ? Theme.shape.borderWidth : 0)
+                    borderColor: fillColor.a > 0.99 ? Theme.surface.borderColor : (visualFocus ? Theme.colors.focusRing : "transparent")
                     onHoveredChanged: {
                         if (hovered)
                             controller.selectedIndex = index;
@@ -87,13 +89,13 @@ ModalWindow {
                         spacing: Theme.spacing.medium
                         IconGlyph {
                             text: windowButton.modelData ? IconGlyphs.application(windowButton.modelData.appId, windowButton.modelData.title) : ""
-                            font.pixelSize: Theme.typography.headingSize * 2
+                            font.pixelSize: Theme.typography.heading.pixelSize * 2
                             color: Theme.colors.accent
                             Layout.alignment: Qt.AlignHCenter
                         }
                         TextLabel {
                             text: windowButton.modelData ? windowButton.modelData.appId : ""
-                            font.bold: true
+                            font: Theme.typography.title
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                             Layout.fillWidth: true

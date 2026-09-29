@@ -29,7 +29,7 @@ Row {
                 BarText {
                     text: workspaceButton.modelData
                     color: workspaceButton.foreground
-                    font.bold: workspaceButton.active
+                    font: workspaceButton.active ? Theme.typography.withOverrides(Theme.typography.body, { weight: Theme.typography.title.weight }) : Theme.typography.body
                     anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                 }
                 Repeater {
@@ -37,7 +37,7 @@ Row {
                     delegate: IconGlyph {
                         required property var modelData
                         text: IconGlyphs.application(modelData.appId, modelData.title)
-                        font.pixelSize: Theme.typography.captionSize
+                        font.pixelSize: Theme.typography.caption.pixelSize
                         color: workspaceButton.foreground
                         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                     }

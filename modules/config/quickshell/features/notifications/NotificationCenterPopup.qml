@@ -69,8 +69,7 @@ PopupPanel {
             TextLabel {
                 Layout.alignment: Qt.AlignHCenter
                 text: NotificationService.doNotDisturb ? "勿扰模式开启中" : "暂无新通知"
-                font.bold: true
-                font.pixelSize: Theme.typography.bodySize
+                font: Theme.typography.withOverrides(Theme.typography.body, { weight: Theme.typography.title.weight })
                 color: Theme.colors.textPrimary
             }
 

@@ -1,4 +1,5 @@
 import "../../theme"
+import "../../theme/components"
 import "../controllers"
 import "../effects"
 import QtQuick
@@ -8,24 +9,28 @@ import QtQuick.Templates as T
 T.Button {
     id: root
 
+    readonly property ActionButtonTokens _tokens: Theme.components.actionButton
+
     property string glyph: ""
     property string tooltipText: ""
     property bool primary: false
     property bool tonal: false
     property bool destructive: false
-    property color foreground: Theme.components.actionButton.foreground(root.enabled, root.checked, root.primary, root.tonal, root.destructive)
-    property color fillColor: Theme.components.actionButton.background(root.enabled, root.checked, root.primary, root.tonal, root.destructive)
+    // Semantic actions retain their foreground/fill pair; material cards use InteractiveCard.
+    property bool materialEnabled: !(root.enabled && (root.primary || root.checked))
+    property color foreground: root._tokens.foreground(root.enabled, root.checked, root.primary, root.tonal, root.destructive)
+    property color fillColor: root._tokens.background(root.enabled, root.checked, root.primary, root.tonal, root.destructive)
     property real cornerRadius: Theme.shape.controlRadius
     property int glyphSize: Theme.components.iconButton.iconSize
-    property int borderWidth: Theme.components.actionButton.borderWidth(root.visualFocus, root.checked, root.fillColor.a > 0.99)
-    property color borderColor: root.fillColor.a > 0.99 ? Theme.components.surface.borderColor : Theme.components.actionButton.borderColor(root.visualFocus, root.checked, root.destructive)
+    property int borderWidth: root._tokens.borderWidth(root.visualFocus, root.checked, root.fillColor.a > 0.99)
+    property color borderColor: root.fillColor.a > 0.99 ? Theme.surface.borderColor : root._tokens.borderColor(root.visualFocus, root.checked, root.destructive)
 
     font: Theme.typography.body
     padding: Theme.spacing.medium
     spacing: Theme.spacing.medium
     hoverEnabled: true
     implicitWidth: implicitContentWidth + leftPadding + rightPadding
-    implicitHeight: Math.max(Theme.components.actionRow.height, implicitContentHeight + topPadding + bottomPadding)
+    implicitHeight: Math.max(root._tokens.minHeight, implicitContentHeight + topPadding + bottomPadding)
     opacity: enabled ? 1 : Theme.disabledOpacity
     onHoveredChanged: {
         if (root.hovered && root.tooltipText)
@@ -43,6 +48,7 @@ T.Button {
     }
 
     background: SurfaceFrame {
+        materialEnabled: root.materialEnabled
         fill: root.fillColor
         radius: root.cornerRadius
         borderWidth: root.borderWidth

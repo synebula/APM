@@ -31,53 +31,8 @@ Singleton {
         saveTimer.restart();
     }
 
-    function migrateStoredState() {
-        const storedVersion = Number(appearanceData.version);
-        if (!Number.isFinite(storedVersion) || storedVersion < 0) {
-            console.warn("AppearanceSettings: invalid state version, resetting to " + 1);
-            appearanceData.version = 1;
-            return true;
-        }
-        if (storedVersion > 1) {
-            console.warn("AppearanceSettings: unsupported future state version: " + storedVersion);
-            return false;
-        }
-
-        let changed = storedVersion !== 1;
-        const legacySchemes = {
-            "catppuccin-latte": { "paletteId": "catppuccin", "colorMode": "light" },
-            "catppuccin-mocha": { "paletteId": "catppuccin", "colorMode": "dark" },
-            "tokyo-night": { "paletteId": "tokyo-night", "colorMode": "dark" },
-            "everforest-dark": { "paletteId": "everforest", "colorMode": "dark" },
-            "everforest-light": { "paletteId": "everforest", "colorMode": "light" },
-            "nord-dark": { "paletteId": "nord", "colorMode": "dark" },
-            "nord-light": { "paletteId": "nord", "colorMode": "light" }
-        };
-
-        if (appearanceData.schemeId && appearanceData.schemeId.length > 0) {
-            const scheme = appearanceData.schemeId;
-            const migration = legacySchemes[scheme];
-            if (migration) {
-                appearanceData.paletteId = migration.paletteId;
-                appearanceData.colorMode = migration.colorMode;
-            } else {
-                console.warn("AppearanceSettings: ignoring unknown legacy scheme: " + scheme);
-            }
-            // This is a one-shot compatibility field. Never let it override
-            // modern fields on the next startup.
-            appearanceData.schemeId = "";
-            changed = true;
-        }
-
-        if (changed)
-            appearanceData.version = 1;
-        return changed;
-    }
-
     function finishLoading() {
         root.ready = true;
-        if (root.migrateStoredState())
-            saveTimer.restart();
         if (Object.keys(root.pendingChanges).length > 0) {
             const changes = root.pendingChanges;
             root.pendingChanges = {};
@@ -110,9 +65,8 @@ Singleton {
         JsonAdapter {
             id: appearanceData
             property int version: 1
-            property string schemeId: ""
             property string themeId: "neumorphic"
-            property string paletteId: "pastel-relief"
+            property string paletteId: ""
             property string colorMode: "system"
             property string accentId: ""
             property string fontFamily: "SpaceMono Nerd Font"

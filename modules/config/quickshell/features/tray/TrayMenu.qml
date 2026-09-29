@@ -95,8 +95,9 @@ PopupPanel {
                     text: entry.modelData.text.replace(/&/g, "")
                     icon.source: entry.modelData.icon
                     selected: entry.modelData.checkState === Qt.Checked
-                    glyph: Theme.components.menu.checkGlyph(entry.modelData.buttonType === QsMenuButtonType.RadioButton, selected)
-                    trailingText: Theme.components.menu.trailingGlyph(entry.modelData.hasChildren)
+                    glyph: entry.modelData.buttonType === QsMenuButtonType.RadioButton
+                        ? (selected ? "●" : "○") : (selected ? "✓" : "")
+                    trailingText: entry.modelData.hasChildren ? "›" : ""
                     onClicked: {
                         if (entry.modelData.hasChildren)
                             stack.push(pageFactory, {

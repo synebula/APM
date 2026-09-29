@@ -39,7 +39,7 @@ ModalWindow {
         anchors.centerIn: parent
         width: Math.min(parent.width - Theme.spacing.section * 2, 640 * Theme.controlScale)
         height: Math.min(parent.height - Theme.spacing.section * 2, content.implicitHeight + Theme.spacing.large * 2)
-        fill: Theme.components.surface.fill
+        fill: Theme.surface.fill
         radius: Theme.shape.panelRadius
 
         CompositorBlurRegion {
@@ -67,15 +67,14 @@ ModalWindow {
                 spacing: Theme.spacing.large
                 IconGlyph {
                     text: controller.provider.glyph
-                    font.pixelSize: Theme.typography.headingSize
+                    font.pixelSize: Theme.typography.heading.pixelSize
                     color: Theme.colors.accent
                 }
                 T.TextField {
                     id: searchInput
                     Layout.fillWidth: true
-                    implicitHeight: Theme.components.actionRow.height * 1.4
-                    font.family: Theme.typography.family
-                    font.pixelSize: Theme.typography.headingSize
+                    implicitHeight: Theme.components.actionRow.minHeight * 1.4
+                    font: Theme.typography.heading
                     color: Theme.colors.textPrimary
                     selectionColor: Theme.colors.accent
                     selectedTextColor: Theme.colors.accentForeground
@@ -126,7 +125,7 @@ ModalWindow {
                 id: results
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.preferredHeight: Math.min(count, 10) * (Theme.components.actionRow.height + Theme.spacing.large)
+                Layout.preferredHeight: Math.min(count, 10) * (Theme.components.actionRow.minHeight + Theme.spacing.large)
                 visible: count > 0
                 clip: true
                 model: controller.results
@@ -166,7 +165,7 @@ ModalWindow {
                     width: results.width
                     height: 50 * Theme.controlScale
                     iconSize: 26 * Theme.controlScale
-                    font.pixelSize: Theme.typography.titleSize
+                    font: Theme.typography.title
                     leftPadding: Theme.spacing.large
                     rightPadding: Theme.spacing.large
                     spacing: Theme.spacing.large

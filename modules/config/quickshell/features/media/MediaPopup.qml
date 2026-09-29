@@ -56,7 +56,7 @@ PopupPanel {
                     anchors.centerIn: parent
                     visible: artwork.status !== Image.Ready
                     text: "󰎈"
-                    font.pixelSize: Theme.typography.headingSize
+                    font.pixelSize: Theme.typography.heading.pixelSize
                     color: Theme.colors.accent
                 }
             }
@@ -67,7 +67,7 @@ PopupPanel {
 
                 TextLabel {
                     text: root.player ? root.player.trackTitle || "未播放媒体" : "未播放媒体"
-                    font.bold: true
+                    font: Theme.typography.title
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }

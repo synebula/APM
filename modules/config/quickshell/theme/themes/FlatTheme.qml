@@ -1,4 +1,7 @@
+import QtQuick
 import ".."
+import "../colors/presets"
+import "../motion/presets"
 
 ThemeDefinition {
     themeId: "flat"
@@ -6,29 +9,8 @@ ThemeDefinition {
     glyph: "󰉈"
     description: "清晰边界 · 简洁层次"
     suggestedPaletteIds: ["catppuccin", "nord"]
-    shape: ShapeSpec {
-        smallRadius: 4
-        controlRadius: 8
-        panelRadius: 12
-        roundRadius: 26
-    }
-    border: BorderSpec {
-        width: 1
-        colorPolicy: "outline"
-    }
-    elevation: ElevationSpec {
-        level: "flat"
-        shadowStyle: "none"
-        highlightStyle: "none"
-    }
-    surface: SurfaceSpec {
-        mode: "solid"
-    }
-    spacing: SpacingSpec {
-        density: 1
-    }
-    typography: TypographySpec {}
-    motion: MotionSpec {
-        duration: 150
-    }
+
+    palette: Catppuccin {}
+    // Default material, geometry and typography provide the flat style.
+    motion: StandardMotion { duration: 150 }
 }

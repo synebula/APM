@@ -1,0 +1,2 @@
+singleton ColorModeResolver 1.0 ColorModeResolver.qml
+singleton ThemeController 1.0 ThemeController.qml
