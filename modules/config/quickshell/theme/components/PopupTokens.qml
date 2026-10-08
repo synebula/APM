@@ -14,6 +14,7 @@ QtObject {
     readonly property color background: root.surface.fill
     readonly property int padding: root.spacing.large
     readonly property int gap: root.spacing.small
+    readonly property int slideDistance: Math.round(8 * root.controlScale)
     readonly property int tooltipMaxWidth: Math.round(480 * root.controlScale)
 
     function swatchBorderColor(selected: bool, visualFocus: bool): color {

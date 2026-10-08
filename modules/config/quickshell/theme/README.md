@@ -26,7 +26,7 @@ theme/
 | materials | MaterialSpec → surface、border、elevation | FrostedGlassMaterial、LiquidGlassMaterial、NeumorphicMaterial |
 | geometry | GeometrySpec → shape、spacing | RoundedGeometry、LargeRoundedGeometry，协调圆角与密度 |
 | typography | TypographySpec → small、caption、body、title、heading | SoftTypography，正文微调字距，标题采用中等字重 |
-| motion | MotionProfile → 六种动效角色 | StandardMotion，组合各角色的曲线与相对时长 |
+| motion | MotionProfile → 十种动效角色 | StandardMotion、SnappyMotion、GentleMotion，组合各角色的曲线与相对时长 |
 
 默认协议提供完整可用的基础值，扁平主题直接使用默认材质、几何与排版。仅改变密度或整体时长时，在 Theme 中直接覆盖；不为默认值或单个常量创建预设文件。领域预设不绑定配色或主题 ID，可跨主题搭配，每次实例化独立持有子对象。
 
@@ -44,7 +44,7 @@ theme/
 | `Theme.qml` | 选择生效定义，连接配置与各计算模块 | 对 UI 提供稳定的只读入口 |
 | `appearance/` | 校验修改、IPC、跟随系统 | 由 ThemeController 调用 AppearanceSettings 持久化 |
 
-`ui/controls`、`ui/containers`、`ui/effects` 负责实际绘制和动画，读取 `Theme.colors`、`Theme.shape`、`Theme.spacing`、`Theme.typography`、`Theme.motion`、`Theme.components`。预设中的材质类型决定使用哪种绘制能力，具体主题 ID 不参与组件分支。
+`ui/controls`、`ui/containers`、`ui/effects` 负责绘制，`ui/animations` 负责绑定目标的 Qt 动画执行；它们读取 `Theme.colors`、`Theme.shape`、`Theme.spacing`、`Theme.typography`、`Theme.motion`、`Theme.components`。预设中的材质类型决定使用哪种绘制能力，具体主题 ID 不参与组件分支。
 
 `Theme.surface` 使用 `materials/runtime/SurfaceTokens` 的计算结果；边框的宽度、透明度、颜色策略统一归材质领域管理。
 
@@ -109,9 +109,24 @@ ThemeDefinition {
 
 TextLabel 默认应用完整 body 字体，SectionHeader 使用 title。局部强调使用 `Theme.typography.withOverrides(Theme.typography.body, { weight: Theme.typography.title.weight })`，复制字体后覆盖指定属性，保留其他参数并保持源角色不变。图标仍使用 iconFamily，仅按需要读取角色字号。
 
-`MotionSpec` 描述单项动效的时长、曲线和缓动类型。`MotionProfile` 包含基础时长及 `fastEffects`、`standard`、`slowEffects`、`spatial`、`accelerate`、`scroll` 六个角色。
+`MotionSpec` 描述单项动效的时长、曲线和缓动类型。`MotionProfile` 包含基础时长及十种角色：
 
-`motion/presets/StandardMotion.qml` 在一个文件中定义整组曲线和相对时长。完整主题通过 `StandardMotion { duration: 320 }` 调整整体节奏，也可覆盖单个角色。运行时只对各项时长应用用户倍率并取整，曲线和缓动类型直接来自预设。
+| 角色 | 用途 |
+| --- | --- |
+| `fastEffects` / `standard` / `slowEffects` | 快速反馈、标准入场、较慢过渡 |
+| `spatial` / `accelerate` / `scroll` | 弹性位移、加速退场、平滑滚动 |
+| `bounce` | 落地回弹（标准预设为 OutBounce） |
+| `linear` | 匀速颜色、图表及播放波形变化 |
+| `symmetric` | 对称缓入缓出，供形变和壁纸交叉淡入使用 |
+| `feedback` | 认证错误抖动的单步节奏 |
+
+`motion/presets/StandardMotion.qml` 定义标准曲线和相对时长；`SnappyMotion`、`GentleMotion` 分别提供轻快、柔和的整组搭配。完整主题通过 `StandardMotion { duration: 320 }` 调整整体节奏，也可覆盖单个角色。运行时只对各项时长应用用户倍率并取整，曲线和缓动类型直接来自预设。
+
+`MotionProfile` 的 `motionId`、`displayName`、`description` 描述方案身份，`motion/runtime/MotionCatalog.qml` 注册可选方案。`Theme.motionProfile` 是当前生效定义，`Theme.motion` 是缩放后的只读消费入口。新增方案需同步预设目录 `qmldir` 和 MotionCatalog；动画实例不放进主题单例，避免不同控件共享播放状态。
+
+主题中心支持“跟随主题 / 标准 / 轻快 / 柔和”。`AppearanceSettings.motionId` 为空或无效时使用当前完整主题的 `motion`；显式选择时独立于主题、配色和深浅模式。唯一写入口为 `ThemeController.setMotion(id)`、`resetMotion()`，对应 IPC 同名方法；`appearance.json` 保存选择。切换或重置方案保留用户时长倍率，倍率 `0` 对所有方案关闭动效。
+
+UI 数值动画统一由 `ui/animations/MotionAnimation` 执行，淡入、滑动、缩放、弹跳继承它；颜色统一由 `ThemeColorAnimation` 执行。弹窗、模态、OSD、菜单、控件及演示均使用同一层，业务组件只选择 `motion` 角色，不自定义曲线。壁纸和连续数据动画的周期仍由领域配置决定，并应用用户动效倍率。详见 [常用动画](../ui/animations/README.md)。
 
 预设时长允许小数，避免在缩放前提前取整。例如 `150 × 0.75 × 1.5` 的最终时长是 `169ms`。字体、间距和圆角同样在运行时使用原始定义计算，不回写预设。
 

@@ -1,4 +1,6 @@
 import QtQuick
+import "../../theme"
+import "../../ui/animations"
 import "../../shared/WallpaperSource.js" as WallpaperSource
 
 Item {
@@ -110,20 +112,18 @@ Item {
         property real targetAOpacity: 1.0
         property real targetBOpacity: 0.0
 
-        NumberAnimation {
+        FadeAnimation {
             target: slotA
-            property: "opacity"
             to: fadeAnimation.targetAOpacity
-            duration: root.transitionDurationMs
-            easing.type: Easing.InOutQuad
+            duration: Math.round(root.transitionDurationMs * Theme.motion.scale)
+            motion: Theme.motion.symmetric
         }
 
-        NumberAnimation {
+        FadeAnimation {
             target: slotB
-            property: "opacity"
             to: fadeAnimation.targetBOpacity
-            duration: root.transitionDurationMs
-            easing.type: Easing.InOutQuad
+            duration: Math.round(root.transitionDurationMs * Theme.motion.scale)
+            motion: Theme.motion.symmetric
         }
 
         onFinished: {

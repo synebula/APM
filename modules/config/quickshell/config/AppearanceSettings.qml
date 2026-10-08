@@ -9,6 +9,7 @@ Singleton {
 
     readonly property string themeId: appearanceData.themeId
     readonly property string paletteId: appearanceData.paletteId
+    readonly property string motionId: appearanceData.motionId
     readonly property string colorMode: appearanceData.colorMode
     readonly property string accentId: appearanceData.accentId
     readonly property string fontFamily: appearanceData.fontFamily
@@ -67,6 +68,7 @@ Singleton {
             property int version: 1
             property string themeId: "neumorphic"
             property string paletteId: ""
+            property string motionId: ""
             property string colorMode: "system"
             property string accentId: ""
             property string fontFamily: "SpaceMono Nerd Font"

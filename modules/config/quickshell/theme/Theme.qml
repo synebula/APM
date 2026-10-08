@@ -9,6 +9,7 @@ import "colors/runtime"
 import "geometry/runtime"
 import "materials/runtime"
 import "typography/runtime"
+import "motion"
 import "motion/runtime"
 import "components"
 
@@ -18,6 +19,8 @@ Singleton {
     readonly property ThemeDefinition definition: ThemeCatalog.find(AppearanceSettings.themeId) || ThemeCatalog.defaultTheme
     readonly property bool paletteFollowsTheme: PaletteCatalog.find(AppearanceSettings.paletteId) === null
     readonly property PaletteDefinition palette: PaletteCatalog.find(AppearanceSettings.paletteId) || root.definition.palette
+    readonly property bool motionFollowsTheme: MotionCatalog.find(AppearanceSettings.motionId) === null
+    readonly property MotionProfile motionProfile: MotionCatalog.find(AppearanceSettings.motionId) || root.definition.motion
     readonly property string colorMode: ["system", "light", "dark"].includes(AppearanceSettings.colorMode) ? AppearanceSettings.colorMode : "system"
     readonly property string resolvedColorMode: root.colorMode === "system" ? ColorModeResolver.systemMode : root.colorMode
     readonly property bool isDark: root.resolvedColorMode === "dark"
@@ -54,7 +57,7 @@ Singleton {
     }
 
     readonly property MotionTokens motion: MotionTokens {
-        spec: root.definition.motion
+        spec: root.motionProfile
         scale: Math.max(0, Math.min(4, AppearanceSettings.motionScale))
     }
 

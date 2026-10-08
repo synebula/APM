@@ -3,6 +3,7 @@ import "../../config"
 import ".."
 import "../themes"
 import "../colors/runtime"
+import "../motion/runtime"
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -21,6 +22,18 @@ Singleton {
 
     function resetPalette() {
         AppearanceSettings.update({ "paletteId": "" });
+    }
+
+    function setMotion(motionId: string): bool {
+        const profile = MotionCatalog.find(motionId);
+        if (!profile)
+            return false;
+        AppearanceSettings.update({ "motionId": profile.motionId });
+        return true;
+    }
+
+    function resetMotion() {
+        AppearanceSettings.update({ "motionId": "" });
     }
 
     function setTheme(themeId: string): bool {
@@ -111,6 +124,14 @@ Singleton {
     }
 
     IpcHandler {
+        function setMotion(motionId: string): bool {
+            return root.setMotion(motionId);
+        }
+
+        function resetMotion() {
+            root.resetMotion();
+        }
+
         function setPalette(paletteId: string): bool {
             return root.setPalette(paletteId);
         }

@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import "../../theme"
+import "../animations"
 import QtQuick
 import "../../theme/materials/runtime"
 import QtQuick.Effects
@@ -234,14 +235,10 @@ Rectangle {
     }
 
     Behavior on color {
-        ColorAnimation {
-            duration: Theme.motion.standard.duration
-        }
+        ThemeColorAnimation {}
     }
 
     Behavior on border.color {
-        ColorAnimation {
-            duration: Theme.motion.standard.duration
-        }
+        ThemeColorAnimation {}
     }
 }

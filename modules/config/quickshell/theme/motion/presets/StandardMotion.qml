@@ -4,6 +4,9 @@ import ".."
 MotionProfile {
     id: root
 
+    motionId: "standard"
+    displayName: "标准"
+    description: "自然入场，利落退场"
     duration: 220
     fastEffects: MotionSpec {
         duration: root.duration * 0.75
@@ -28,5 +31,21 @@ MotionProfile {
     scroll: MotionSpec {
         duration: root.duration
         curve: [0, 0, 0, 1, 1, 1]
+    }
+    bounce: MotionSpec {
+        duration: root.duration * 1.75
+        easing: Easing.OutBounce
+    }
+    linear: MotionSpec {
+        duration: root.duration
+        easing: Easing.Linear
+    }
+    symmetric: MotionSpec {
+        duration: root.duration * 1.5
+        easing: Easing.InOutQuad
+    }
+    feedback: MotionSpec {
+        duration: root.duration * 0.2
+        easing: Easing.InOutQuad
     }
 }

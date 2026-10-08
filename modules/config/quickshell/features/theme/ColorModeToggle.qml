@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import "../../theme"
 import "../../ui/controls"
+import "../../ui/animations"
 import QtQuick
 import QtQuick.Templates as T
 
@@ -22,7 +23,7 @@ T.Switch {
         border.color: Theme.components.colorModeToggle.trackBorder(root.checked)
 
         Behavior on color {
-            ColorAnimation { duration: Theme.motion.fastEffects.duration }
+            ThemeColorAnimation { motion: Theme.motion.fastEffects }
         }
 
         IconGlyph {
@@ -34,7 +35,7 @@ T.Switch {
             anchors.verticalCenter: parent.verticalCenter
 
             Behavior on opacity {
-                NumberAnimation { duration: Theme.motion.fastEffects.duration }
+                FadeAnimation { motion: Theme.motion.fastEffects }
             }
         }
 
@@ -47,7 +48,7 @@ T.Switch {
             anchors.verticalCenter: parent.verticalCenter
 
             Behavior on opacity {
-                NumberAnimation { duration: Theme.motion.fastEffects.duration }
+                FadeAnimation { motion: Theme.motion.fastEffects }
             }
         }
 
@@ -65,15 +66,13 @@ T.Switch {
             border.color: Theme.components.colorModeToggle.knobBorder(root.checked)
 
             Behavior on x {
-                NumberAnimation {
-                    duration: Theme.motion.standard.duration
-                    easing.type: Theme.motion.standard.easing
-                    easing.bezierCurve: Theme.motion.standard.curve
+                SlideAnimation {
+                    property: "x"
                 }
             }
 
             Behavior on color {
-                ColorAnimation { duration: Theme.motion.fastEffects.duration }
+                ThemeColorAnimation { motion: Theme.motion.fastEffects }
             }
 
             IconGlyph {

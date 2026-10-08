@@ -1,4 +1,5 @@
 import "../../theme"
+import "../animations"
 import QtQuick
 
 ValueSlider {
@@ -7,7 +8,8 @@ ValueSlider {
     property bool playing: false
     property real phase: 0
 
-    NumberAnimation on phase {
+    MotionAnimation on phase {
+        motion: Theme.motion.linear
         from: 0
         to: Math.PI * 2
         duration: Math.max(1, 1200 * Theme.motion.scale)

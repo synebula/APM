@@ -2,6 +2,7 @@ import "../theme/appearance"
 import "../theme/themes"
 import "../theme/colors/runtime"
 import "../theme/colors/presets"
+import "../theme/motion/runtime"
 import "../config"
 import "../features/theme"
 import "../services"
@@ -22,6 +23,57 @@ TestSuite {
         ThemeController.setPalette("pastel-relief");
         ThemeController.setColorMode("light");
         ThemeController.resetColors();
+        ThemeController.resetMotion();
+    }
+
+    function test_motionSelectionPersistsAndStaysIndependentOfTheme() {
+        const popup = createTemporaryObject(popupComponent, root, { ownerScreen: Quickshell.screens[0] });
+        popup.open();
+        tryCompare(popup, "transitionProgress", 1);
+        const gentle = findChild(popup.contentItem, "motion-gentle");
+        const follow = findChild(popup.contentItem, "followThemeMotion");
+        verify(gentle !== null && follow !== null, "Motion selection rows must be instantiated");
+        verify(follow.selected, "Motion selection should initially follow the theme");
+        gentle.clicked();
+        verify(gentle.selected, "Clicking Gentle must select its row");
+        verify(!Theme.motionFollowsTheme, "Selecting a profile must override the theme's motion");
+        compare(Theme.motionProfile, MotionCatalog.find("gentle"));
+        tryVerify(() => root.persistedAppearance.motionId === "gentle");
+        ThemeController.setMotionScale(1.5);
+        ThemeController.setTheme("flat");
+        compare(Theme.motionProfile.motionId, "gentle");
+        compare(Theme.motion.standard.duration, 510);
+        compare(Theme.palette.paletteId, "pastel-relief");
+        follow.clicked();
+        verify(Theme.motionFollowsTheme, "Follow action must reset the motion override");
+        compare(Theme.motionProfile, Theme.definition.motion);
+        compare(Theme.motion.standard.duration, 225);
+        compare(Theme.motion.scale, 1.5);
+        tryVerify(() => root.persistedAppearance.motionId === "");
+        ThemeController.setMotionScale(1);
+        popup.close();
+        tryCompare(popup, "visible", false);
+    }
+
+    function test_motionCatalogAndInvalidSelection() {
+        compare(MotionCatalog.profiles.length, 3);
+        const seen = {};
+        for (const profile of MotionCatalog.profiles) {
+            verify(!seen[profile.motionId]);
+            seen[profile.motionId] = true;
+            verify(profile.displayName.length > 0);
+            verify(profile.description.length > 0);
+            verify(ThemeController.setMotion(profile.motionId));
+            compare(Theme.motionProfile, profile);
+            compare(Theme.motion.standard.easing, profile.standard.easing);
+            compare(JSON.stringify(Theme.motion.standard.curve), JSON.stringify(profile.standard.curve));
+        }
+        verify(!ThemeController.setMotion("missing"));
+        compare(Theme.motionProfile.motionId, "gentle");
+        AppearanceSettings.update({ motionId: "missing" });
+        verify(Theme.motionFollowsTheme);
+        compare(Theme.motionProfile, Theme.definition.motion);
+        ThemeController.resetMotion();
     }
 
     function test_completePalettes() {

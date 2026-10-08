@@ -1,4 +1,5 @@
 import "../../theme"
+import "../animations"
 import QtQuick
 
 // ============================================================================
@@ -34,10 +35,8 @@ Item {
         opacity: root.active ? root.activeOpacity : 0
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.motion.fastEffects.duration
-                easing.type: Theme.motion.fastEffects.easing
-                easing.bezierCurve: Theme.motion.fastEffects.curve
+            FadeAnimation {
+                motion: Theme.motion.fastEffects
             }
         }
     }

@@ -1,0 +1,6 @@
+MotionAnimation 1.0 MotionAnimation.qml
+ThemeColorAnimation 1.0 ThemeColorAnimation.qml
+FadeAnimation 1.0 FadeAnimation.qml
+SlideAnimation 1.0 SlideAnimation.qml
+ScaleAnimation 1.0 ScaleAnimation.qml
+BounceAnimation 1.0 BounceAnimation.qml

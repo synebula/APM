@@ -42,4 +42,28 @@ QtObject {
         easing: root.spec.scroll.easing
         curve: root.spec.scroll.curve
     }
+
+    readonly property MotionSpec bounce: MotionSpec {
+        duration: Math.round(root.spec.bounce.duration * root.scale)
+        easing: root.spec.bounce.easing
+        curve: root.spec.bounce.curve
+    }
+
+    readonly property MotionSpec linear: MotionSpec {
+        duration: Math.round(root.spec.linear.duration * root.scale)
+        easing: root.spec.linear.easing
+        curve: root.spec.linear.curve
+    }
+
+    readonly property MotionSpec symmetric: MotionSpec {
+        duration: Math.round(root.spec.symmetric.duration * root.scale)
+        easing: root.spec.symmetric.easing
+        curve: root.spec.symmetric.curve
+    }
+
+    readonly property MotionSpec feedback: MotionSpec {
+        duration: Math.round(root.spec.feedback.duration * root.scale)
+        easing: root.spec.feedback.easing
+        curve: root.spec.feedback.curve
+    }
 }

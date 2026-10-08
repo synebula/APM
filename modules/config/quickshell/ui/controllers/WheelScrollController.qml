@@ -1,4 +1,5 @@
 import "../../theme"
+import "../animations"
 import QtQuick
 
 // ============================================================================
@@ -123,14 +124,12 @@ MouseArea {
             stop();
     }
 
-    NumberAnimation {
+    MotionAnimation {
         id: scrollAnimation
 
         target: root
         property: "position"
         alwaysRunToEnd: false
-        duration: Theme.motion.scroll.duration
-        easing.type: Theme.motion.scroll.easing
-        easing.bezierCurve: Theme.motion.scroll.curve
+        motion: Theme.motion.scroll
     }
 }

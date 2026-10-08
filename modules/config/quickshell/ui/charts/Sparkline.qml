@@ -1,4 +1,5 @@
 import "../../theme"
+import "../animations"
 import QtQuick
 
 // ============================================================================
@@ -65,7 +66,7 @@ Item {
     onActiveChanged: requestVisiblePaint()
     onTransitionProgressChanged: requestVisiblePaint()
 
-    NumberAnimation {
+    MotionAnimation {
         id: slideAnimation
 
         target: root
@@ -73,7 +74,7 @@ Item {
         from: 0
         to: 1
         duration: Math.max(250, root.updateInterval) * Theme.motion.scale
-        easing.type: Easing.Linear
+        motion: Theme.motion.linear
     }
 
     Canvas {
@@ -164,9 +165,9 @@ Item {
     }
 
     Behavior on scaleMaximum {
-        NumberAnimation {
+        MotionAnimation {
             duration: Theme.motion.slowEffects.duration
-            easing.type: Easing.Linear
+            motion: Theme.motion.linear
         }
     }
 }

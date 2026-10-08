@@ -3,6 +3,8 @@ import "../../theme/appearance"
 import "../../theme/themes"
 import "../../theme/colors/runtime"
 import "../../theme/colors"
+import "../../theme/motion"
+import "../../theme/motion/runtime"
 import "../../theme"
 import "../../theme/colors/runtime/ColorMath.js" as ColorMath
 import "../../ui/containers"
@@ -78,11 +80,38 @@ PopupPanel {
                 width: parent.width
                 spacing: Theme.spacing.small
 
+                TextLabel {
+                    text: "动效方案"
+                    font: Theme.typography.title
+                }
+
+                ActionRow {
+                    objectName: "followThemeMotion"
+                    width: parent.width
+                    text: "跟随主题"
+                    description: Theme.definition.motion.displayName
+                    selected: Theme.motionFollowsTheme
+                    onClicked: ThemeController.resetMotion()
+                }
+
+                Repeater {
+                    model: MotionCatalog.profiles
+                    delegate: ActionRow {
+                        required property MotionProfile modelData
+                        objectName: "motion-" + modelData.motionId
+                        width: parent.width
+                        text: modelData.displayName
+                        description: modelData.description
+                        selected: !Theme.motionFollowsTheme && Theme.motionProfile.motionId === modelData.motionId
+                        onClicked: ThemeController.setMotion(modelData.motionId)
+                    }
+                }
+
                 RowLayout {
                     width: parent.width
 
                     TextLabel {
-                        text: "动画速度"
+                        text: "动效时长倍率"
                         font: Theme.typography.caption
                         color: Theme.colors.textSecondary
                         Layout.fillWidth: true
@@ -91,7 +120,7 @@ PopupPanel {
                     TextLabel {
                         text: Theme.motion.scale <= 0
                             ? "无动效 (0ms)"
-                            : Theme.motion.scale.toFixed(1) + "x · " + Theme.motion.slowEffects.duration + "ms"
+                            : Theme.motion.scale.toFixed(1) + "x · " + Theme.motion.standard.duration + "ms"
                         font: Theme.typography.caption
                         color: Theme.colors.accent
                     }

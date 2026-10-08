@@ -19,6 +19,8 @@ ShellRoot {
 
     PopupCoordinatorTest {}
 
+    PopupAnimationTest {}
+
     LauncherTest {}
 
     ConfigTest {}
@@ -36,5 +38,7 @@ ShellRoot {
         color: Theme.colors.background
 
         ControlsTest {}
+
+        AnimationTest {}
     }
 }

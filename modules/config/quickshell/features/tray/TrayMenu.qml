@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 
 import "../../theme"
+import "../../ui/animations"
 import "../../ui/containers"
 import "../../ui/controls"
 
@@ -34,19 +35,17 @@ PopupPanel {
                 root.close();
         }
         pushEnter: Transition {
-            NumberAnimation {
-                property: "opacity"
+            FadeAnimation {
                 from: 0
                 to: 1
-                duration: Theme.motion.fastEffects.duration
+                motion: Theme.motion.fastEffects
             }
         }
         pushExit: Transition {
-            NumberAnimation {
-                property: "opacity"
+            FadeAnimation {
                 from: 1
                 to: 0
-                duration: Theme.motion.fastEffects.duration
+                motion: Theme.motion.fastEffects
             }
         }
         popEnter: pushEnter

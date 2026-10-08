@@ -9,6 +9,7 @@ import "../../theme"
 import "../../ui/containers"
 import "../../ui/controls"
 import "../../ui/effects"
+import "../../ui/animations"
 
 ModalWindow {
     id: root
@@ -27,9 +28,10 @@ ModalWindow {
     }
 
     onIsOpenChanged: {
+        shakeAnim.stop();
+        root.shakeOffset = 0;
         if (root.isOpen) {
             root.showPlaintext = false;
-            root.shakeOffset = 0;
             passwordInput.text = "";
             passwordInput.forceActiveFocus();
         }
@@ -38,49 +40,44 @@ ModalWindow {
     SequentialAnimation {
         id: shakeAnim
 
-        NumberAnimation {
+        MotionAnimation {
             target: root
             property: "shakeOffset"
             from: 0
             to: -12
-            duration: 45
-            easing.type: Easing.OutQuad
+            motion: Theme.motion.feedback
         }
 
-        NumberAnimation {
+        MotionAnimation {
             target: root
             property: "shakeOffset"
             from: -12
             to: 12
-            duration: 45
-            easing.type: Easing.InOutQuad
+            motion: Theme.motion.feedback
         }
 
-        NumberAnimation {
+        MotionAnimation {
             target: root
             property: "shakeOffset"
             from: 12
             to: -8
-            duration: 45
-            easing.type: Easing.InOutQuad
+            motion: Theme.motion.feedback
         }
 
-        NumberAnimation {
+        MotionAnimation {
             target: root
             property: "shakeOffset"
             from: -8
             to: 8
-            duration: 45
-            easing.type: Easing.InOutQuad
+            motion: Theme.motion.feedback
         }
 
-        NumberAnimation {
+        MotionAnimation {
             target: root
             property: "shakeOffset"
             from: 8
             to: 0
-            duration: 45
-            easing.type: Easing.OutQuad
+            motion: Theme.motion.feedback
         }
     }
 

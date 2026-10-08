@@ -98,7 +98,7 @@ TestSuite {
         compare(f.motion.standard.easing, Easing.Linear);
         compare(JSON.stringify(f.motion.standard.curve), JSON.stringify(f.profile.standard.curve));
         f.motion.scale = 0;
-        for (const role of ["fastEffects", "standard", "slowEffects", "spatial", "accelerate", "scroll"])
+        for (const role of ["fastEffects", "standard", "slowEffects", "spatial", "accelerate", "scroll", "bounce", "linear", "symmetric", "feedback"])
             compare(f.motion[role].duration, 0);
     }
 

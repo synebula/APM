@@ -1,4 +1,5 @@
 import "../../theme"
+import "../animations"
 import QtQuick
 import QtQuick.Templates as T
 
@@ -20,7 +21,7 @@ T.Switch {
         border.color: Theme.components.toggleSwitch.borderColor(root.visualFocus)
 
         Behavior on color {
-            ColorAnimation { duration: Theme.motion.standard.duration }
+            ThemeColorAnimation {}
         }
 
         Rectangle {
@@ -32,14 +33,13 @@ T.Switch {
             color: Theme.components.toggleSwitch.knobColor(root.enabled, root.checked)
 
             Behavior on color {
-                ColorAnimation { duration: Theme.motion.standard.duration }
+                ThemeColorAnimation {}
             }
 
             Behavior on x {
-                NumberAnimation {
-                    duration: Theme.motion.fastEffects.duration
-                    easing.type: Theme.motion.fastEffects.easing
-                    easing.bezierCurve: Theme.motion.fastEffects.curve
+                SlideAnimation {
+                    property: "x"
+                    motion: Theme.motion.fastEffects
                 }
             }
         }

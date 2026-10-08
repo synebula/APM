@@ -5,6 +5,7 @@ import "../../ui/IconGlyphs.js" as IconGlyphs
 import "../../ui/containers"
 import "../../ui/controls"
 import "../../ui/effects"
+import "../../ui/animations"
 import "../../shared/AudioPresentation.js" as AudioPresentation
 import QtQuick
 import QtQuick.Layouts
@@ -95,8 +96,8 @@ PanelWindow {
         opacity: root.isOpen ? 1 : 0
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.motion.fastEffects.duration
+            FadeAnimation {
+                motion: Theme.motion.fastEffects
             }
         }
 

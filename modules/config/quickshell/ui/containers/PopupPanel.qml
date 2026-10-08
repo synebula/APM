@@ -2,6 +2,7 @@ import "../../theme/motion"
 import "../../theme"
 import "../controllers"
 import "../effects"
+import "../animations"
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -127,10 +128,11 @@ PanelWindow {
         // stable region instead of chasing a moving/fading card.
         blurRegion.clear();
         root.isOpen = false;
-        releaseTimer.restart();
+        if (!transitionAnimation.running)
+            releaseTimer.restart();
     }
 
-    readonly property real slideDistance: Math.round(8 * Theme.controlScale)
+    readonly property real slideDistance: Theme.components.popup.slideDistance
 
     readonly property real _popupX: {
         const anchorLeft = root._anchorX;
@@ -191,10 +193,12 @@ PanelWindow {
     Timer {
         id: releaseTimer
 
-        interval: Math.max(1, root.exitMotion.duration + 32)
+        // Allow the final frame/region removal to reach the compositor after
+        // the animation actually stops, including when its profile changes.
+        interval: 32
         repeat: false
         onTriggered: {
-            if (!root.isOpen && root.transitionProgress <= root.visibilityCutoff) {
+            if (!root.isOpen && !transitionAnimation.running && root.transitionProgress <= root.visibilityCutoff) {
                 root.surfaceStarted = false;
                 PopupCoordinator.release(root);
             }
@@ -202,10 +206,15 @@ PanelWindow {
     }
 
     Behavior on transitionProgress {
-        NumberAnimation {
-            duration: root.isOpen ? root.enterMotion.duration : root.exitMotion.duration
-            easing.type: root.isOpen ? root.enterMotion.easing : root.exitMotion.easing
-            easing.bezierCurve: root.isOpen ? root.enterMotion.curve : root.exitMotion.curve
+        id: transition
+        MotionAnimation {
+            id: transitionAnimation
+            // Behavior publishes targetValue before starting its animation.
+            motion: transition.targetValue === 1 ? root.enterMotion : root.exitMotion
+            onRunningChanged: {
+                if (!running && !root.isOpen)
+                    releaseTimer.restart();
+            }
         }
     }
 

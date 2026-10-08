@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import "../../theme"
 import "../effects"
+import "../animations"
 import QtQuick
 
 Item {
@@ -18,7 +19,6 @@ Item {
     property real edgeSoftness: 0.8
     property bool shadowEnabled: Theme.surface.shadowEnabled && !Theme.surface.isGlass
     property bool satelliteClickable: true
-    property int animationDuration: Theme.motion.slowEffects.duration
 
     // 默认子组件放入主药丸容器
     default property alias contentData: mainContentContainer.data
@@ -37,9 +37,8 @@ Item {
     property real internalProgress: 0
 
     Behavior on internalProgress {
-        NumberAnimation {
-            duration: root.animationDuration
-            easing.type: Easing.InOutQuad
+        MotionAnimation {
+            motion: Theme.motion.symmetric
         }
     }
 

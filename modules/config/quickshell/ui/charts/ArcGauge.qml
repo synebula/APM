@@ -1,4 +1,5 @@
 import "../../theme"
+import "../animations"
 import "../../theme/components"
 import QtQuick
 
@@ -35,7 +36,6 @@ Item {
     property real handleInner: root._tokens.handleInner
     property real handleOuter: root._tokens.handleOuter
     property bool showHandle: false
-    property int animationDuration: Theme.motion.standard.duration
     // --- 内部动画属性 ---
     readonly property real clampedValue: Math.max(0, Math.min(1, root.value))
     property real displayedAngle: clampedValue * (360 - 2 * root.gapAngle)
@@ -120,9 +120,6 @@ Item {
     }
 
     Behavior on displayedAngle {
-        NumberAnimation {
-            duration: root.animationDuration
-            easing.type: Easing.OutCubic
-        }
+        MotionAnimation {}
     }
 }

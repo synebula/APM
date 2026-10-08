@@ -31,6 +31,8 @@ ui/containers/          InteractiveCard、弹窗、模态窗口、遮罩和栏�
 ui/controllers/         跨功能的弹窗、提示、滚动和确认状态协调器
 ui/charts/              可复用图表组件 (ArcGauge, Sparkline)
 ui/effects/             表面底框 (SurfaceFrame)、交互状态层 (StateLayer)、合成器模糊
+ui/animations/          统一数值/颜色动画及淡入、滑动、缩放、弹跳组件；用法见 ui/animations/README.md
+animations.qml          常用动画交互演示（qs -p animations.qml）
 tests/                  行为测试与测试脚本检查
 ```
 
@@ -83,7 +85,7 @@ tests/                  行为测试与测试脚本检查
   - `smallRadius`(4), `controlRadius`(8), `panelRadius`(12), `roundRadius`(26)（均乘 `Theme.shape.scale`），`borderWidth`，`focusBorderWidth`
   - 全局禁用态不透明度：`Theme.disabledOpacity`(0.45)
 - **动效 (`Theme.motion.*`)**：
-  - `fastEffects`, `standard`, `slowEffects`, `spatial`, `scroll`（均含 `duration`、`easing` 与 `curve` 贝塞尔曲线参数）
+  - `fastEffects`, `standard`, `slowEffects`, `spatial`, `accelerate`, `scroll`, `bounce`, `linear`, `symmetric`, `feedback`（均含 `duration`、`easing` 与 `curve` 参数），由统一动画组件消费；定义见 `theme/motion/presets/StandardMotion.qml`。
 - **材质 (`Theme.surface.*`)**：填充、边框、阴影、高光与玻璃效果参数，供各类控件统一使用。
 - **组件专用令牌 (`Theme.components.*`)**：
   - `bar`, `barGroup`, `barButton`, `actionButton`, `actionRow`, `sectionHeader`, `arcGauge`, `toggleSwitch`, `iconButton`, `popup`, `slider`, `status`, `calendar`, `themeCard`, `colorModeToggle`, `notification`, `bluetooth`, `menu`
@@ -98,6 +100,7 @@ tests/                  行为测试与测试脚本检查
   - 每个主题组合一个默认配色对象；用户显式选择的配色优先，未指定或无效时使用主题默认值。
   - 配色面板可选择“跟随主题”，清空显式配色选择并持久化；新用户默认跟随，已有选择保持有效。
   - 切换主题不会重置配色家族、明暗模式或强调色；切换配色家族亦不改变主题。
+  - 动效方案在主题中心独立选择“标准 / 轻快 / 柔和”，默认“跟随主题”；选择保存到 `appearance.json` 的 `motionId`，切换完整主题保留显式方案及动效时长倍率。
   - `colorMode` 支持 `system`（由 `ColorModeResolver` 动态解析）、`light`、`dark`。
 
 ## IPC 命令
@@ -109,6 +112,8 @@ tests/                  行为测试与测试脚本检查
 | `theme` | `setTheme` | `<id>`: `flat` / `neumorphic` / `frosted-glass` / `liquid-glass` |
 | `theme` | `setPalette` | `<id>`: `pastel-relief` / `catppuccin` / `nord` / `everforest` / `tokyo-night` |
 | `theme` | `resetPalette` | 恢复跟随主题默认配色，保持深浅模式与强调色选择 |
+| `theme` | `setMotion` | `<id>`: `standard` / `snappy` / `gentle`；独立选择动效方案 |
+| `theme` | `resetMotion` | 恢复跟随主题默认动效，保留当前时长倍率 |
 | `theme` | `setColorMode` | `<mode>`: `system` / `light` / `dark` |
 | `theme` | `toggleColorMode` | 快速在深色与浅色之间切换 |
 | `theme` | `setAccent` | `<id>`: 当前配色支持的 accent 名称（如 `blue`, `lavender`, `green`） |
@@ -139,6 +144,7 @@ tests/                  行为测试与测试脚本检查
 
 ```sh
 qmllint shell.qml tests.qml
+bash tests/AnimationDemoTest.sh
 bash tests/RunnerTest.sh
 bash tests/ThemeSyncTest.sh
 scripts/run-tests.sh
@@ -147,5 +153,9 @@ scripts/run-tests.sh
 生产切换前，应在隔离的 Niri 环境中检查多屏栏、启动器、主题缩放和通知窗口；可在 Xvfb 内启动嵌套 Niri。单独的 Xvfb/X11 环境无法覆盖基于 Wayland PanelWindow 的主题弹窗测试。
 
 测试脚本为每次运行创建独立状态目录，结束时清理；它检查所有已登记测试套件的完成情况和失败计数，错误、未完成或超时均返回非零。默认超时 60 秒，可通过 `APM_QUICKSHELL_TEST_TIMEOUT` 调整。
+
+`AnimationTest` 验证常用动画的实际插值、反向切换、渲染变化、组合重播、停止与重启、弹跳回弹及主题缩放；交互演示运行 `qs -p animations.qml`，组件用法见 [常用动画](ui/animations/README.md)。`AnimationDemoTest.sh` 在独立状态目录中使用离屏平台直接启动演示入口，检查类型加载与启动错误。
+
+`PopupAnimationTest` 验证实际弹窗/模态窗口使用统一动效、主题角色替换、退场模糊清理、快速关闭后重开及零时长模式。`ThemeTest` 同时验证主题中心动效选择、持久化、跟随恢复及独立于完整主题的切换。
 
 `ThemeSyncTest.sh` 使用模拟命令验证连续请求合并、完成状态和部分目标失败，不修改真实桌面配置。

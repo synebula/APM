@@ -1,6 +1,7 @@
 import "../../services"
 import "../../theme"
 import "../controllers"
+import "../animations"
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -62,10 +63,9 @@ PanelWindow {
         }
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: root.isOpen ? Theme.motion.fastEffects.duration : Theme.motion.accelerate.duration
-                easing.type: root.isOpen ? Theme.motion.fastEffects.easing : Theme.motion.accelerate.easing
-                easing.bezierCurve: root.isOpen ? Theme.motion.fastEffects.curve : Theme.motion.accelerate.curve
+            id: backdropFade
+            FadeAnimation {
+                motion: backdropFade.targetValue === 1 ? Theme.motion.fastEffects : Theme.motion.accelerate
             }
         }
     }
